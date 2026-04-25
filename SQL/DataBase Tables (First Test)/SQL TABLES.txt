@@ -1,0 +1,100 @@
+
+CREATE TABLE users (
+    user_id INT PRIMARY KEY AUTO_INCREMENT,
+    full_name VARCHAR(100),
+    email VARCHAR(100) UNIQUE,
+    password VARCHAR(100),
+    role VARCHAR(20),          -- Admin / Student / Landlord
+    phone VARCHAR(20),
+    status VARCHAR(20)
+);
+
+CREATE TABLE students (
+    student_id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT,
+    student_number VARCHAR(30),
+    institution VARCHAR(100),
+    program VARCHAR(100),
+    year_level VARCHAR(20),
+    gender VARCHAR(20),
+    emergency_contact VARCHAR(20),
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+);
+
+CREATE TABLE landlords (
+    landlord_id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT,
+    business_name VARCHAR(100),
+    id_number VARCHAR(30),
+    approval_status VARCHAR(20),
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+);
+
+CREATE TABLE rooms (
+    room_id INT PRIMARY KEY AUTO_INCREMENT,
+    landlord_id INT,
+    room_number VARCHAR(20),
+    room_type VARCHAR(50),
+    location VARCHAR(150),
+    price DECIMAL(10,2),
+    capacity INT,
+    description VARCHAR(255),
+    availability_status VARCHAR(30),
+    FOREIGN KEY (landlord_id) REFERENCES landlords(landlord_id)
+);
+
+CREATE TABLE bookings (
+    booking_id INT PRIMARY KEY AUTO_INCREMENT,
+    student_id INT,
+    room_id INT,
+    booking_date DATE,
+    check_in DATE,
+    check_out DATE,
+    booking_status VARCHAR(30),
+    FOREIGN KEY (student_id) REFERENCES students(student_id),
+    FOREIGN KEY (room_id) REFERENCES rooms(room_id)
+);
+
+CREATE TABLE payments (
+    payment_id INT PRIMARY KEY AUTO_INCREMENT,
+    booking_id INT,
+    amount DECIMAL(10,2),
+    payment_date DATE,
+    payment_method VARCHAR(30),
+    payment_status VARCHAR(30),
+    FOREIGN KEY (booking_id) REFERENCES bookings(booking_id)
+);
+
+
+CREATE TABLE maintenance_requests (
+    request_id INT PRIMARY KEY AUTO_INCREMENT,
+    student_id INT,
+    room_id INT,
+    issue_description VARCHAR(255),
+    priority VARCHAR(20),
+    request_date DATE,
+    request_status VARCHAR(30),
+    FOREIGN KEY (student_id) REFERENCES students(student_id),
+    FOREIGN KEY (room_id) REFERENCES rooms(room_id)
+);
+
+
+CREATE TABLE notifications (
+    notification_id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT,
+    message VARCHAR(255),
+    notification_date DATE,
+    read_status VARCHAR(20),
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+);
+
+
+CREATE TABLE system_settings (
+    setting_id INT PRIMARY KEY AUTO_INCREMENT,
+    app_name VARCHAR(100),
+    support_email VARCHAR(100),
+    contact_number VARCHAR(20),
+    theme_mode VARCHAR(20),
+    records_per_page INT,
+    last_updated DATE
+);
