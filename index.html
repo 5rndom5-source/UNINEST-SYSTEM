@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UniNest - Auth</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Create Account Page -->
+  <div id="createAccountPage" class="container page active">
+    <div class="header-bar">
+       <svg class="home-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" 
+        stroke="#000000" 
+        stroke-width="2" 
+        fill="none" 
+        stroke-linecap="round" 
+        stroke-linejoin="round"/>
+</svg>
+    </div>
+
+    <div class="content">
+      <h1>Create Account</h1>
+
+      <form id="createForm" action="/register" method="POST">
+        <div class="form-group row">
+          <label for="fullname">Full Name:</label>
+          <input type="text" id="fullname" name="fullname" required>
+        </div>
+
+        <div class="form-group row">
+          <label for="email">Email:</label>
+          <input type="email" id="email" name="email" required>
+        </div>
+
+        <div class="form-group row">
+          <label for="password">Password:</label>
+          <input type="password" id="password" name="password" required>
+        </div>
+
+        <div class="form-group row">
+          <label for="confirm-password">Confirm Password:</label>
+          <input type="password" id="confirm-password" name="confirmPassword" required>
+        </div>
+
+        <div class="roles-box">
+          <div class="roles-title">Select Roles</div>
+          <div class="form-group">
+            <select id="role" name="role" required>
+              <option value="student">Student</option>
+              <option value="landlord">Landlord</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+        </div>
+
+        <button type="submit" class="btn">Register</button>
+
+        <div class="switch-link">
+          Already have an account? <a onclick="showPage('loginPage')">Login</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Login Page -->
+  <div id="loginPage" class="container page">
+    <div class="header-bar">
+      
+    </div>
+
+    <div class="content">
+      <h1>UniNest</h1>
+      <p class="subtitle">Login to your account</p>
+
+      <form id="loginForm" action="/login" method="POST">
+        <div class="form-group column">
+          <label for="login-email">Email Address</label>
+          <input type="email" id="login-email" name="email" placeholder="Enter your email" required>
+        </div>
+
+        <div class="form-group column">
+          <label for="login-password">Password</label>
+          <input type="password" id="login-password" name="password" placeholder="Enter your password" required>
+        </div>
+
+        <button type="submit" class="btn">Login</button>
+
+        <div class="divider"><span>OR</span></div>
+
+        <div class="switch-link">
+          Don't have an account? <a onclick="showPage('createAccountPage')">Register</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+<script>
+  function showPage(pageId) {
+    document.querySelectorAll('.page').forEach(page => {
+      page.classList.remove('active');
+    });
+    document.getElementById(pageId).classList.add('active');
+  }
+
+  // Basic password match validation for create account
+  document.getElementById('createForm').addEventListener('submit', function(e) {
+    const pwd = document.getElementById('password').value;
+    const cpwd = document.getElementById('confirm-password').value;
+    if (pwd !== cpwd) {
+      e.preventDefault();
+      alert('Passwords do not match');
+    }
+  });
+</script>
+
+</body>
+</html>
