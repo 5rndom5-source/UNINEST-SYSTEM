@@ -1,0 +1,21 @@
+import java.io.IOException;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+@WebServlet({"/AddBookingServlet", "/Admin/AddBookingServlet"})
+public class AddBookingServlet extends HttpServlet {
+
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        String addBookingBtn = request.getParameter("addBookingBtn");
+        request.setAttribute("addBookingBtn", addBookingBtn);
+
+        // Redirect to your add booking form when you create it.
+        response.sendRedirect(request.getContextPath() + "/Admin/Booking.html");
+    }
+}

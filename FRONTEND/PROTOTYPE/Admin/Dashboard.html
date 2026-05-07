@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UniNest Admin - Dashboard</title>
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <div class="admin-shell">
+    <aside class="sidebar">
+      <a class="brand" href="Dashboard.html"><img src="uninest-logo.png" alt="UniNest logo"><span>UniNest</span></a>
+      <nav class="nav">
+        <a class="active" href="Dashboard.html"><b class="icon">&#8962;</b><span>Dashboard</span></a>
+        <a href="Booking.html"><b class="icon">&#9635;</b><span>Bookings</span></a>
+        <a href="Students.html"><b class="icon">&#9787;</b><span>Students</span></a>
+        <a href="Rooms.html"><b class="icon">&#9919;</b><span>Rooms</span></a>
+        <a href="Payments.html"><b class="icon">R</b><span>Payments</span></a>
+        <a href="Maintenance.html"><b class="icon">&#9881;</b><span>Maintenance</span></a>
+        <a href="Reporting.html"><b class="icon">&#9632;</b><span>Reporting</span></a>
+        <a href="Settings.html"><b class="icon">&#9881;</b><span>Settings</span></a>
+        <a href="Logout.html"><b class="icon">&#10162;</b><span>Logout</span></a>
+      </nav>
+      <div class="sidebar-footer"><strong>Admin Name</strong><br>admin@uninest.edu</div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <form class="search-form" action="AdminSearchServlet" method="get">
+          <button type="submit" name="searchSubmit" value="global">&#9906;</button>
+          <input type="search" name="globalSearch" placeholder="Search students, rooms, bookings...">
+        </form>
+        <div class="header-actions">
+          <span>&#128276;</span>
+          <form class="profile" action="AdminProfileServlet" method="get">
+            <span class="avatar">&#9711;</span>
+            <select name="profileAction" onchange="this.form.submit()">
+              <option value="">Admin Name</option>
+              <option value="profile">Profile</option>
+              <option value="settings">Settings</option>
+              <option value="logout">Logout</option>
+            </select>
+          </form>
+        </div>
+      </header>
+
+      <section class="content">
+        <div class="page-head">
+          <h1>Dashboard Overview</h1>
+          <form action="GenerateReportServlet" method="post">
+            <input type="hidden" name="reportType" value="dashboardOverview">
+            <button class="btn" type="submit" name="generateReportBtn" value="dashboard">Generate Report</button>
+          </form>
+        </div>
+
+        <section class="grid-4">
+          <article class="card metric"><h3>Current Occupancy</h3><p><strong>92%</strong> - 215 Rooms</p></article>
+          <article class="card metric"><h3>Active Bookings</h3><p>Total: <strong>189</strong></p></article>
+          <article class="card metric"><h3>Pending Maintenance</h3><p>Tickets: <strong>12</strong> Open</p></article>
+          <article class="card metric"><h3>New Applications</h3><p>Total: <strong>34</strong></p></article>
+        </section>
+
+        <section class="dashboard-grid" style="margin-top:24px">
+          <article class="card table-card">
+            <h2>Recent Bookings Table</h2>
+            <table>
+              <thead><tr><th>Student</th><th>Room #</th><th>Check-in Date</th><th>Status</th><th>Action</th></tr></thead>
+              <tbody>
+                <tr><td>LEBOGANG SESING</td><td>B-201</td><td>01 Sep 2023</td><td><span class="badge confirmed">Confirmed</span></td><td><a href="BookingDetailsServlet?bookingId=BKG001">[View]</a></td></tr>
+                <tr><td>AYANDA SAMBO</td><td>A-102</td><td>15 Sep 2023</td><td><span class="badge pending">Pending</span></td><td><a href="BookingDetailsServlet?bookingId=BKG002">[View]</a></td></tr>
+                <tr><td>MASIBULELE SANDLA</td><td>C-303</td><td>10 Jan 2024</td><td><span class="badge cancelled">Cancelled</span></td><td><a href="BookingDetailsServlet?bookingId=BKG003">[View]</a></td></tr>
+                <tr><td>ANNAH RAMETSETSE</td><td>B-205</td><td>01 Oct 2023</td><td><span class="badge pending">Pending</span></td><td><a href="BookingDetailsServlet?bookingId=BKG004">[View]</a></td></tr>
+                <tr><td>MOLEBOGENG RAMUSHU</td><td>A-101</td><td>01 Sep 2023</td><td><span class="badge confirmed">Confirmed</span></td><td><a href="BookingDetailsServlet?bookingId=BKG005">[View]</a></td></tr>
+              </tbody>
+            </table>
+            <form style="padding:22px;text-align:center" action="BookingServlet" method="get">
+              <button class="btn" type="submit" name="viewAllBookingsBtn" value="true">View All Bookings</button>
+            </form>
+          </article>
+
+          <div class="stack">
+            <article class="card pad">
+              <h2>Room Status Overview</h2>
+              <div class="chart-row">
+                <div class="donut room" aria-label="Room status chart"></div>
+                <ul class="legend">
+                  <li><span style="background:var(--teal)"></span>Occupied</li>
+                  <li><span style="background:var(--navy)"></span>Reserved</li>
+                  <li><span style="background:var(--gray)"></span>Vacant</li>
+                </ul>
+              </div>
+            </article>
+            <article class="card table-card">
+              <h2>Maintenance Requests List</h2>
+              <table>
+                <thead><tr><th>Request ID</th><th>Room</th><th>Issue</th><th>Priority</th><th>Action</th></tr></thead>
+                <tbody>
+                  <tr><td>101</td><td>A-101</td><td>Issue</td><td><span class="badge high">High</span></td><td><a href="MaintenanceDetailsServlet?ticketId=101">[View]</a></td></tr>
+                  <tr><td>102</td><td>A-101</td><td>Issue</td><td><span class="badge mid">Mid</span></td><td><a href="MaintenanceDetailsServlet?ticketId=102">[View]</a></td></tr>
+                  <tr><td>103</td><td>A-101</td><td>Issue</td><td><span class="badge low">Low</span></td><td><a href="MaintenanceDetailsServlet?ticketId=103">[View]</a></td></tr>
+                </tbody>
+              </table>
+            </article>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

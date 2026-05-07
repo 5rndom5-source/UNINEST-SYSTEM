@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UniNest Admin - Logout</title>
+  <link rel="stylesheet" href="admin.css">
+  <style>
+    .logout-stage {
+      min-height: calc(100vh - 118px);
+      display: grid;
+      place-items: center;
+      padding: 34px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .logout-stage::before,
+    .logout-stage::after {
+      content: "";
+      position: absolute;
+      border-radius: 999px;
+      filter: blur(2px);
+      opacity: .22;
+      pointer-events: none;
+    }
+
+    .logout-stage::before {
+      width: 420px;
+      height: 420px;
+      right: -120px;
+      top: 60px;
+      background: var(--teal);
+    }
+
+    .logout-stage::after {
+      width: 330px;
+      height: 330px;
+      left: 12%;
+      bottom: -140px;
+      background: var(--blue);
+    }
+
+    .logout-card {
+      width: min(720px, 100%);
+      padding: 38px;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .logout-mark {
+      width: 118px;
+      height: 118px;
+      margin: 0 auto 18px;
+      border-radius: 32px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, rgba(0, 168, 143, .16), rgba(6, 24, 61, .08));
+      border: 2px solid var(--ink);
+      font-size: 54px;
+      color: var(--teal-dark);
+    }
+
+    .logout-card h1 {
+      margin-bottom: 14px;
+      font-size: clamp(36px, 6vw, 64px);
+    }
+
+    .logout-card p {
+      max-width: 520px;
+      margin: 0 auto;
+      color: var(--muted);
+      font-size: 20px;
+      line-height: 1.5;
+    }
+
+    .logout-actions {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-top: 30px;
+    }
+
+    .danger-btn {
+      background: linear-gradient(135deg, #df1f26, #a81219);
+    }
+
+    .logout-meta {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 30px;
+      text-align: left;
+    }
+
+    .logout-meta div {
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #f8fbff;
+    }
+
+    .logout-meta strong {
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    @media (max-width: 760px) {
+      .logout-stage { min-height: 100vh; padding: 18px; }
+      .logout-card { padding: 26px; }
+      .logout-meta { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-shell">
+    <aside class="sidebar">
+      <a class="brand" href="Dashboard.html">
+        <img src="uninest-logo.png" alt="UniNest logo">
+        <span>UniNest</span>
+      </a>
+      <nav class="nav">
+        <a href="Dashboard.html"><b class="icon">&#8962;</b><span>Dashboard</span></a>
+        <a href="Booking.html"><b class="icon">&#9635;</b><span>Bookings</span></a>
+        <a href="Students.html"><b class="icon">&#9787;</b><span>Students</span></a>
+        <a href="Rooms.html"><b class="icon">&#9919;</b><span>Rooms</span></a>
+        <a href="Payments.html"><b class="icon">R</b><span>Payments</span></a>
+        <a href="Maintenance.html"><b class="icon">&#9881;</b><span>Maintenance</span></a>
+        <a href="Reporting.html"><b class="icon">&#9632;</b><span>Reporting</span></a>
+        <a href="Settings.html"><b class="icon">&#9881;</b><span>Settings</span></a>
+        <a class="active" href="Logout.html"><b class="icon">&#10162;</b><span>Logout</span></a>
+      </nav>
+      <div class="sidebar-footer"><strong>Admin Name</strong><br>admin@uninest.edu</div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <form class="search-form" action="AdminSearchServlet" method="get">
+          <button type="submit" name="searchSubmit" value="global">&#9906;</button>
+          <input type="search" name="globalSearch" placeholder="Search students, rooms, bookings...">
+        </form>
+        <div class="header-actions">
+          <span>&#128276;</span>
+          <span class="profile"><span class="avatar">&#9711;</span>Admin Name</span>
+        </div>
+      </header>
+
+      <section class="logout-stage">
+        <article class="card logout-card">
+          <div class="logout-mark">&#10162;</div>
+          <h1>Ready to log out?</h1>
+          <p>You are about to end your UniNest admin session. Any unsaved changes on open forms should be saved before signing out.</p>
+
+          <div class="logout-actions">
+            <form action="LogoutServlet" method="post">
+              <input type="hidden" name="logoutSource" value="adminLogoutPage">
+              <button class="btn danger-btn" type="submit" name="confirmLogoutBtn" value="true">Yes, Log Out</button>
+            </form>
+            <form action="Dashboard.html" method="get">
+              <button class="outline-btn" type="submit" name="cancelLogoutBtn" value="true">Cancel and Return</button>
+            </form>
+          </div>
+
+          <div class="logout-meta">
+            <div><strong>Account</strong><span>Admin Name</span></div>
+            <div><strong>Email</strong><span>admin@uninest.edu</span></div>
+            <div><strong>Session</strong><span>Active admin dashboard</span></div>
+          </div>
+        </article>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

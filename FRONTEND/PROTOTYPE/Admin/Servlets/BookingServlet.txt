@@ -1,0 +1,36 @@
+import java.io.IOException;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+@WebServlet({"/BookingServlet", "/Admin/BookingServlet"})
+public class BookingServlet extends HttpServlet {
+
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        String bookingSearch = request.getParameter("bookingSearch");
+        String bookingSearchBtn = request.getParameter("bookingSearchBtn");
+        String leaseStatus = request.getParameter("leaseStatus");
+        String roomType = request.getParameter("roomType");
+        String dateFrom = request.getParameter("dateFrom");
+        String dateTo = request.getParameter("dateTo");
+        String page = request.getParameter("page");
+        String viewAllBookingsBtn = request.getParameter("viewAllBookingsBtn");
+
+        request.setAttribute("bookingSearch", bookingSearch);
+        request.setAttribute("bookingSearchBtn", bookingSearchBtn);
+        request.setAttribute("leaseStatus", leaseStatus);
+        request.setAttribute("roomType", roomType);
+        request.setAttribute("dateFrom", dateFrom);
+        request.setAttribute("dateTo", dateTo);
+        request.setAttribute("page", page);
+        request.setAttribute("viewAllBookingsBtn", viewAllBookingsBtn);
+
+        // Add SELECT bookings WHERE filters logic here.
+        response.sendRedirect(request.getContextPath() + "/Admin/Booking.html");
+    }
+}

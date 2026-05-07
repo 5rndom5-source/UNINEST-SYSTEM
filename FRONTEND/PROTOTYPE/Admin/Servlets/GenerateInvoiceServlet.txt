@@ -1,0 +1,21 @@
+import java.io.IOException;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+@WebServlet({"/GenerateInvoiceServlet", "/Admin/GenerateInvoiceServlet"})
+public class GenerateInvoiceServlet extends HttpServlet {
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        String generateInvoiceBtn = request.getParameter("generateInvoiceBtn");
+        request.setAttribute("generateInvoiceBtn", generateInvoiceBtn);
+
+        // Add invoice creation logic here.
+        response.sendRedirect(request.getContextPath() + "/Admin/Payments.html");
+    }
+}

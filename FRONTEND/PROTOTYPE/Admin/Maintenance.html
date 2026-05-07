@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UniNest Admin - Maintenance</title>
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <div class="admin-shell">
+    <aside class="sidebar">
+      <a class="brand" href="Dashboard.html"><img src="uninest-logo.png" alt="UniNest logo"><span>UniNest</span></a>
+      <nav class="nav">
+        <a href="Dashboard.html"><b class="icon">&#8962;</b><span>Dashboard</span></a><a href="Booking.html"><b class="icon">&#9635;</b><span>Bookings</span></a><a href="Students.html"><b class="icon">&#9787;</b><span>Students</span></a><a href="Rooms.html"><b class="icon">&#9919;</b><span>Rooms</span></a><a href="Payments.html"><b class="icon">R</b><span>Payments</span></a><a class="active" href="Maintenance.html"><b class="icon">&#9881;</b><span>Maintenance</span></a><a href="Reporting.html"><b class="icon">&#9632;</b><span>Reporting</span></a><a href="Settings.html"><b class="icon">&#9881;</b><span>Settings</span></a><a href="Logout.html"><b class="icon">&#10162;</b><span>Logout</span></a>
+      </nav>
+      <div class="sidebar-footer"><strong>Admin Name</strong><br>admin@uninest.edu</div>
+    </aside>
+    <main class="main">
+      <header class="topbar"><form class="search-form" action="AdminSearchServlet" method="get"><button type="submit" name="searchSubmit" value="global">&#9906;</button><input type="search" name="globalSearch" placeholder="Search students, rooms, bookings..."></form><div class="header-actions"><span>&#128276;</span><span class="profile"><span class="avatar">&#9711;</span>Admin Name</span></div></header>
+      <section class="content">
+        <div class="page-head"><h1>Maintenance Management</h1><form action="CreateTicketServlet" method="get"><button class="btn" type="submit" name="createTicketBtn" value="true">Create Ticket</button></form></div>
+        <form class="filters" action="MaintenanceServlet" method="get">
+          <div class="filter-group"><label for="priority">Priority</label><select id="priority" name="priority"><option value="all">All</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select></div>
+          <div class="filter-group"><label for="ticketType">Type</label><select id="ticketType" name="ticketType"><option value="all">All</option><option value="repair">Repair</option><option value="inspection">Inspection</option><option value="regularService">Regular Service</option></select></div>
+          <div class="filter-group"><label for="ticketStatus">Status</label><select id="ticketStatus" name="ticketStatus"><option value="all">All</option><option value="pending">Pending</option><option value="inProgress">In Progress</option><option value="complete">Complete</option></select></div>
+          <div class="search-compact"><button type="submit" name="ticketSearchBtn" value="true">&#9906;</button><input type="search" name="ticketSearch" placeholder="Search Tickets..."></div>
+        </form>
+        <section class="grid-4">
+          <article class="card metric"><h3>Total Open Tickets</h3><p><strong class="danger">28</strong></p><p>High Priority: <b class="danger">10</b></p><p>Medium: <b class="warning">12</b></p><p>Low: <b style="color:var(--teal)">6</b></p></article>
+          <article class="card pad"><h3>Tickets by Priority</h3><div class="bars"><span style="height:72%;background:var(--danger)"></span><span style="height:86%;background:var(--warning)"></span><span style="height:48%"></span></div><p>High &nbsp; Medium &nbsp; Low</p></article>
+          <article class="card metric"><h3>Average Resolution Time</h3><p><strong>4.5 Days</strong></p><div class="sparkline"></div></article>
+          <article class="card pad"><h3>Ticket Type Distribution</h3><div class="chart-row"><div class="donut type"></div><ul class="legend"><li><span style="background:var(--blue)"></span>Repair</li><li><span style="background:var(--teal)"></span>Regular Service</li><li><span style="background:var(--danger)"></span>Inspection</li></ul></div></article>
+        </section>
+        <div class="page-grid" style="margin-top:22px">
+          <article class="card table-card"><h2>Maintenance Tickets Table</h2><form action="BulkMaintenanceActionServlet" method="post"><table><thead><tr><th><input class="checkbox" type="checkbox" name="selectAllTickets" value="all"></th><th>Ticket ID</th><th>Room #</th><th>Unit Type</th><th>Issue Description</th><th>Request Date</th><th>Reporter</th><th>Priority</th><th>Status</th><th>Actions</th></tr></thead><tbody>
+            <tr><td><input class="checkbox" type="checkbox" name="ticketIds" value="M-A101-1"></td><td>M-A101-1</td><td>A-101</td><td>Studio</td><td>Leaky Faucet</td><td>15 Nov 2023</td><td>Student</td><td><span class="badge high">High</span></td><td><span class="badge complete">Complete</span></td><td><a href="MaintenanceDetailsServlet?ticketId=M-A101-1">[View]</a> <a href="AssignTicketServlet?ticketId=M-A101-1">[Assign]</a> <a href="UpdateTicketStatusServlet?ticketId=M-A101-1">[Status]</a></td></tr>
+            <tr><td><input class="checkbox" type="checkbox" name="ticketIds" value="M-B205-1"></td><td>M-B205-1</td><td>B-205</td><td>1-Bed</td><td>AC Repair</td><td>10 Nov 2023</td><td>Staff</td><td><span class="badge high">High</span></td><td><span class="badge progress">In Progress</span></td><td><a href="MaintenanceDetailsServlet?ticketId=M-B205-1">[View]</a> <a href="AssignTicketServlet?ticketId=M-B205-1">[Assign]</a> <a href="UpdateTicketStatusServlet?ticketId=M-B205-1">[Status]</a></td></tr>
+            <tr><td><input class="checkbox" type="checkbox" name="ticketIds" value="M-A102-1"></td><td>M-A102-1</td><td>A-102</td><td>Shared</td><td>Broken Light</td><td>16 Nov 2023</td><td>Student</td><td><span class="badge low">Low</span></td><td><span class="badge pending">Pending</span></td><td><a href="MaintenanceDetailsServlet?ticketId=M-A102-1">[View]</a> <a href="AssignTicketServlet?ticketId=M-A102-1">[Assign]</a> <a href="UpdateTicketStatusServlet?ticketId=M-A102-1">[Status]</a></td></tr>
+            <tr><td><input class="checkbox" type="checkbox" name="ticketIds" value="M-C303-1"></td><td>M-C303-1</td><td>C-303</td><td>Studio</td><td>Paint Touch-up</td><td>18 Nov 2023</td><td>Student</td><td><span class="badge mid">Medium</span></td><td><span class="badge progress">In Progress</span></td><td><a href="MaintenanceDetailsServlet?ticketId=M-C303-1">[View]</a> <a href="AssignTicketServlet?ticketId=M-C303-1">[Assign]</a> <a href="UpdateTicketStatusServlet?ticketId=M-C303-1">[Status]</a></td></tr>
+          </tbody></table></form><div class="pagination"><span class="current">1</span><a href="MaintenanceServlet?page=2">2</a><a href="MaintenanceServlet?page=3">3</a><span>...</span><a href="MaintenanceServlet?page=10">10</a></div></article>
+          <aside class="stack"><article class="card table-card"><h2>Highest Priority Tickets (Queue)</h2><table><thead><tr><th>Ticket ID</th><th>Room #</th><th>Issue</th><th>Priority</th></tr></thead><tbody><tr><td>M-A101-1</td><td>A-101</td><td>Leaky Faucet</td><td><span class="badge high">High</span></td></tr><tr><td>M-B205-1</td><td>B-205</td><td>AC Repair</td><td><span class="badge high">High</span></td></tr><tr><td>M-A102-1</td><td>A-101</td><td>Leaky Faucet</td><td><span class="badge high">High</span></td></tr></tbody></table></article><article class="card pad"><h2>Tickets Resolved Trend (Month)</h2><div class="bars"><span style="height:64%"></span><span style="height:48%"></span><span style="height:86%"></span><span style="height:38%"></span><span style="height:58%"></span><span style="height:31%"></span></div><p>Jan Feb Mar Apr May Jun</p></article></aside>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

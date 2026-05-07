@@ -1,0 +1,25 @@
+import java.io.IOException;
+import java.util.Arrays;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+@WebServlet({"/BulkMaintenanceActionServlet", "/Admin/BulkMaintenanceActionServlet"})
+public class BulkMaintenanceActionServlet extends HttpServlet {
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        String selectAllTickets = request.getParameter("selectAllTickets");
+        String[] ticketIds = request.getParameterValues("ticketIds");
+
+        request.setAttribute("selectAllTickets", selectAllTickets);
+        request.setAttribute("ticketIds", ticketIds);
+
+        System.out.println("Selected tickets: " + Arrays.toString(ticketIds));
+        response.sendRedirect(request.getContextPath() + "/Admin/Maintenance.html");
+    }
+}

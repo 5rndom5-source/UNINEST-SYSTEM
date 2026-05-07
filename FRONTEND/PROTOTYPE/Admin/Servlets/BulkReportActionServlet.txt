@@ -1,0 +1,25 @@
+import java.io.IOException;
+import java.util.Arrays;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+@WebServlet({"/BulkReportActionServlet", "/Admin/BulkReportActionServlet"})
+public class BulkReportActionServlet extends HttpServlet {
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        String selectAllReports = request.getParameter("selectAllReports");
+        String[] reportIds = request.getParameterValues("reportIds");
+
+        request.setAttribute("selectAllReports", selectAllReports);
+        request.setAttribute("reportIds", reportIds);
+
+        System.out.println("Selected reports: " + Arrays.toString(reportIds));
+        response.sendRedirect(request.getContextPath() + "/Admin/Reporting.html");
+    }
+}

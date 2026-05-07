@@ -1,0 +1,33 @@
+import java.io.IOException;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+@WebServlet({"/GenerateReportServlet", "/Admin/GenerateReportServlet"})
+public class GenerateReportServlet extends HttpServlet {
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        String reportType = request.getParameter("reportType");
+        String generateReportBtn = request.getParameter("generateReportBtn");
+
+        request.setAttribute("reportType", reportType);
+        request.setAttribute("generateReportBtn", generateReportBtn);
+
+        // Add database insert/report generation logic here.
+        response.sendRedirect(request.getContextPath() + "/Admin/Reporting.html");
+    }
+
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        String template = request.getParameter("template");
+        request.setAttribute("template", template);
+        response.sendRedirect(request.getContextPath() + "/Admin/Reporting.html");
+    }
+}

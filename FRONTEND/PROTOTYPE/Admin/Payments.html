@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UniNest Admin - Payments</title>
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <div class="admin-shell">
+    <aside class="sidebar">
+      <a class="brand" href="Dashboard.html"><img src="uninest-logo.png" alt="UniNest logo"><span>UniNest</span></a>
+      <nav class="nav">
+        <a href="Dashboard.html"><b class="icon">&#8962;</b><span>Dashboard</span></a><a href="Booking.html"><b class="icon">&#9635;</b><span>Bookings</span></a><a href="Students.html"><b class="icon">&#9787;</b><span>Students</span></a><a href="Rooms.html"><b class="icon">&#9919;</b><span>Rooms</span></a><a class="active" href="Payments.html"><b class="icon">R</b><span>Payments</span></a><a href="Maintenance.html"><b class="icon">&#9881;</b><span>Maintenance</span></a><a href="Reporting.html"><b class="icon">&#9632;</b><span>Reporting</span></a><a href="Settings.html"><b class="icon">&#9881;</b><span>Settings</span></a><a href="Logout.html"><b class="icon">&#10162;</b><span>Logout</span></a>
+      </nav>
+      <div class="sidebar-footer"><strong>Admin Name</strong><br>admin@uninest.edu</div>
+    </aside>
+    <main class="main">
+      <header class="topbar"><form class="search-form" action="AdminSearchServlet" method="get"><button type="submit" name="searchSubmit" value="global">&#9906;</button><input type="search" name="globalSearch" placeholder="Search students, rooms, bookings..."></form><div class="header-actions"><span>&#128276;</span><span class="profile"><span class="avatar">&#9711;</span>Admin Name</span></div></header>
+      <section class="content">
+        <div class="page-head"><h1>Payments Management</h1><form action="GenerateInvoiceServlet" method="post"><button class="btn" type="submit" name="generateInvoiceBtn" value="true">Generate Invoice</button></form></div>
+        <form class="filters" action="PaymentServlet" method="get">
+          <div class="filter-group"><label for="invoiceType">Invoice Type</label><select id="invoiceType" name="invoiceType"><option value="all">All</option><option value="deposit">Deposit</option><option value="monthly">Monthly</option><option value="penalty">Penalty</option></select></div>
+          <div class="filter-group"><label for="paymentStatus">Status</label><select id="paymentStatus" name="paymentStatus"><option value="all">All</option><option value="paid">Paid</option><option value="pending">Pending</option><option value="overdue">Overdue</option></select></div>
+          <div class="search-compact"><button type="submit" name="invoiceSearchBtn" value="true">&#9906;</button><input type="search" name="invoiceSearch" placeholder="Search Invoices..."></div>
+        </form>
+        <section class="grid-4">
+          <article class="card metric"><h3>Revenue (This Month)</h3><p>Total: <strong>R35,000</strong></p><p>Paid: <strong>R28,000</strong></p><p>Pending: <strong class="warning">R7,000</strong></p></article>
+          <article class="card pad"><h3>Invoices vs Payments</h3><div class="chart-row"><div class="donut revenue"></div><ul class="legend"><li><span style="background:var(--teal)"></span>Paid</li><li><span style="background:var(--warning)"></span>Pending</li><li><span style="background:var(--danger)"></span>Overdue</li></ul></div></article>
+          <article class="card metric"><h3>Outstanding Payments</h3><p>Total Overdue Amount:</p><p><strong class="danger">R15,000</strong></p><p>Overdue Count: <b>8 Invoices</b></p></article>
+          <article class="card pad"><h3>Revenue by Source</h3><div class="chart-row"><div class="donut revenue"></div><ul class="legend"><li><span style="background:var(--teal)"></span>Rent</li><li><span style="background:var(--blue)"></span>Deposit</li><li><span style="background:var(--danger)"></span>Penalties</li></ul></div></article>
+        </section>
+        <div class="page-grid" style="margin-top:22px">
+          <article class="card table-card"><h2>Invoices Table</h2><form action="BulkInvoiceActionServlet" method="post"><table><thead><tr><th><input class="checkbox" type="checkbox" name="selectAllInvoices" value="all"></th><th>Invoice ID</th><th>Student</th><th>Unit Type</th><th>Description</th><th>Amount</th><th>Due Date</th><th>Payment Date</th><th>Status</th><th>Actions</th></tr></thead><tbody>
+            <tr><td><input class="checkbox" type="checkbox" name="invoiceIds" value="INV-A101-1"></td><td>INV-A101-1</td><td>LEBOGANG SESING</td><td>A-101</td><td>Monthly Rent</td><td>R1,500</td><td>01 Nov 2023</td><td>01 Nov 2023</td><td><span class="badge paid">Paid</span></td><td><a href="InvoiceDetailsServlet?invoiceId=INV-A101-1">[View]</a> <a href="EmailInvoiceServlet?invoiceId=INV-A101-1">[Email]</a> <a href="VoidInvoiceServlet?invoiceId=INV-A101-1">[Void]</a></td></tr>
+            <tr><td><input class="checkbox" type="checkbox" name="invoiceIds" value="INV-B205-1"></td><td>INV-B205-1</td><td>AYANDA SAMBO</td><td>B-205</td><td>Deposit</td><td>R1,200</td><td>15 Oct 2023</td><td>--</td><td><span class="badge overdue">Overdue</span></td><td><a href="InvoiceDetailsServlet?invoiceId=INV-B205-1">[View]</a> <a href="EmailInvoiceServlet?invoiceId=INV-B205-1">[Email]</a> <a href="VoidInvoiceServlet?invoiceId=INV-B205-1">[Void]</a></td></tr>
+            <tr><td><input class="checkbox" type="checkbox" name="invoiceIds" value="INV-A102-1"></td><td>INV-A102-1</td><td>MASIBULELE SANDLA</td><td>A-102</td><td>Monthly Rent</td><td>R750</td><td>01 Nov 2023</td><td>05 Nov 2023</td><td><span class="badge paid">Paid</span></td><td><a href="InvoiceDetailsServlet?invoiceId=INV-A102-1">[View]</a> <a href="EmailInvoiceServlet?invoiceId=INV-A102-1">[Email]</a> <a href="VoidInvoiceServlet?invoiceId=INV-A102-1">[Void]</a></td></tr>
+            <tr><td><input class="checkbox" type="checkbox" name="invoiceIds" value="INV-C303-1"></td><td>INV-C303-1</td><td>ANNAH RAMETSETSE</td><td>C-303</td><td>Monthly Rent</td><td>R1,500</td><td>10 Nov 2023</td><td>--</td><td><span class="badge pending">Pending</span></td><td><a href="InvoiceDetailsServlet?invoiceId=INV-C303-1">[View]</a> <a href="EmailInvoiceServlet?invoiceId=INV-C303-1">[Email]</a> <a href="VoidInvoiceServlet?invoiceId=INV-C303-1">[Void]</a></td></tr>
+          </tbody></table></form><div class="pagination"><span class="current">1</span><a href="PaymentServlet?page=2">2</a><a href="PaymentServlet?page=3">3</a><span>...</span><a href="PaymentServlet?page=10">10</a></div></article>
+          <aside class="stack"><article class="card table-card"><h2>Overdue Accounts</h2><table><thead><tr><th>Room #</th><th>Overdue Amount</th><th>Priority</th></tr></thead><tbody><tr><td>A-101<br><small>LEBOGANG SESING</small></td><td>R500 30+</td><td><span class="badge high">High</span></td></tr><tr><td>B-205<br><small>AYANDA SAMBO</small></td><td>R200 15</td><td><span class="badge mid">Mid</span></td></tr><tr><td>C-212<br><small>MASIBULELE SANDLA</small></td><td>R50 5</td><td><span class="badge low">Low</span></td></tr></tbody></table></article><article class="card pad"><h2>Quarterly Revenue Growth</h2><div class="bars"><span style="height:42%"></span><span style="height:58%"></span><span style="height:80%"></span><span style="height:96%"></span></div><p>Q1 &nbsp; Q2 &nbsp; Q3 &nbsp; Q4</p></article></aside>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

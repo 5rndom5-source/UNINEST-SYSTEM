@@ -1,0 +1,47 @@
+import java.io.IOException;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+@WebServlet({"/SettingsServlet", "/Admin/SettingsServlet"})
+public class SettingsServlet extends HttpServlet {
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        String systemName = request.getParameter("systemName");
+        String academicYear = request.getParameter("academicYear");
+        String currency = request.getParameter("currency");
+        String notifyBookings = request.getParameter("notifyBookings");
+        String paymentReminders = request.getParameter("paymentReminders");
+        String maintenanceAlerts = request.getParameter("maintenanceAlerts");
+        String fromEmail = request.getParameter("fromEmail");
+        String replyToEmail = request.getParameter("replyToEmail");
+        String twoFactorEnabled = request.getParameter("twoFactorEnabled");
+        String sessionTimeout = request.getParameter("sessionTimeout");
+        String saveSettingsBtn = request.getParameter("saveSettingsBtn");
+
+        boolean notifyBookingsEnabled = notifyBookings != null;
+        boolean paymentRemindersEnabled = paymentReminders != null;
+        boolean maintenanceAlertsEnabled = maintenanceAlerts != null;
+        boolean twoFactorEnabledValue = twoFactorEnabled != null;
+
+        request.setAttribute("systemName", systemName);
+        request.setAttribute("academicYear", academicYear);
+        request.setAttribute("currency", currency);
+        request.setAttribute("notifyBookingsEnabled", notifyBookingsEnabled);
+        request.setAttribute("paymentRemindersEnabled", paymentRemindersEnabled);
+        request.setAttribute("maintenanceAlertsEnabled", maintenanceAlertsEnabled);
+        request.setAttribute("fromEmail", fromEmail);
+        request.setAttribute("replyToEmail", replyToEmail);
+        request.setAttribute("twoFactorEnabledValue", twoFactorEnabledValue);
+        request.setAttribute("sessionTimeout", sessionTimeout);
+        request.setAttribute("saveSettingsBtn", saveSettingsBtn);
+
+        // Add UPDATE settings table logic here.
+        response.sendRedirect(request.getContextPath() + "/Admin/Settings.html");
+    }
+}

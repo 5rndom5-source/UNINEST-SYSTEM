@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UniNest Admin - Reporting</title>
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <div class="admin-shell">
+    <aside class="sidebar">
+      <a class="brand" href="Dashboard.html"><img src="uninest-logo.png" alt="UniNest logo"><span>UniNest</span></a>
+      <nav class="nav">
+        <a href="Dashboard.html"><b class="icon">&#8962;</b><span>Dashboard</span></a><a href="Booking.html"><b class="icon">&#9635;</b><span>Bookings</span></a><a href="Students.html"><b class="icon">&#9787;</b><span>Students</span></a><a href="Rooms.html"><b class="icon">&#9919;</b><span>Rooms</span></a><a href="Payments.html"><b class="icon">R</b><span>Payments</span></a><a href="Maintenance.html"><b class="icon">&#9881;</b><span>Maintenance</span></a><a class="active" href="Reporting.html"><b class="icon">&#9632;</b><span>Reporting</span></a><a href="Settings.html"><b class="icon">&#9881;</b><span>Settings</span></a><a href="Logout.html"><b class="icon">&#10162;</b><span>Logout</span></a>
+      </nav>
+      <div class="sidebar-footer"><strong>Admin Name</strong><br>admin@uninest.edu</div>
+    </aside>
+    <main class="main">
+      <header class="topbar"><form class="search-form" action="AdminSearchServlet" method="get"><button type="submit" name="searchSubmit" value="global">&#9906;</button><input type="search" name="globalSearch" placeholder="Search students, rooms, bookings..."></form><div class="header-actions"><span>&#128276;</span><span class="profile"><span class="avatar">&#9711;</span>Admin Name</span></div></header>
+      <section class="content">
+        <div class="page-head"><h1>Reporting &amp; Analytics</h1><form action="GenerateReportServlet" method="post"><button class="btn" type="submit" name="generateReportBtn" value="new">Generate New Report</button></form></div>
+        <form class="filters" action="ReportServlet" method="get">
+          <div class="filter-group"><label for="reportType">Report Type</label><select id="reportType" name="reportType"><option value="all">All</option><option value="revenue">Revenue</option><option value="occupancy">Occupancy</option><option value="maintenance">Maintenance</option><option value="demographics">Demographics</option></select></div>
+          <div class="filter-group"><label for="reportStatus">Status</label><select id="reportStatus" name="reportStatus"><option value="all">All</option><option value="complete">Complete</option><option value="processing">Processing</option><option value="expired">Expired</option></select></div>
+          <div class="search-compact"><button type="submit" name="reportSearchBtn" value="true">&#9906;</button><input type="search" name="reportSearch" placeholder="Search Reports..."></div>
+        </form>
+        <section class="grid-4">
+          <article class="card pad"><h3>Q3 Performance Overview KPIs</h3><p>Period: Q3 2023</p><p>Total Students: <b>450</b> <span style="color:green">(+2% YoY)</span></p><p>Occupancy Rate: <b>96%</b> <span style="color:green">(+1% YoY)</span></p><div class="sparkline"></div></article>
+          <article class="card pad"><h3>Period Revenue &amp; Payments</h3><p>Q3 2023</p><p>Total Revenue: <b>R150k</b></p><p>Payment Collection: <b>99%</b></p><div class="chart-row"><div class="donut revenue"></div><ul class="legend"><li><span style="background:var(--teal)"></span>Rent</li><li><span style="background:var(--blue)"></span>Utilities</li><li><span style="background:var(--warning)"></span>Fees</li></ul></div></article>
+          <article class="card pad"><h3>Maintenance Operations Report</h3><p>Q3 2023</p><p>Total Tickets Resolved: <b>45</b></p><p>Avg Resolution Time: <b>2.1 days</b></p><div class="bars"><span style="height:70%;background:var(--danger)"></span><span style="height:45%;background:var(--warning)"></span><span style="height:62%"></span><span style="height:32%;background:var(--warning)"></span><span style="height:60%"></span><span style="height:38%;background:var(--danger)"></span></div></article>
+          <article class="card pad"><h3>Student Demographics Summary</h3><p>Diversity Score: <b>85</b></p><p>Top Home Country: <b>Nigeria</b></p><div class="chart-row"><div class="donut"></div><ul class="legend"><li><span style="background:var(--teal)"></span>Computer Science</li><li><span style="background:var(--blue)"></span>Business</li><li><span style="background:var(--warning)"></span>Engineering</li><li><span style="background:var(--danger)"></span>Other</li></ul></div></article>
+        </section>
+        <div class="page-grid" style="margin-top:22px">
+          <article class="card table-card"><h2>Reports Inventory</h2><form action="BulkReportActionServlet" method="post"><table><thead><tr><th><input class="checkbox" type="checkbox" name="selectAllReports" value="all"></th><th>Report ID</th><th>Report Name</th><th>Description</th><th>Period</th><th>Date Generated</th><th>Status</th><th>Actions</th></tr></thead><tbody>
+            <tr><td><input class="checkbox" type="checkbox" name="reportIds" value="REP-Q3-REV01"></td><td>REP-Q3-REV01</td><td>Quarterly Revenue Q3</td><td>Financial breakdown</td><td>Q3 2023</td><td>15 Oct 2023</td><td><span class="badge complete">Complete</span></td><td><a href="ReportDetailsServlet?reportId=REP-Q3-REV01">[View]</a> <a href="DownloadReportServlet?reportId=REP-Q3-REV01">[Download]</a></td></tr>
+            <tr><td><input class="checkbox" type="checkbox" name="reportIds" value="REP-AUG-OCC02"></td><td>REP-AUG-OCC02</td><td>August Occupancy</td><td>Detailed room occupancy data</td><td>Aug 2023</td><td>10 Sep 2023</td><td><span class="badge pending">Processing</span></td><td><a href="ReportDetailsServlet?reportId=REP-AUG-OCC02">[View]</a> <a href="ReportDetailsServlet?reportId=REP-AUG-OCC02">[Details]</a></td></tr>
+            <tr><td><input class="checkbox" type="checkbox" name="reportIds" value="REP-SEP-MNT03"></td><td>REP-SEP-MNT03</td><td>Maintenance Ticket Summary</td><td>Analysis of ticket resolution</td><td>Sep 2023</td><td>Expired</td><td><span class="badge expired">Expired</span></td><td><a href="DownloadReportServlet?reportId=REP-SEP-MNT03">[Download]</a></td></tr>
+            <tr><td><input class="checkbox" type="checkbox" name="reportIds" value="REP-Q2-DEM04"></td><td>REP-Q2-DEM04</td><td>Student Demographics Q2</td><td>Program and background report</td><td>Q2 2023</td><td>20 Jul 2023</td><td><span class="badge complete">Complete</span></td><td><a href="ReportDetailsServlet?reportId=REP-Q2-DEM04">[View]</a> <a href="DownloadReportServlet?reportId=REP-Q2-DEM04">[Download]</a></td></tr>
+          </tbody></table></form><div class="pagination"><span class="current">1</span><a href="ReportServlet?page=2">2</a><a href="ReportServlet?page=3">3</a><span>...</span><a href="ReportServlet?page=10">10</a></div></article>
+          <aside class="stack"><article class="card pad"><h2>Reporting Quick Links</h2><p><a href="GenerateReportServlet?template=monthlyFinancials">Monthly Financials August</a></p><br><p><a href="GenerateReportServlet?template=annualDemographics">Annual Demographics</a></p><br><p><a href="ReportServlet?status=expired">Overdue Report Expire</a></p></article><article class="card pad"><h2>Quarterly Performance Metric</h2><div class="bars"><span style="height:62%"></span><span style="height:50%"></span><span style="height:84%"></span><span style="height:42%"></span><span style="height:58%"></span><span style="height:30%"></span></div><p>Jan Feb Mar Apr May Jun</p></article></aside>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

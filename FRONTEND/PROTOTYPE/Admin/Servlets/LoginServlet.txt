@@ -1,0 +1,33 @@
+import java.io.IOException;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+@WebServlet({"/LoginServlet", "/Admin/LoginServlet"})
+public class LoginServlet extends HttpServlet {
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        String adminEmail = request.getParameter("adminEmail");
+        String adminPassword = request.getParameter("adminPassword");
+        String rememberMe = request.getParameter("rememberMe");
+        String loginBtn = request.getParameter("loginBtn");
+
+        if ("admin@uninest.edu".equals(adminEmail) && "12345".equals(adminPassword)) {
+            HttpSession session = request.getSession();
+            session.setAttribute("adminEmail", adminEmail);
+            session.setAttribute("rememberMe", rememberMe != null);
+            session.setAttribute("loginBtn", loginBtn);
+            response.sendRedirect(request.getContextPath() + "/Admin/Dashboard.html");
+        } else {
+            response.setContentType("text/html");
+            response.getWriter().println("<h3>Invalid admin login details</h3>");
+            response.getWriter().println("<a href='" + request.getContextPath() + "/Admin/admin.html'>Try again</a>");
+        }
+    }
+}

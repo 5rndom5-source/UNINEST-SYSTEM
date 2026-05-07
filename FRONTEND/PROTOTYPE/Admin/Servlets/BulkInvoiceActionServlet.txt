@@ -1,0 +1,25 @@
+import java.io.IOException;
+import java.util.Arrays;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+@WebServlet({"/BulkInvoiceActionServlet", "/Admin/BulkInvoiceActionServlet"})
+public class BulkInvoiceActionServlet extends HttpServlet {
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        String selectAllInvoices = request.getParameter("selectAllInvoices");
+        String[] invoiceIds = request.getParameterValues("invoiceIds");
+
+        request.setAttribute("selectAllInvoices", selectAllInvoices);
+        request.setAttribute("invoiceIds", invoiceIds);
+
+        System.out.println("Selected invoices: " + Arrays.toString(invoiceIds));
+        response.sendRedirect(request.getContextPath() + "/Admin/Payments.html");
+    }
+}

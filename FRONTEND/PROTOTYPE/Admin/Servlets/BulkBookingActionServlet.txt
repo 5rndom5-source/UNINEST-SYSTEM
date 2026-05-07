@@ -1,0 +1,26 @@
+import java.io.IOException;
+import java.util.Arrays;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+@WebServlet({"/BulkBookingActionServlet", "/Admin/BulkBookingActionServlet"})
+public class BulkBookingActionServlet extends HttpServlet {
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        String selectAllBookings = request.getParameter("selectAllBookings");
+        String[] bookingIds = request.getParameterValues("bookingIds");
+
+        request.setAttribute("selectAllBookings", selectAllBookings);
+        request.setAttribute("bookingIds", bookingIds);
+
+        // Example: update/delete/export selected bookings.
+        System.out.println("Selected bookings: " + Arrays.toString(bookingIds));
+        response.sendRedirect(request.getContextPath() + "/Admin/Booking.html");
+    }
+}

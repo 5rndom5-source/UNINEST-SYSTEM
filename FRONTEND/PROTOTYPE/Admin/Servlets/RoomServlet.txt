@@ -1,0 +1,32 @@
+import java.io.IOException;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+@WebServlet({"/RoomServlet", "/Admin/RoomServlet"})
+public class RoomServlet extends HttpServlet {
+
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        String roomSearch = request.getParameter("roomSearch");
+        String roomSearchBtn = request.getParameter("roomSearchBtn");
+        String roomType = request.getParameter("roomType");
+        String roomStatus = request.getParameter("roomStatus");
+        String filterOpen = request.getParameter("filterOpen");
+        String page = request.getParameter("page");
+
+        request.setAttribute("roomSearch", roomSearch);
+        request.setAttribute("roomSearchBtn", roomSearchBtn);
+        request.setAttribute("roomType", roomType);
+        request.setAttribute("roomStatus", roomStatus);
+        request.setAttribute("filterOpen", filterOpen);
+        request.setAttribute("page", page);
+
+        // Add SELECT rooms WHERE filters logic here.
+        response.sendRedirect(request.getContextPath() + "/Admin/Rooms.html");
+    }
+}

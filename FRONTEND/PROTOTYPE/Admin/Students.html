@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UniNest Admin - Students</title>
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <div class="admin-shell">
+    <aside class="sidebar">
+      <a class="brand" href="Dashboard.html"><img src="uninest-logo.png" alt="UniNest logo"><span>UniNest</span></a>
+      <nav class="nav">
+        <a href="Dashboard.html"><b class="icon">&#8962;</b><span>Dashboard</span></a>
+        <a href="Booking.html"><b class="icon">&#9635;</b><span>Bookings</span></a>
+        <a class="active" href="Students.html"><b class="icon">&#9787;</b><span>Students</span></a>
+        <a href="Rooms.html"><b class="icon">&#9919;</b><span>Rooms</span></a>
+        <a href="Payments.html"><b class="icon">R</b><span>Payments</span></a>
+        <a href="Maintenance.html"><b class="icon">&#9881;</b><span>Maintenance</span></a>
+        <a href="Reporting.html"><b class="icon">&#9632;</b><span>Reporting</span></a>
+        <a href="Settings.html"><b class="icon">&#9881;</b><span>Settings</span></a>
+        <a href="Logout.html"><b class="icon">&#10162;</b><span>Logout</span></a>
+      </nav>
+      <div class="sidebar-footer"><strong>Admin Name</strong><br>admin@uninest.edu</div>
+    </aside>
+    <main class="main">
+      <header class="topbar">
+        <form class="search-form" action="AdminSearchServlet" method="get"><button type="submit" name="searchSubmit" value="global">&#9906;</button><input type="search" name="globalSearch" placeholder="Search students, rooms, bookings..."></form>
+        <div class="header-actions"><span>&#128276;</span><span class="profile"><span class="avatar">&#9711;</span>Admin Name</span></div>
+      </header>
+      <section class="content">
+        <div class="page-head">
+          <h1>Students Management</h1>
+          <form action="AddStudentServlet" method="get"><button class="btn" type="submit" name="addStudentBtn" value="true">Add New Student</button></form>
+        </div>
+        <form class="filters" action="StudentServlet" method="get">
+          <div class="search-compact"><button type="submit" name="studentSearchBtn" value="true">&#9906;</button><input type="search" name="studentSearch" placeholder="Search Students..."></div>
+          <div class="filter-group"><label for="studentStatus">Status</label><select id="studentStatus" name="studentStatus"><option value="all">All</option><option value="active">Active</option><option value="graduated">Graduated</option><option value="onHold">On Hold</option><option value="alumni">Alumni</option></select></div>
+          <div class="filter-group"><label for="program">Program</label><select id="program" name="program"><option value="all">All</option><option value="itAppDev">IT-APP DEV</option><option value="business">Business</option><option value="engineering">Engineering</option></select></div>
+        </form>
+        <div class="page-grid">
+          <article class="card table-card">
+            <h2>Detailed Students Table</h2>
+            <form action="BulkStudentActionServlet" method="post">
+              <table>
+                <thead><tr><th><input class="checkbox" type="checkbox" name="selectAllStudents" value="all"></th><th>Student</th><th>Student ID</th><th>Program</th><th>Check-In</th><th>Check-Out</th><th>Status</th><th>Actions</th></tr></thead>
+                <tbody>
+                  <tr><td><input class="checkbox" type="checkbox" name="studentIds" value="ID1234"></td><td>LEBOGANG SESING</td><td>ID1234</td><td>IT-APP DEV</td><td>15 Sep 2026</td><td>15 Aug 2027</td><td><span class="badge active">Active</span></td><td class="actions"><a href="EditStudentServlet?studentId=ID1234">[Edit]</a><a href="StudentProfileServlet?studentId=ID1234">[View Profile]</a></td></tr>
+                  <tr><td><input class="checkbox" type="checkbox" name="studentIds" value="ID4567"></td><td>AYANDA SAMBO</td><td>ID4567</td><td>IT-APP DEV</td><td>01 Oct 2026</td><td>31 Jul 2027</td><td><span class="badge onhold">On Hold</span></td><td class="actions"><a href="ApproveStudentServlet?studentId=ID4567">[Approve]</a><a href="StudentProfileServlet?studentId=ID4567">[View Profile]</a></td></tr>
+                  <tr><td><input class="checkbox" type="checkbox" name="studentIds" value="ID8910"></td><td>MASIBULELE SANDLA</td><td>ID8910</td><td>IT-APP DEV</td><td>01 Sep 2026</td><td>31 Jul 2027</td><td><span class="badge graduated">Graduated</span></td><td class="actions"><a href="StudentProfileServlet?studentId=ID8910">[View Profile]</a><a href="AlumniServlet?studentId=ID8910">[Alumni]</a></td></tr>
+                  <tr><td><input class="checkbox" type="checkbox" name="studentIds" value="ID2345"></td><td>ANNAH RAMETSETSE</td><td>ID2345</td><td>IT-APP DEV</td><td>10 Jan 2026</td><td>31 May 2027</td><td><span class="badge active">Active</span></td><td class="actions"><a href="EditStudentServlet?studentId=ID2345">[Edit]</a><a href="StudentProfileServlet?studentId=ID2345">[View Profile]</a></td></tr>
+                  <tr><td><input class="checkbox" type="checkbox" name="studentIds" value="ID6789"></td><td>MOLEBOGENG RAMUSHU</td><td>ID6789</td><td>IT-APP DEV</td><td>15 Sep 2026</td><td>15 Aug 2027</td><td><span class="badge alumni">Alumni</span></td><td class="actions"><a href="StudentDetailsServlet?studentId=ID6789">[View Details]</a><a href="ReconnectStudentServlet?studentId=ID6789">[Reconnect]</a></td></tr>
+                </tbody>
+              </table>
+            </form>
+            <div class="pagination"><button>&lt;</button><span class="current">1</span><a href="StudentServlet?page=2">2</a><a href="StudentServlet?page=3">3</a><span>...</span><a href="StudentServlet?page=10">10</a><button>&gt;</button></div>
+          </article>
+          <aside class="stack">
+            <article class="card pad"><h2>Student Status Breakdown</h2><div class="chart-row"><div class="donut"></div><ul class="legend"><li><span style="background:var(--teal)"></span>Active</li><li><span style="background:var(--warning)"></span>On Hold</li><li><span style="background:var(--danger)"></span>Graduated</li><li><span style="background:var(--blue)"></span>Alumni</li></ul></div></article>
+            <article class="card table-card"><h2>New Student Applications</h2><table><thead><tr><th>Actions</th></tr></thead><tbody><tr><td>New Applications: 12</td></tr><tr><td>Pending Review: 5</td></tr></tbody></table></article>
+            <article class="card pad"><h2>Student Population Trend (Month)</h2><div class="bars"><span style="height:42%"></span><span style="height:58%"></span><span style="height:76%"></span><span style="height:94%"></span></div><p>Jul &nbsp; Aug &nbsp; Sep &nbsp; Oct</p></article>
+          </aside>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

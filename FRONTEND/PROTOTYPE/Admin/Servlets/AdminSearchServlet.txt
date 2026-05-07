@@ -1,0 +1,28 @@
+import java.io.IOException;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+@WebServlet({"/AdminSearchServlet", "/Admin/AdminSearchServlet"})
+public class AdminSearchServlet extends HttpServlet {
+
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        String globalSearch = request.getParameter("globalSearch");
+        String searchSubmit = request.getParameter("searchSubmit");
+
+        request.setAttribute("globalSearch", globalSearch);
+        request.setAttribute("searchSubmit", searchSubmit);
+
+        // Change this redirect if you create a dedicated search results page.
+        response.sendRedirect(request.getContextPath() + "/Admin/Dashboard.html?globalSearch=" + safe(globalSearch));
+    }
+
+    private String safe(String value) {
+        return value == null ? "" : value.replace(" ", "+");
+    }
+}

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UniNest Admin - Bookings</title>
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <div class="admin-shell">
+    <aside class="sidebar">
+      <a class="brand" href="Dashboard.html"><img src="uninest-logo.png" alt="UniNest logo"><span>UniNest</span></a>
+      <nav class="nav">
+        <a href="Dashboard.html"><b class="icon">&#8962;</b><span>Dashboard</span></a>
+        <a class="active" href="Booking.html"><b class="icon">&#9635;</b><span>Bookings</span></a>
+        <a href="Students.html"><b class="icon">&#9787;</b><span>Students</span></a>
+        <a href="Rooms.html"><b class="icon">&#9919;</b><span>Rooms</span></a>
+        <a href="Payments.html"><b class="icon">R</b><span>Payments</span></a>
+        <a href="Maintenance.html"><b class="icon">&#9881;</b><span>Maintenance</span></a>
+        <a href="Reporting.html"><b class="icon">&#9632;</b><span>Reporting</span></a>
+        <a href="Settings.html"><b class="icon">&#9881;</b><span>Settings</span></a>
+        <a href="Logout.html"><b class="icon">&#10162;</b><span>Logout</span></a>
+      </nav>
+      <div class="sidebar-footer"><strong>Admin Name</strong><br>admin@uninest.edu</div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <form class="search-form" action="AdminSearchServlet" method="get">
+          <button type="submit" name="searchSubmit" value="global">&#9906;</button>
+          <input type="search" name="globalSearch" placeholder="Search students, rooms, bookings...">
+        </form>
+        <div class="header-actions"><span>&#128276;</span><span class="profile"><span class="avatar">&#9711;</span>Admin Name</span></div>
+      </header>
+
+      <section class="content">
+        <div class="page-head">
+          <h1>Bookings Management</h1>
+          <form action="AddBookingServlet" method="get"><button class="btn" type="submit" name="addBookingBtn" value="true">Add New Booking</button></form>
+        </div>
+
+        <form class="filters" action="BookingServlet" method="get">
+          <div class="search-compact"><button type="submit" name="bookingSearchBtn" value="true">&#9906;</button><input type="search" name="bookingSearch" placeholder="Search Bookings..."></div>
+          <div class="filter-group"><label for="leaseStatus">Lease Status</label><select id="leaseStatus" name="leaseStatus"><option value="all">All</option><option value="confirmed">Confirmed</option><option value="pending">Pending</option><option value="cancelled">Cancelled</option></select></div>
+          <div class="filter-group"><label for="roomType">Room Type</label><select id="roomType" name="roomType"><option value="all">All</option><option value="studio">Studio</option><option value="oneBed">1-Bed</option><option value="shared">Shared</option></select></div>
+          <div class="filter-group"><label for="dateFrom">Date Range</label><input id="dateFrom" type="date" name="dateFrom"><input type="date" name="dateTo"></div>
+        </form>
+
+        <div class="page-grid">
+          <article class="card table-card">
+            <h2>Detailed Bookings Table</h2>
+            <form action="BulkBookingActionServlet" method="post">
+              <table>
+                <thead><tr><th><input class="checkbox" type="checkbox" name="selectAllBookings" value="all"></th><th>Student</th><th>Student ID</th><th>Room</th><th>Term (Mo)</th><th>Check-In</th><th>Check-Out</th><th>Deposit Paid</th><th>Status</th><th>Actions</th></tr></thead>
+                <tbody>
+                  <tr><td><input class="checkbox" type="checkbox" name="bookingIds" value="BKG001"></td><td>LEBOGANG SESING</td><td>250017822</td><td>Unit B-201</td><td>12</td><td>01 Sep 2023</td><td>31 Aug 2024</td><td>R1,200</td><td><span class="badge confirmed">Confirmed</span></td><td class="actions"><a href="EditBookingServlet?bookingId=BKG001">[Edit]</a><a href="BookingDetailsServlet?bookingId=BKG001">[View]</a></td></tr>
+                  <tr><td><input class="checkbox" type="checkbox" name="bookingIds" value="BKG002"></td><td>AYANDA SAMBO</td><td>231176007</td><td>Unit A-102</td><td>12</td><td>15 Sep 2023</td><td>15 Aug 2024</td><td>R1,300</td><td><span class="badge pending">Pending</span></td><td class="actions"><a href="EditBookingServlet?bookingId=BKG002">[Edit]</a><a href="BookingDetailsServlet?bookingId=BKG002">[View]</a></td></tr>
+                  <tr><td><input class="checkbox" type="checkbox" name="bookingIds" value="BKG003"></td><td>MASIBULELE SANDLA</td><td>223149772</td><td>Unit C-303</td><td>10</td><td>10 Jan 2024</td><td>31 May 2024</td><td>R750</td><td><span class="badge cancelled">Cancelled</span></td><td class="actions"><a href="EditBookingServlet?bookingId=BKG003">[Edit]</a><a href="BookingDetailsServlet?bookingId=BKG003">[View]</a></td></tr>
+                  <tr><td><input class="checkbox" type="checkbox" name="bookingIds" value="BKG004"></td><td>ANNAH RAMETSETSE</td><td>240711939</td><td>Unit B-205</td><td>10</td><td>01 Oct 2023</td><td>31 Jul 2024</td><td>R1,200</td><td><span class="badge pending">Pending</span></td><td class="actions"><a href="EditBookingServlet?bookingId=BKG004">[Edit]</a><a href="BookingDetailsServlet?bookingId=BKG004">[View]</a></td></tr>
+                  <tr><td><input class="checkbox" type="checkbox" name="bookingIds" value="BKG005"></td><td>MOLEBOGENG RAMUSHU</td><td>241178630</td><td>Unit A-101</td><td>11</td><td>01 Sep 2023</td><td>31 Jul 2024</td><td>R1,100</td><td><span class="badge confirmed">Confirmed</span></td><td class="actions"><a href="EditBookingServlet?bookingId=BKG005">[Edit]</a><a href="BookingDetailsServlet?bookingId=BKG005">[View]</a></td></tr>
+                </tbody>
+              </table>
+            </form>
+            <div class="pagination"><button name="page" value="prev">&lt;</button><span class="current">1</span><a href="BookingServlet?page=2">2</a><a href="BookingServlet?page=3">3</a><span>...</span><a href="BookingServlet?page=10">10</a><button name="page" value="next">&gt;</button></div>
+          </article>
+
+          <aside class="stack">
+            <article class="card pad"><h2>Booking Status Breakdown</h2><div class="chart-row"><div class="donut"></div><ul class="legend"><li><span style="background:var(--teal)"></span>Confirmed</li><li><span style="background:var(--warning)"></span>Pending</li><li><span style="background:var(--danger)"></span>Cancelled</li><li><span style="background:var(--blue)"></span>Future</li></ul></div></article>
+            <article class="card table-card"><h2>Booking Status Bookings</h2><table><thead><tr><th>Actions</th></tr></thead><tbody><tr><td>[Edit] [View Details]</td></tr><tr><td>[Edit] [View]</td></tr></tbody></table></article>
+            <article class="card pad"><h2>Booking Trends (Month)</h2><p>[Edit] [View Details]</p><div class="sparkline"></div><p>Jul &nbsp; Aug &nbsp; Sep &nbsp; Oct</p></article>
+          </aside>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

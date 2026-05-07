@@ -1,0 +1,30 @@
+import java.io.IOException;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+@WebServlet({"/PaymentServlet", "/Admin/PaymentServlet"})
+public class PaymentServlet extends HttpServlet {
+
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        String invoiceType = request.getParameter("invoiceType");
+        String paymentStatus = request.getParameter("paymentStatus");
+        String invoiceSearch = request.getParameter("invoiceSearch");
+        String invoiceSearchBtn = request.getParameter("invoiceSearchBtn");
+        String page = request.getParameter("page");
+
+        request.setAttribute("invoiceType", invoiceType);
+        request.setAttribute("paymentStatus", paymentStatus);
+        request.setAttribute("invoiceSearch", invoiceSearch);
+        request.setAttribute("invoiceSearchBtn", invoiceSearchBtn);
+        request.setAttribute("page", page);
+
+        // Add SELECT invoices/payments WHERE filters logic here.
+        response.sendRedirect(request.getContextPath() + "/Admin/Payments.html");
+    }
+}

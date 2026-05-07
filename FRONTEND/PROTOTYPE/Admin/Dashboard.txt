@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UniNest - Dashboard Overview</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="fas fa-home-alt"></i>
+                <span>UniNest</span>
+            </div>
+            <nav>
+                <ul>
+                    <li class="active"><i class="fas fa-th-large"></i> Dashboard</li>
+                    <li><i class="fas fa-calendar-alt"></i> Bookings</li>
+                    <li><i class="fas fa-users"></i> Students</li>
+                    <li><i class="fas fa-key"></i> Rooms</li>
+                    <li><i class="fas fa-door-open"></i> Rooms</li>
+                    <li><i class="fas fa-dollar-sign"></i> Payments</li>
+                    <li><i class="fas fa-wrench"></i> Maintenance</li>
+                    <li><i class="fas fa-chart-line"></i> Reporting</li>
+                    <li><i class="fas fa-cog"></i> Settings</li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header>
+                <div class="search-bar">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Search students, rooms, bookings...">
+                </div>
+                <div class="header-right">
+                    <i class="fas fa-bell"></i>
+                    <div class="user-profile">
+                        <i class="fas fa-user-circle"></i>
+                        <span>Admin Name</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                </div>
+            </header>
+
+            <section class="dashboard-header">
+                <h1>Dashboard Overview</h1>
+                <button class="btn-report">Generate Report</button>
+            </section>
+
+            <section class="stats-grid">
+                <div class="stat-card">
+                    <h3>Current Occupancy</h3>
+                    <p class="stat-value"><span class="highlight">92%</span> - 215/ Rooms</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Active Bookings</h3>
+                    <p class="stat-value">Total: <span class="highlight">189</span></p>
+                </div>
+                <div class="stat-card">
+                    <h3>Pending Maintenance</h3>
+                    <p class="stat-value">Tickets: 12 Open</p>
+                </div>
+                <div class="stat-card">
+                    <h3>New Applications</h3>
+                    <p class="stat-value">Total: <span class="highlight">34</span></p>
+                </div>
+            </section>
+
+            <div class="dashboard-grid">
+                <div class="card recent-bookings">
+                    <h2>Recent Bookings Table</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>Room #</th>
+                                <th>Check-in Date</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>John Doe</td><td>A-101</td><td>15 Oct 2023</td><td class="status-confirmed">Confirmed</td><td><a href="#">[View]</a></td></tr>
+                            <tr><td>John Doe</td><td>A-101</td><td>15 Oct 2023</td><td class="status-confirmed">Confirmed</td><td><a href="#">[View]</a></td></tr>
+                            <tr><td>John Doe</td><td>A-101</td><td>15 Oct 2023</td><td class="status-confirmed">Confirmed</td><td><a href="#">[View]</a></td></tr>
+                            <tr><td>John Doe</td><td>A-101</td><td>15 Oct 2023</td><td class="status-confirmed">Confirmed</td><td><a href="#">[View]</a></td></tr>
+                        </tbody>
+                    </table>
+                    <button class="btn-view-all">View All Bookings</button>
+                </div>
+
+                <div class="card room-status">
+                    <h2>Room Status Overview</h2>
+                    <div class="chart-container">
+                        <div class="donut-chart"></div>
+                        <ul class="legend">
+                            <li><span class="dot occupied"></span> Occupied</li>
+                            <li><span class="dot reserved"></span> Reserved</li>
+                            <li><span class="dot vacant"></span> Vacant</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="card maintenance-list">
+                    <h2>Maintenance Requests List</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Request ID</th>
+                                <th>Room</th>
+                                <th>Issue</th>
+                                <th>Priority</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>101</td><td>A-101</td><td>Issue</td><td class="p-high">High</td><td><a href="#">[View]</a></td></tr>
+                            <tr><td>102</td><td>A-101</td><td>Issue</td><td class="p-mid">Mid</td><td><a href="#">[View]</a></td></tr>
+                            <tr><td>103</td><td>A-101</td><td>Issue</td><td class="p-low">Low</td><td><a href="#">[View]</a></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

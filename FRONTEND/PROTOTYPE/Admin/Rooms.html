@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UniNest Admin - Rooms</title>
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <div class="admin-shell">
+    <aside class="sidebar">
+      <a class="brand" href="Dashboard.html"><img src="uninest-logo.png" alt="UniNest logo"><span>UniNest</span></a>
+      <nav class="nav">
+        <a href="Dashboard.html"><b class="icon">&#8962;</b><span>Dashboard</span></a>
+        <a href="Booking.html"><b class="icon">&#9635;</b><span>Bookings</span></a>
+        <a href="Students.html"><b class="icon">&#9787;</b><span>Students</span></a>
+        <a class="active" href="Rooms.html"><b class="icon">&#9919;</b><span>Rooms</span></a>
+        <a href="Payments.html"><b class="icon">R</b><span>Payments</span></a>
+        <a href="Maintenance.html"><b class="icon">&#9881;</b><span>Maintenance</span></a>
+        <a href="Reporting.html"><b class="icon">&#9632;</b><span>Reporting</span></a>
+        <a href="Settings.html"><b class="icon">&#9881;</b><span>Settings</span></a>
+        <a href="Logout.html"><b class="icon">&#10162;</b><span>Logout</span></a>
+      </nav>
+      <div class="sidebar-footer"><strong>Admin Name</strong><br>admin@uninest.edu</div>
+    </aside>
+    <main class="main">
+      <header class="topbar">
+        <form class="search-form" action="AdminSearchServlet" method="get"><button type="submit" name="searchSubmit" value="global">&#9906;</button><input type="search" name="globalSearch" placeholder="Search rooms by name, number, type, building..."></form>
+        <div class="header-actions"><form action="AddRoomServlet" method="get"><button class="btn" type="submit" name="addRoomBtn" value="true">+ Add Room</button></form><span>&#128276;</span><span class="profile"><span class="avatar">&#9711;</span>Admin Name</span></div>
+      </header>
+      <section class="content">
+        <div class="page-head"><div><h1>Rooms Management</h1><p style="color:var(--muted);margin-top:14px">Manage all accommodation rooms in the system</p></div><form action="RoomServlet" method="get"><button class="outline-btn" type="submit" name="filterOpen" value="true">Filter</button></form></div>
+        <form class="filters" action="RoomServlet" method="get">
+          <div class="filter-group"><label for="roomType">Room Type</label><select id="roomType" name="roomType"><option value="all">All</option><option value="studio">Studio</option><option value="oneBed">1-Bed</option><option value="shared">Shared</option><option value="suite">Suite</option></select></div>
+          <div class="filter-group"><label for="roomStatus">Status</label><select id="roomStatus" name="roomStatus"><option value="all">All</option><option value="occupied">Occupied</option><option value="available">Available</option><option value="partial">Partial</option><option value="maintenance">Maintenance</option></select></div>
+          <div class="search-compact"><button type="submit" name="roomSearchBtn" value="true">&#9906;</button><input type="search" name="roomSearch" placeholder="Search Rooms..."></div>
+        </form>
+        <section class="room-cards">
+          <article class="card room-card"><div class="top"><div><h3>Room A-204</h3><p>Building A</p></div><span class="badge occupied">Occupied</span></div><p>Type: <strong>Single</strong> &nbsp; Occupancy: <strong>1 / 1</strong></p><p>Floor: <strong>2nd Floor</strong></p><div class="amenities"><span>WiFi</span><span>AC</span><span>Desk</span></div><div class="price-row"><span><b class="price">R 6,500</b> / Month</span><a class="outline-btn" href="RoomDetailsServlet?roomId=A-204">View Details</a></div></article>
+          <article class="card room-card"><div class="top"><div><h3>Room B-108</h3><p>Building B</p></div><span class="badge occupied">Occupied</span></div><p>Type: <strong>Double</strong> &nbsp; Occupancy: <strong>2 / 2</strong></p><p>Floor: <strong>1st Floor</strong></p><div class="amenities"><span>WiFi</span><span>Shared Bath</span></div><div class="price-row"><span><b class="price">R 5,500</b> / Month</span><a class="outline-btn" href="RoomDetailsServlet?roomId=B-108">View Details</a></div></article>
+          <article class="card room-card"><div class="top"><div><h3>Room C-312</h3><p>Building C</p></div><span class="badge active">Available</span></div><p>Type: <strong>Single</strong> &nbsp; Occupancy: <strong>0 / 1</strong></p><p>Floor: <strong>3rd Floor</strong></p><div class="amenities"><span>WiFi</span><span>AC</span><span>Desk</span><span>Private Bath</span></div><div class="price-row"><span><b class="price">R 6,800</b> / Month</span><a class="outline-btn" href="RoomDetailsServlet?roomId=C-312">View Details</a></div></article>
+          <article class="card room-card"><div class="top"><div><h3>Room A-156</h3><p>Building A</p></div><span class="badge pending">Partial</span></div><p>Type: <strong>Double</strong> &nbsp; Occupancy: <strong>1 / 2</strong></p><p>Floor: <strong>1st Floor</strong></p><div class="amenities"><span>WiFi</span><span>AC</span></div><div class="price-row"><span><b class="price">R 6,200</b> / Month</span><a class="outline-btn" href="RoomDetailsServlet?roomId=A-156">View Details</a></div></article>
+          <article class="card room-card"><div class="top"><div><h3>Room D-221</h3><p>Building D</p></div><span class="badge alumni">Maintenance</span></div><p>Type: <strong>Suite</strong> &nbsp; Occupancy: <strong>0 / 4</strong></p><p>Floor: <strong>2nd Floor</strong></p><div class="amenities"><span>WiFi</span><span>Kitchen</span><span>Living Area</span></div><div class="price-row"><span><b class="price">R 6,900</b> / Month</span><a class="outline-btn" href="RoomDetailsServlet?roomId=D-221">View Details</a></div></article>
+          <article class="card room-card"><div class="top"><div><h3>Room B-315</h3><p>Building B</p></div><span class="badge occupied">Occupied</span></div><p>Type: <strong>Single</strong> &nbsp; Occupancy: <strong>1 / 1</strong></p><p>Floor: <strong>3rd Floor</strong></p><div class="amenities"><span>WiFi</span><span>AC</span><span>Desk</span><span>Balcony</span></div><div class="price-row"><span><b class="price">R 5,800</b> / Month</span><a class="outline-btn" href="RoomDetailsServlet?roomId=B-315">View Details</a></div></article>
+        </section>
+        <div class="pagination"><a href="RoomServlet?page=previous">Previous</a><span class="current">1</span><a href="RoomServlet?page=2">2</a><a href="RoomServlet?page=3">3</a><a href="RoomServlet?page=4">4</a><a href="RoomServlet?page=next">Next</a></div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UniNest Admin - Settings</title>
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <div class="admin-shell">
+    <aside class="sidebar">
+      <a class="brand" href="Dashboard.html"><img src="uninest-logo.png" alt="UniNest logo"><span>UniNest</span></a>
+      <nav class="nav">
+        <a href="Dashboard.html"><b class="icon">&#8962;</b><span>Dashboard</span></a><a href="Booking.html"><b class="icon">&#9635;</b><span>Bookings</span></a><a href="Students.html"><b class="icon">&#9787;</b><span>Students</span></a><a href="Rooms.html"><b class="icon">&#9919;</b><span>Rooms</span></a><a href="Payments.html"><b class="icon">R</b><span>Payments</span></a><a href="Maintenance.html"><b class="icon">&#9881;</b><span>Maintenance</span></a><a href="Reporting.html"><b class="icon">&#9632;</b><span>Reporting</span></a><a class="active" href="Settings.html"><b class="icon">&#9881;</b><span>Settings</span></a><a href="Logout.html"><b class="icon">&#10162;</b><span>Logout</span></a>
+      </nav>
+      <div class="sidebar-footer"><strong>Admin Name</strong><br>admin@uninest.edu</div>
+    </aside>
+    <main class="main">
+      <header class="topbar"><form class="search-form" action="AdminSearchServlet" method="get"><button type="submit" name="searchSubmit" value="global">&#9906;</button><input type="search" name="globalSearch" placeholder="Search students, rooms, bookings..."></form><div class="header-actions"><form action="AddRoomServlet" method="get"><button class="btn" type="submit" name="addRoomBtn" value="true">+ Add Room</button></form><span>&#128276;</span><span class="profile"><span class="avatar">&#9711;</span>Admin Name</span></div></header>
+      <section class="content">
+        <div class="page-head"><div><h1>Settings</h1><p style="color:var(--muted);margin-top:10px">Manage system preferences and configurations</p></div></div>
+        <form action="SettingsServlet" method="post">
+          <section class="card settings-section">
+            <div class="card-title"><h2>General Settings</h2><p>Basic system configuration</p></div>
+            <div class="settings-row"><label for="systemName"><strong>System Name</strong><br><small>Set your systems name</small></label><input id="systemName" name="systemName" value="UNINEST"></div>
+            <div class="settings-row"><label for="academicYear"><strong>Academic Year</strong><br><small>Select the current academic year</small></label><select id="academicYear" name="academicYear"><option value="2026-2027">2026-2027</option><option value="2027-2028">2027-2028</option></select></div>
+            <div class="settings-row"><label for="currency"><strong>Currency</strong><br><small>Select the default currency for transactions</small></label><select id="currency" name="currency"><option value="ZAR">South African Rand (R)</option><option value="USD">US Dollar ($)</option></select></div>
+          </section>
+          <section class="card settings-section">
+            <div class="card-title"><h2>Notifications</h2><p>Configure notification preferences</p></div>
+            <div class="settings-row"><label for="notifyBookings"><strong>New Booking Requests</strong><br><small>Get notified when students submit new booking requests</small></label><input class="switch" id="notifyBookings" type="checkbox" name="notifyBookings" value="true" checked></div>
+            <div class="settings-row"><label for="paymentReminders"><strong>Payment Reminders</strong><br><small>Send reminders for upcoming payment due dates</small></label><input class="switch" id="paymentReminders" type="checkbox" name="paymentReminders" value="true" checked></div>
+            <div class="settings-row"><label for="maintenanceAlerts"><strong>Maintenance Alerts</strong><br><small>Receive alerts about room maintenance issues</small></label><input class="switch" id="maintenanceAlerts" type="checkbox" name="maintenanceAlerts" value="true"></div>
+          </section>
+          <section class="card settings-section">
+            <div class="card-title"><h2>Email Settings</h2><p>Configure email templates and settings</p></div>
+            <div class="settings-row"><label for="fromEmail"><strong>From Email Address</strong><br><small>Email address used for sending emails</small></label><input id="fromEmail" type="email" name="fromEmail" value="admin@uninest.edu"></div>
+            <div class="settings-row"><label for="replyToEmail"><strong>Reply-To Email Address</strong><br><small>Email address for receiving replies</small></label><input id="replyToEmail" type="email" name="replyToEmail" value="support@uninest.edu"></div>
+          </section>
+          <section class="card settings-section">
+            <div class="card-title"><h2>Security</h2><p>Manage security and access controls</p></div>
+            <div class="settings-row"><label for="twoFactorEnabled"><strong>Two-Factor Authentication (2FA)</strong><br><small>Require 2FA for admin accounts</small></label><input class="switch" id="twoFactorEnabled" type="checkbox" name="twoFactorEnabled" value="true" checked></div>
+            <div class="settings-row"><label for="sessionTimeout"><strong>Session Timeout</strong><br><small>Automatically log out after inactivity</small></label><select id="sessionTimeout" name="sessionTimeout"><option value="15">15 minutes</option><option value="30">30 minutes</option><option value="60">60 minutes</option></select></div>
+          </section>
+          <div style="text-align:right"><button class="btn" type="submit" name="saveSettingsBtn" value="true">Save Changes</button></div>
+        </form>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

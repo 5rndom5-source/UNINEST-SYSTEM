@@ -1,0 +1,32 @@
+import java.io.IOException;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+@WebServlet({"/MaintenanceServlet", "/Admin/MaintenanceServlet"})
+public class MaintenanceServlet extends HttpServlet {
+
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        String priority = request.getParameter("priority");
+        String ticketType = request.getParameter("ticketType");
+        String ticketStatus = request.getParameter("ticketStatus");
+        String ticketSearch = request.getParameter("ticketSearch");
+        String ticketSearchBtn = request.getParameter("ticketSearchBtn");
+        String page = request.getParameter("page");
+
+        request.setAttribute("priority", priority);
+        request.setAttribute("ticketType", ticketType);
+        request.setAttribute("ticketStatus", ticketStatus);
+        request.setAttribute("ticketSearch", ticketSearch);
+        request.setAttribute("ticketSearchBtn", ticketSearchBtn);
+        request.setAttribute("page", page);
+
+        // Add SELECT maintenance tickets WHERE filters logic here.
+        response.sendRedirect(request.getContextPath() + "/Admin/Maintenance.html");
+    }
+}
