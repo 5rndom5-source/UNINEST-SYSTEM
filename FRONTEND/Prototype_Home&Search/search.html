@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>UniNest Listings</title>
+
+    <link rel="stylesheet" href="style.css" />
+
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+  </head>
+
+  <body>
+    <header class="navbar">
+      <div class="logo">
+        <img src="UniNest-logo.png" alt="UniNest Logo" class="logo-img" />
+
+        <div class="logo-text">
+          <h2>UniNest</h2>
+          <p>Student Accommodation Marketplace</p>
+        </div>
+      </div>
+
+      <nav>
+        <a href="home.html">Home</a>
+        <a href="#" class="active">Listings</a>
+        <a href="#">About</a>
+        <a href="#">Contact</a>
+      </nav>
+
+      <div class="nav-right">
+        <i class="fa-regular fa-bell"></i>
+
+        <button class="login-btn">Login</button>
+        <button class="register-btn">Register</button>
+      </div>
+    </header>
+
+    <section class="top-search">
+      <div class="search-input">
+        <i class="fa-solid fa-magnifying-glass"></i>
+
+        <input
+          type="text"
+          placeholder="Search by street, location or university...."
+        />
+      </div>
+
+      <div class="move-date">
+        <i class="fa-solid fa-calendar-days"></i>
+
+        <select>
+          <option>Move - In Date</option>
+        </select>
+      </div>
+
+      <button class="search-btn">
+        <i class="fa-solid fa-search"></i> Search
+      </button>
+    </section>
+
+    <section class="search-container">
+      <!-- FILTERS -->
+      <aside class="sidebar">
+        <div class="filter-header">
+          <h2><i class="fa-solid fa-sliders"></i> Filters</h2>
+
+          <span>Clear All</span>
+        </div>
+
+        <div class="filter-group">
+          <label>Location</label>
+
+          <select>
+            <option>Select area or city</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label>Price Range (per month)</label>
+
+          <div class="price-inputs">
+            <input type="text" placeholder="Min R0" />
+            <span>-</span>
+            <input type="text" placeholder="Max R8,000" />
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <h3>Accommodation Type</h3>
+
+          <label><input type="checkbox" /> Apartment</label>
+
+          <label><input type="checkbox" /> Single Rooms</label>
+
+          <label><input type="checkbox" /> Shared Rooms</label>
+
+          <label><input type="checkbox" /> Student Residence</label>
+        </div>
+
+        <div class="filter-group">
+          <h3>Facilities</h3>
+
+          <label><input type="checkbox" /> Wifi</label>
+
+          <label><input type="checkbox" /> Parking</label>
+
+          <label><input type="checkbox" /> Furnished</label>
+
+          <label><input type="checkbox" /> Security</label>
+        </div>
+
+        <div class="filter-group">
+          <h3>Rating</h3>
+
+          <div class="rating-buttons">
+            <button>⭐1+</button>
+            <button>⭐2+</button>
+            <button>⭐3+</button>
+            <button>⭐4+</button>
+          </div>
+        </div>
+
+        <button class="apply-btn">Apply Filters</button>
+
+        <button class="reset-btn">Reset Filters</button>
+      </aside>
+
+      <section class="results">
+        <div class="results-top">
+          <h2>Search Results</h2>
+
+          <div class="sort-box">
+            Sort by:
+
+            <select>
+              <option>Most Recent</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="listing-card">
+          <div class="listing-image">
+            <img src="res-1.jpg" alt="Accommodation Image" />
+
+            <i class="fa-regular fa-heart"></i>
+          </div>
+
+          <div class="listing-content">
+            <h2>Modern Apartments near campus</h2>
+
+            <p class="listing-price">R4,500 / month</p>
+
+            <p class="listing-location">
+              <i class="fa-solid fa-location-dot"></i>
+              Pretoria Central
+            </p>
+
+            <div class="listing-tags">
+              <span>
+                <i class="fa-solid fa-bed"></i>
+                Furnished
+              </span>
+
+              <span>
+                <i class="fa-solid fa-wifi"></i>
+                Wifi
+              </span>
+            </div>
+
+            <button>View Details</button>
+          </div>
+
+          <div class="listing-rating">⭐ 4.3 (20)</div>
+        </div>
+
+        <div class="listing-card">
+          <div class="listing-image">
+            <img src="res-4.jpg" alt="Accommodation Image" />
+
+            <i class="fa-regular fa-heart"></i>
+          </div>
+
+          <div class="listing-content">
+            <h2>Cozy Room in Shared House</h2>
+
+            <p class="listing-price">R2,800 / month</p>
+
+            <p class="listing-location">
+              <i class="fa-solid fa-location-dot"></i>
+              CapeTown - CBD
+            </p>
+
+            <div class="listing-tags">
+              <span>
+                <i class="fa-solid fa-bed"></i>
+                1 Bed
+              </span>
+
+              <span>
+                <i class="fa-solid fa-users"></i>
+                Shared
+              </span>
+
+              <span>
+                <i class="fa-solid fa-wifi"></i>
+                Wifi
+              </span>
+            </div>
+
+            <button>View Details</button>
+          </div>
+
+          <div class="listing-rating">⭐ 4.0 (15)</div>
+        </div>
+
+        <div class="listing-card">
+          <div class="listing-image">
+            <img src="res-2.jpg" alt="Accommodation Image" />
+
+            <i class="fa-regular fa-heart"></i>
+          </div>
+
+          <div class="listing-content">
+            <h2>Student Residence</h2>
+
+            <p class="listing-price">R3,200 / month</p>
+
+            <p class="listing-location">
+              <i class="fa-solid fa-location-dot"></i>
+              Bellville
+            </p>
+
+            <div class="listing-tags">
+              <span>24/7 Security</span>
+
+              <span>
+                <i class="fa-solid fa-wifi"></i>
+                Wifi
+              </span>
+
+              <span>Parking</span>
+            </div>
+
+            <button>View Details</button>
+          </div>
+
+          <div class="listing-rating">⭐ 4.7 (42)</div>
+        </div>
+      </section>
+    </section>
+
+    <footer>
+      <div class="footer-container">
+        <!-- SECTION 1 -->
+        <div class="footer-section">
+          <div class="logo">
+            <img src="UniNest-logo.png" alt="" class="logo-img" />
+
+            <div class="logo-text">
+              <h2>UniNest</h2>
+              <p>Student Accommodation Marketplace</p>
+            </div>
+          </div>
+
+          <p>
+            Helping Students find safe, affordable and convenient accommodation.
+          </p>
+
+          <div class="social-icons">
+            <i class="fab fa-facebook"></i>
+            <i class="fab fa-instagram"></i>
+            <i class="fab fa-twitter"></i>
+            <i class="fab fa-linkedin"></i>
+          </div>
+        </div>
+
+        <div class="footer-section">
+          <h3>Quick Links</h3>
+
+          <a href="#">Home</a>
+          <a href="#">Listings</a>
+          <a href="#">About</a>
+          <a href="#">Contact</a>
+        </div>
+
+        <div class="footer-section">
+          <h3>For Students</h3>
+
+          <a href="#">Browse Listings</a>
+          <a href="#">Saved Listings</a>
+          <a href="#">How it works</a>
+          <a href="#">Help Center</a>
+        </div>
+
+        <div class="footer-section">
+          <h3>Subscribe to Updates</h3>
+
+          <div class="subscribe-box">
+            <input type="email" placeholder="Enter your email" />
+
+            <button>
+              <i class="fa-solid fa-paper-plane"></i>
+            </button>
+          </div>
+
+          <p>
+            <i class="fa-solid fa-check"></i>
+            Get new listings and updates
+          </p>
+
+          <p>
+            <i class="fa-solid fa-check"></i>
+            No spam, unsubscribe anytime
+          </p>
+        </div>
+      </div>
+
+      <hr />
+
+      <p class="copyright">@2026 UniNest. All Rights Reserved.</p>
+    </footer>
+  </body>
+</html>
