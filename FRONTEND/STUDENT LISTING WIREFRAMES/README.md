@@ -1,2 +1,2 @@
 #Student Listing Wireframes 
-This folder contains UniNest lisying mockupsand wireframe
+This folder contains UniNest listing mockupsand wireframe
