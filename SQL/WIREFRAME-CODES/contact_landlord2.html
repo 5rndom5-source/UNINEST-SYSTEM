@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>UniNest - Contact Landlord</title>
+  <style>
+    body { font-family: Calibri, Arial; background:#f4f4f4; margin:0; }
+    .navbar { background:#1E3A8A; color:#fff; padding:15px; display:flex; justify-content:space-between; align-items:center; }
+    .navbar a { color:#fff; text-decoration:none; margin:0 10px; font-weight:bold; }
+    .container { width:70%; margin:30px auto; background:#fff; padding:20px; border-radius:8px; }
+    h2 { color:#1E3A8A; }
+    .property { display:flex; align-items:center; margin-bottom:20px; }
+    .property img { width:220px; height:130px; border-radius:6px; margin-right:20px; object-fit:cover; }
+    .property-info { font-weight:bold; }
+    .available { background:#10B981; color:#fff; padding:5px 10px; border-radius:4px; }
+    .landlord-box { border:1px solid #ccc; padding:10px; border-radius:6px; background:#f9f9f9; width:250px; }
+    form input, form textarea { width:100%; padding:8px; margin:6px 0; border:1px solid #ccc; border-radius:4px; }
+    .btn-green { background:#10B981; color:#fff; border:none; padding:10px 15px; border-radius:4px; cursor:pointer; }
+    .btn-blue { background:#3B82F6; color:#fff; border:none; padding:10px 15px; border-radius:4px; cursor:pointer; }
+    .success { background:#D1FAE5; color:#065F46; padding:10px; border-radius:6px; margin-top:15px; text-align:center; font-weight:bold; }
+  </style>
+</head>
+<body>
+  <div class="navbar">
+    <div><strong>UniNest</strong></div>
+    <div>
+      <a href="#">Home</a>
+      <a href="#">My Listings</a>
+      <a href="#">Booking Requests</a>
+      <a href="#">Reviews</a>
+      <a href="#">Profile</a>
+      <a href="#">Logout</a>
+    </div>
+  </div>
+
+  <div class="container">
+    <h2>Contact Landlord</h2>
+
+    <div class="property">
+      <img src="https://via.placeholder.com/220x130" alt="Cozy Studio Apartment">
+      <div class="property-info">
+        <p><strong>Cozy Studio Apartment</strong></p>
+        <p>Cape Town — R6,000 / month</p>
+        <span class="available">Available</span>
+      </div>
+    </div>
+
+    <div style="display:flex; justify-content:space-between;">
+      <div style="width:60%;">
+        <form>
+          <label>Student Name:</label>
+          <input type="text" placeholder="Student Name" required>
+          <label>Email:</label>
+          <input type="email" placeholder="Email" required>
+          <label>Message:</label>
+          <textarea rows="4" placeholder="Enter your message" required></textarea>
+          <button class="btn-green" type="submit">Send Message</button>
+          <button class="btn-blue" type="reset">Cancel</button>
+        </form>
+        <div class="success">✔ Message sent successfully!</div>
+      </div>
+
+      <div class="landlord-box">
+        <h4>Landlord Information</h4>
+        <p><strong>John Smith</strong></p>
+        <p>📞 023‑123‑4567</p>
+        <p>✉ john.smith@email.com</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
