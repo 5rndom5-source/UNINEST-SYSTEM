@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>UniNest - Landlord Dashboard</title>
+  <style>
+    body { font-family: Calibri, Arial; background:#f4f4f4; margin:0; }
+    .navbar { background:#1E3A8A; color:#fff; padding:15px; display:flex; justify-content:space-between; align-items:center; }
+    .navbar a { color:#fff; text-decoration:none; margin:0 10px; font-weight:bold; }
+    .container { width:80%; margin:30px auto; background:#fff; padding:20px; border-radius:8px; }
+    h2 { color:#1E3A8A; }
+    input, select { width:100%; padding:8px; margin:6px 0; border:1px solid #ccc; border-radius:4px; }
+    .checkboxes label { margin-right:15px; }
+    .btn-green { background:#10B981; color:#fff; border:none; padding:10px 15px; border-radius:4px; cursor:pointer; }
+    .btn-blue { background:#3B82F6; color:#fff; border:none; padding:10px 15px; border-radius:4px; cursor:pointer; }
+    .status { background:#F59E0B; color:#fff; padding:8px 12px; border-radius:4px; display:inline-block; margin-top:10px; }
+    .listing-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:15px; margin-top:20px; }
+    .card { border:1px solid #ccc; border-radius:6px; overflow:hidden; background:#fff; }
+    .card img { width:100%; height:150px; object-fit:cover; }
+    .card-content { padding:10px; }
+    .approved { background:#10B981; color:#fff; padding:5px 10px; border-radius:4px; }
+    .pending { background:#F59E0B; color:#fff; padding:5px 10px; border-radius:4px; }
+    .rejected { background:#EF4444; color:#fff; padding:5px 10px; border-radius:4px; }
+    .btn-small { background:#3B82F6; color:#fff; border:none; padding:5px 10px; border-radius:4px; margin-right:5px; cursor:pointer; }
+    .footer { text-align:right; margin-top:20px; color:#555; }
+  </style>
+</head>
+<body>
+  <div class="navbar">
+    <div><strong>UniNest</strong></div>
+    <div>
+      <a href="#">Home</a>
+      <a href="#">My Listings</a>
+      <a href="#">Booking Requests</a>
+      <a href="#">Reviews</a>
+      <a href="#">Profile</a>
+      <a href="#">Logout</a>
+    </div>
+  </div>
+
+  <div class="container">
+    <h2>Landlord Property Listings</h2>
+    <h3>Add New Property</h3>
+    <form>
+      <label>Title:</label>
+      <input type="text" placeholder="Enter property title">
+      <label>Description:</label>
+      <input type="text" placeholder="Enter property description">
+      <label>Location:</label>
+      <select>
+        <option>Select location</option>
+        <option>Cape Town</option>
+        <option>Johannesburg</option>
+        <option>Stellenbosch</option>
+        <option>Durban</option>
+      </select>
+      <label>Price (R):</label>
+      <input type="number" placeholder="Price">
+      <label>Upload Photos:</label>
+      <button class="btn-blue" type="button">Upload Images</button>
+      <div class="checkboxes">
+        <label><input type="checkbox"> WiFi</label>
+        <label><input type="checkbox"> Parking</label>
+        <label><input type="checkbox"> Furnished</label>
+      </div>
+      <button class="btn-green" type="submit">Submit Listing</button>
+      <button class="btn-blue" type="reset">Cancel</button>
+      <div class="status">Pending Approval</div>
+    </form>
+
+    <h3>My Property Listings:</h3>
+    <div class="listing-grid">
+      <div class="card">
+        <img src="https://via.placeholder.com/300x150" alt="Cozy Studio Apartment">
+        <div class="card-content">
+          <h4>Cozy Studio Apartment</h4>
+          <p>Cape Town — R6,000 / Town</p>
+          <span class="approved">Approved</span><br>
+          <button class="btn-small">Edit</button>
+          <button class="btn-small">Delete</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <img src="https://via.placeholder.com/300x150" alt="Modern Loft">
+        <div class="card-content">
+          <h4>Modern Loft</h4>
+          <p>Johannesburg — R8,500 / month</p>
+          <span class="pending">Pending</span><br>
+          <button class="btn-small">Edit</button>
+          <button class="btn-small">Delete</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <img src="https://via.placeholder.com/300x150" alt="Student House">
+        <div class="card-content">
+          <h4>Student House</h4>
+          <p>Stellenbosch — R5,500 / month</p>
+          <span class="rejected">Rejected</span><br>
+          <button class="btn-small">Edit</button>
+          <button class="btn-small">Delete</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <img src="https://via.placeholder.com/300x150" alt="Seaside Apartment">
+        <div class="card-content">
+          <h4>Seaside Apartment</h4>
+          <p>Durban — R7,200 / month</p>
+          <span class="approved">Approved</span><br>
+          <button class="btn-small">Edit</button>
+          <button class="btn-small">Delete</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">Showing 1 to 4 of 4 entries &nbsp; <a href="#">Next</a></div>
+  </div>
+</body>
+</html>
