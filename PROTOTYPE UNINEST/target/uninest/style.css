@@ -1,0 +1,284 @@
+
+.adminLogin{
+    margin: 200px 200px 200px 100px;
+
+    background-color: grey;
+    text-decoration-color: white;
+    position: absolute;
+    display: block;
+}
+#btn-submit{
+    margin-top: 50px;
+    margin-left: 100px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: #f8fafc;
+    color: #0c1b4d;
+}
+
+.container {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 240px;
+    background-color: #0a1332;
+    color: #8fa1c7;
+    padding: 20px 0;
+}
+
+.logo {
+    padding: 0 20px 40px;
+    color: #ffffff;
+    font-size: 24px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.logo i {
+    color: #26bba4;
+    border: 2px solid #26bba4;
+    border-radius: 8px;
+    padding: 5px;
+}
+
+.sidebar ul {
+    list-style: none;
+}
+
+.sidebar li {
+    padding: 15px 25px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    transition: 0.3s;
+}
+
+.sidebar li.active {
+    background-color: #1a264a;
+    color: #26bba4;
+}
+
+.sidebar li:hover {
+    color: #ffffff;
+}
+
+/* Main Content */
+.main-content {
+    flex: 1;
+    padding: 20px 40px;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.search-bar {
+    background: #fff;
+    border: 1px solid #ccc;
+    padding: 10px 20px;
+    border-radius: 8px;
+    width: 400px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.search-bar input {
+    border: none;
+    outline: none;
+    width: 100%;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    font-size: 1.2rem;
+}
+
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1rem;
+}
+
+/* Dashboard Header */
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.btn-report {
+    background-color: #26bba4;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+/* Stats Cards */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.stat-card {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    border: 1px solid #333;
+}
+
+.stat-card h3 {
+    font-size: 1.1rem;
+    margin-bottom: 15px;
+}
+
+.stat-value {
+    font-size: 1.3rem;
+    font-weight: bold;
+}
+
+.highlight {
+    color: #26bba4;
+}
+
+/* Tables & Charts */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 20px;
+}
+
+.card {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    border: 1px solid #333;
+}
+
+.card h2 {
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th {
+    background-color: #0a1332;
+    color: white;
+    text-align: left;
+    padding: 10px;
+}
+
+td {
+    padding: 12px 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.status-confirmed {
+    color: #26bba4;
+    font-weight: bold;
+}
+
+.btn-view-all {
+    margin-top: 20px;
+    background-color: #26bba4;
+    color: white;
+    border: none;
+    padding: 10px 25px;
+    border-radius: 5px;
+    cursor: pointer;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Maintenance List Specifics */
+.maintenance-list {
+    grid-column: 2;
+    grid-row: 2;
+}
+
+.p-high { color: #d9534f; font-weight: bold; }
+.p-mid { color: #f0ad4e; font-weight: bold; }
+.p-low { color: #5bc0de; font-weight: bold; }
+
+/* Donut Chart Placeholder */
+.chart-container {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.donut-chart {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background: conic-gradient(
+        #26bba4 0% 70%, 
+        #0a1332 70% 85%, 
+        #ccc 85% 100%
+    );
+    position: relative;
+}
+
+.donut-chart::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80px;
+    height: 80px;
+    background: white;
+    border-radius: 50%;
+}
+
+.legend {
+    list-style: none;
+}
+
+.legend li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 5px;
+}
+
+.dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+}
+
+.occupied { background-color: #26bba4; }
+.reserved { background-color: #0a1332; }
+.vacant { background-color: #ccc; }
