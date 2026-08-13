@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - UniNest Admin Portal</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .dashboard-wrapper {
+            display: grid;
+            grid-template-columns: 250px minmax(0, 1fr);
+            min-height: 100vh;
+        }
+
+        .header,
+        .main-content {
+            grid-column: 2;
+        }
+
+        .main-content {
+            padding: 30px;
+            min-width: 0;
+        }
+
+        .profile-grid {
+            display: grid;
+            grid-template-columns: 320px minmax(0, 1fr);
+            gap: 22px;
+            align-items: start;
+        }
+
+        .panel {
+            background: var(--white);
+            border: 1px solid rgba(30, 64, 175, 0.12);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            padding: 24px;
+        }
+
+        .avatar {
+            width: 92px;
+            height: 92px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--white);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            font-weight: 900;
+            margin-bottom: 16px;
+        }
+
+        .profile-name {
+            color: var(--primary-dark);
+            font-size: 22px;
+            margin-bottom: 4px;
+        }
+
+        .profile-meta {
+            color: var(--gray);
+            font-size: 14px;
+            margin-bottom: 18px;
+        }
+
+        .access-list {
+            display: grid;
+            gap: 10px;
+        }
+
+        .access-item {
+            padding: 12px;
+            background: #f8fafc;
+            border: 1px solid var(--light);
+            border-radius: var(--radius-md);
+        }
+
+        .access-item strong {
+            display: block;
+            color: var(--primary-dark);
+            font-size: 14px;
+        }
+
+        .access-item span {
+            color: var(--gray);
+            font-size: 13px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 18px;
+        }
+
+        .btn {
+            border: 0;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-weight: 800;
+            padding: 10px 14px;
+            text-decoration: none;
+        }
+
+        .btn-outline {
+            background: var(--white);
+            border: 1px solid var(--light);
+            color: var(--primary);
+        }
+
+        @media (max-width: 900px) {
+            .dashboard-wrapper,
+            .profile-grid,
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .header,
+            .main-content {
+                grid-column: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-wrapper">
+        <div class="header" style="background: var(--white); border-bottom: 1px solid var(--light); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center;">
+            <h1 class="brand-title">UniNest Admin</h1>
+            <div class="admin-header-actions">
+    <button class="admin-notification" type="button" aria-label="Notifications">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 7h18s-3 0-3-7"></path><path d="M13.7 21a2 2 0 0 1-3.4 0"></path></svg>
+    </button>
+    <div class="admin-profile-menu">
+        <button class="admin-profile-trigger" type="button" aria-label="Open admin menu">
+            <span class="admin-avatar">UN</span>
+            <span>Admin Account</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+        </button>
+        <div class="admin-profile-dropdown">
+            <a href="Profile.html">Profile</a>
+            <a href="../../../HomePage/contact.html">Contact Us</a>
+            <a href="Logout.html">Logout</a>
+        </div>
+    </div>
+</div>
+        </div>
+
+        <aside class="sidebar">
+            <a href="Dashboard.html" class="nav-item"><span></span> Dashboard</a>
+            <a href="MyProperties.html" class="nav-item"><span></span> Listing Queue</a>
+            <a href="AddProperty.html" class="nav-item"><span></span> Verify Listings</a>
+            <a href="BookingRequests.html" class="nav-item"><span></span> Booking Requests</a>
+            <a href="Enquiries.html" class="nav-item"><span></span> Enquiries</a>
+            <a href="Messages.html" class="nav-item"><span></span> Messages</a>
+            <a href="Payments.html" class="nav-item"><span></span> Records</a>
+            <a href="Maintenance.html" class="nav-item"><span></span> Maintenance</a>
+            <a href="Profile.html" class="nav-item active"><span></span> Profile</a>
+            <a href="../../../HomePage/contact.html" class="nav-item"><span></span> Contact Us</a>
+            <a href="Logout.html" class="nav-item"><span></span> Logout</a>
+        </aside>
+
+        <main class="main-content">
+            <div class="page-header">
+                <h1 class="page-title">Profile</h1>
+                <p class="page-subtitle">Manage your administrator account details.</p>
+            </div>
+
+            <div class="profile-grid">
+                <aside class="panel">
+                    <div class="avatar" data-user-initials>UN</div>
+                    <h2 class="profile-name" data-user-name>UniNest Administrator</h2>
+                    <p class="profile-meta"><span data-user-role>Admin</span><br><span data-user-email></span></p>
+                    <form data-profile-image-form enctype="multipart/form-data" style="margin: 16px 0; text-align: center;">
+                        <label class="btn btn-outline" for="adminProfilePhoto">Choose Profile Picture</label>
+                        <input id="adminProfilePhoto" name="photo" type="file" accept="image/jpeg,image/png,image/webp" required hidden>
+                        <button class="btn btn-primary" type="submit" style="margin-top: 8px;">Upload Picture</button>
+                        <p data-profile-image-message class="profile-meta" aria-live="polite"></p>
+                    </form>
+
+                    <div class="access-list">
+                        <div class="access-item">
+                            <strong>Role</strong>
+                            <span>Admin verification user</span>
+                        </div>
+                        <div class="access-item">
+                            <strong>Main Access</strong>
+                            <span>Listing review, enquiries, messages, and records</span>
+                        </div>
+                        <div class="access-item">
+                            <strong>Data Source</strong>
+                            <span>Profile data ready</span>
+                        </div>
+                    </div>
+                </aside>
+
+                <section class="panel">
+                    <div class="section-header" style="border-bottom: 1px solid var(--light); padding-bottom: 14px; margin-bottom: 18px;">
+                        <h2 class="section-title">Account Information</h2>
+                    </div>
+
+                    <form method="post" action="../../../ProfileServlet">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Full Name</label>
+                                <input type="text" class="form-control" name="fullName" required autocomplete="name">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Role</label>
+                                <input type="text" class="form-control" name="role" value="Admin" readonly>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Email Address</label>
+                                <input type="email" class="form-control" name="email" required autocomplete="email">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Phone Number</label>
+                                <input type="tel" class="form-control" name="phone" required autocomplete="tel">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Admin Notes</label>
+                            <textarea class="form-control" name="adminNotes">Responsible for reviewing landlord-submitted listings before publication.</textarea>
+                        </div>
+
+                        <div class="form-actions">
+                            <a class="btn btn-outline" href="Dashboard.html">Back to dashboard</a>
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                        </div>
+                    </form>
+                    <p id="saveMessage" class="success-message" style="display: none; margin-top: 12px;">Profile updated successfully.</p>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        if (new URLSearchParams(window.location.search).has('success')) {
+            document.getElementById('saveMessage').style.display = 'block';
+        }
+    </script>
+  <script src="../../../portal-identity.js?v=20260813-profile"></script>
+  <script src="../../../system-status.js"></script>
+</body>
+</html>
+

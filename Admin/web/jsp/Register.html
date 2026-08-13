@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Access Request - UniNest</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1e40af, #10b981);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .access-card {
+            width: min(720px, 100%);
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            padding: 36px;
+        }
+
+        .access-card h1 {
+            color: var(--primary-dark);
+            margin-bottom: 8px;
+        }
+
+        .access-card p {
+            color: var(--gray);
+            margin-bottom: 22px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        textarea.form-control {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .actions {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            align-items: center;
+            margin-top: 18px;
+        }
+
+        @media (max-width: 720px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .access-card {
+                padding: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="access-card">
+        <img src="../uninest-logo.png" alt="UniNest" width="64" height="64" style="object-fit: contain; margin-bottom: 14px;">
+        <h1 class="brand-title">Admin Access Request</h1>
+        <p>Request access to the UniNest administration portal.</p>
+
+        <form method="post" action="../../../AdminRegisterRequestServlet">
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label required">Full Name</label>
+                    <input type="text" class="form-control" name="fullName" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label required">Email Address</label>
+                    <input type="email" class="form-control" name="email" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label required">Reason For Access</label>
+                <textarea class="form-control" name="reason" required placeholder="Briefly explain why this admin account is needed."></textarea>
+            </div>
+
+            <div class="actions">
+                <a href="Login.html" style="color: var(--secondary-dark); font-weight: 800; text-decoration: none;">Back to login</a>
+                <button type="submit" class="btn btn-primary">Submit request</button>
+            </div>
+        </form>
+
+        <p id="requestMessage" class="success-message" style="display: none; margin-top: 14px;">Request submitted for review.</p>
+    </main>
+
+    <script>
+        if (new URLSearchParams(window.location.search).has('success')) {
+            document.getElementById('requestMessage').style.display = 'block';
+        }
+    </script>
+  <script src="../../../system-status.js"></script>
+</body>
+</html>
+

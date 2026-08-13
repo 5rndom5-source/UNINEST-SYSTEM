@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Listing Queue - UniNest Admin Portal</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .dashboard-wrapper {
+            display: grid;
+            grid-template-columns: 250px minmax(0, 1fr);
+            min-height: 100vh;
+        }
+
+        .header,
+        .main-content {
+            grid-column: 2;
+        }
+
+        .main-content {
+            padding: 30px;
+            min-width: 0;
+        }
+
+        .section {
+            background: var(--white);
+            border: 1px solid rgba(30, 64, 175, 0.12);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            padding: 24px;
+            margin-bottom: 22px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            align-items: center;
+            border-bottom: 1px solid var(--light);
+            padding-bottom: 14px;
+            margin-bottom: 18px;
+        }
+
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .filters select,
+        .filters input {
+            padding: 10px 12px;
+            border: 1px solid var(--light);
+            border-radius: var(--radius-md);
+            background: var(--white);
+            font-family: var(--font-main);
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        .table {
+            width: 100%;
+            min-width: 920px;
+            border-collapse: collapse;
+        }
+
+        .table th,
+        .table td {
+            text-align: left;
+            padding: 13px 12px;
+            border-bottom: 1px solid var(--light);
+            vertical-align: top;
+            font-size: 14px;
+        }
+
+        .table thead {
+            background: #eef4ff;
+        }
+
+        .table th {
+            color: var(--primary-dark);
+            font-weight: 800;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .badge-pending {
+            background: #fff7ed;
+            color: #9a3412;
+        }
+
+        .badge-approved {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .badge-denied {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .action-link {
+            display: inline-block;
+            margin-right: 8px;
+            color: var(--secondary-dark);
+            font-weight: 800;
+            text-decoration: none;
+        }
+
+        .action-link:hover {
+            text-decoration: underline;
+        }
+
+        .empty-note {
+            background: #f8fafc;
+            border: 1px dashed rgba(30, 64, 175, 0.24);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            color: var(--gray);
+            font-size: 14px;
+        }
+
+        @media (max-width: 900px) {
+            .dashboard-wrapper {
+                grid-template-columns: 1fr;
+            }
+
+            .header,
+            .main-content {
+                grid-column: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-wrapper">
+        <div class="header" style="background: var(--white); border-bottom: 1px solid var(--light); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center;">
+            <h1 class="brand-title">UniNest Admin</h1>
+            <div style="display: flex; gap: 14px; align-items: center;">
+                <input type="search" id="queueSearch" placeholder="Search listing queue..." style="padding: 9px 12px; border: 1px solid var(--light); border-radius: 6px; width: 260px;">
+                <div class="admin-header-actions">
+    <button class="admin-notification" type="button" aria-label="Notifications">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 7h18s-3 0-3-7"></path><path d="M13.7 21a2 2 0 0 1-3.4 0"></path></svg>
+    </button>
+    <div class="admin-profile-menu">
+        <button class="admin-profile-trigger" type="button" aria-label="Open admin menu">
+            <span class="admin-avatar">UN</span>
+            <span>Admin Account</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+        </button>
+        <div class="admin-profile-dropdown">
+            <a href="Profile.html">Profile</a>
+            <a href="../../../HomePage/contact.html">Contact Us</a>
+            <a href="Logout.html">Logout</a>
+        </div>
+    </div>
+</div>
+            </div>
+        </div>
+
+        <aside class="sidebar">
+            <a href="Dashboard.html" class="nav-item"><span></span> Dashboard</a>
+            <a href="MyProperties.html" class="nav-item active"><span></span> Listing Queue</a>
+            <a href="AddProperty.html" class="nav-item"><span></span> Verify Listings</a>
+            <a href="BookingRequests.html" class="nav-item"><span></span> Booking Requests</a>
+            <a href="Enquiries.html" class="nav-item"><span></span> Enquiries</a>
+            <a href="Messages.html" class="nav-item"><span></span> Messages</a>
+            <a href="Payments.html" class="nav-item"><span></span> Records</a>
+            <a href="Maintenance.html" class="nav-item"><span></span> Maintenance</a>
+            <a href="Profile.html" class="nav-item"><span></span> Profile</a>
+            <a href="../../../HomePage/contact.html" class="nav-item"><span></span> Contact Us</a>
+            <a href="Logout.html" class="nav-item"><span></span> Logout</a>
+        </aside>
+
+        <main class="main-content">
+            <div class="page-header">
+                <h1 class="page-title">Listing Queue</h1>
+                <p class="page-subtitle">Review and manage landlord listing submissions.</p>
+            </div>
+
+            <section class="section">
+                <div class="section-header">
+                    <div>
+                        <h2 class="section-title">Property Submissions</h2>
+                        <p class="page-subtitle">Filter submissions by property, landlord, area, or status.</p>
+                    </div>
+                    <a href="AddProperty.html" class="btn btn-primary">Open verification</a>
+                </div>
+
+                <div class="filters">
+                    <select id="statusFilter">
+                        <option value="all">All statuses</option>
+                        <option value="pending">Pending review</option>
+                        <option value="approved">Approved</option>
+                        <option value="denied">Denied</option>
+                    </select>
+                    <select id="areaFilter">
+                        <option value="all">All Cape Town areas</option>
+                        <option value="rondebosch">Rondebosch</option>
+                        <option value="bellville">Bellville</option>
+                        <option value="observatory">Observatory</option>
+                        <option value="claremont">Claremont</option>
+                    </select>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table" id="queueTable">
+                        <thead>
+                            <tr>
+                                <th>Property</th>
+                                <th>Landlord</th>
+                                <th>Area</th>
+                                <th>Advertised Rent</th>
+                                <th>Submitted</th>
+                                <th>Status</th>
+                                <th>Admin Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="empty-record" colspan="7">No property submissions found.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <div class="empty-note">
+                The queue shows landlord submissions and records each admin accept or deny decision through the verification workflow.
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function filterRows() {
+            var status = document.getElementById('statusFilter').value;
+            var area = document.getElementById('areaFilter').value;
+            var search = document.getElementById('queueSearch').value.trim().toLowerCase();
+            var rows = Array.from(document.querySelectorAll('#queueTable tbody tr'));
+
+            rows.forEach(function (row) {
+                var matchesStatus = status === 'all' || row.dataset.status === status;
+                var matchesArea = area === 'all' || row.dataset.area === area;
+                var matchesSearch = row.textContent.toLowerCase().indexOf(search) !== -1;
+                row.style.display = matchesStatus && matchesArea && matchesSearch ? 'table-row' : 'none';
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            document.getElementById('statusFilter').addEventListener('change', filterRows);
+            document.getElementById('areaFilter').addEventListener('change', filterRows);
+            document.getElementById('queueSearch').addEventListener('input', filterRows);
+        });
+    </script>
+  <script src="../../../portal-identity.js?v=20260813-profile"></script>
+  <script src="../../../system-status.js"></script>
+</body>
+</html>
+

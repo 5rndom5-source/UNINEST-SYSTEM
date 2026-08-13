@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking Requests - UniNest Admin Portal</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .dashboard-wrapper {
+            display: grid;
+            grid-template-columns: 250px minmax(0, 1fr);
+            min-height: 100vh;
+        }
+
+        .header,
+        .main-content {
+            grid-column: 2;
+        }
+
+        .main-content {
+            padding: 30px;
+            min-width: 0;
+        }
+
+        .section {
+            background: var(--white);
+            border: 1px solid rgba(30, 64, 175, 0.12);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            padding: 24px;
+            margin-bottom: 22px;
+        }
+
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .filters select,
+        .filters input {
+            padding: 10px 12px;
+            border: 1px solid var(--light);
+            border-radius: var(--radius-md);
+            background: var(--white);
+            font-family: var(--font-main);
+        }
+
+        .empty-panel {
+            min-height: 310px;
+            display: grid;
+            place-items: center;
+            text-align: center;
+        }
+
+        .empty-panel h2 {
+            color: var(--primary-dark);
+            margin-bottom: 8px;
+        }
+
+        .empty-panel p {
+            color: var(--gray);
+            max-width: 620px;
+            margin: 0 auto;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        .table {
+            width: 100%;
+            min-width: 760px;
+            border-collapse: collapse;
+        }
+
+        .table th,
+        .table td {
+            padding: 13px 12px;
+            border-bottom: 1px solid var(--light);
+            text-align: left;
+            font-size: 14px;
+        }
+
+        .table thead {
+            background: #eef4ff;
+        }
+
+        @media (max-width: 900px) {
+            .dashboard-wrapper {
+                grid-template-columns: 1fr;
+            }
+
+            .header,
+            .main-content {
+                grid-column: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-wrapper">
+        <div class="header" style="background: var(--white); border-bottom: 1px solid var(--light); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center;">
+            <h1 class="brand-title">UniNest Admin</h1>
+            <div style="display: flex; gap: 14px; align-items: center;">
+                <input type="search" id="bookingSearch" placeholder="Search booking requests..." style="padding: 9px 12px; border: 1px solid var(--light); border-radius: 6px; width: 260px;">
+                <div class="admin-header-actions">
+                    <button class="admin-notification" type="button" aria-label="Notifications">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 7h18s-3 0-3-7"></path><path d="M13.7 21a2 2 0 0 1-3.4 0"></path></svg>
+                    </button>
+                    <div class="admin-profile-menu">
+                        <button class="admin-profile-trigger" type="button" aria-label="Open admin menu">
+                            <span class="admin-avatar">UN</span>
+                            <span>Admin Account</span>
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+                        </button>
+                        <div class="admin-profile-dropdown">
+                            <a href="Profile.html">Profile</a>
+                            <a href="../../../HomePage/contact.html">Contact Us</a>
+                            <a href="Logout.html">Logout</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <aside class="sidebar">
+            <a href="Dashboard.html" class="nav-item"><span></span> Dashboard</a>
+            <a href="MyProperties.html" class="nav-item"><span></span> Listing Queue</a>
+            <a href="AddProperty.html" class="nav-item"><span></span> Verify Listings</a>
+            <a href="BookingRequests.html" class="nav-item active"><span></span> Booking Requests</a>
+            <a href="Enquiries.html" class="nav-item"><span></span> Enquiries</a>
+            <a href="Messages.html" class="nav-item"><span></span> Messages</a>
+            <a href="Payments.html" class="nav-item"><span></span> Records</a>
+            <a href="Maintenance.html" class="nav-item"><span></span> Maintenance</a>
+            <a href="Profile.html" class="nav-item"><span></span> Profile</a>
+            <a href="../../../HomePage/contact.html" class="nav-item"><span></span> Contact Us</a>
+            <a href="Logout.html" class="nav-item"><span></span> Logout</a>
+        </aside>
+
+        <main class="main-content">
+            <div class="page-header">
+                <h1 class="page-title">Booking Requests</h1>
+                <p class="page-subtitle">Manage booking requests and viewing appointments.</p>
+            </div>
+
+            <section class="section">
+                <div class="filters">
+                    <select>
+                        <option>All properties</option>
+                    </select>
+                    <select>
+                        <option>All statuses</option>
+                    </select>
+                    <select>
+                        <option>Newest first</option>
+                    </select>
+                </div>
+            </section>
+
+            <section class="section empty-panel">
+                <div>
+                    <h2>No booking requests</h2>
+                    <p>There are no booking requests requiring attention.</p>
+                </div>
+            </section>
+
+            <section class="section">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>Property</th>
+                                <th>Request Type</th>
+                                <th>Status</th>
+                                <th>Admin Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="empty-record" colspan="5">No booking requests found.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+  <script src="../../../portal-identity.js?v=20260813-profile"></script>
+  <script src="../../../system-status.js"></script>
+</body>
+</html>

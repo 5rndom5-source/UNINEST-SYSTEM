@@ -1,0 +1,16 @@
+@WebServlet("/LandlordLoginServlet")
+public class LandlordLoginServlet extends HttpServlet {
+
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        String email = request.getParameter("landlordEmail");
+        String password = request.getParameter("landlordPassword");
+
+        if ("molebogeng.ramushu@uninest.co.za".equalsIgnoreCase(email) && "12345".equals(password)) {
+            response.sendRedirect("Landlord/index.html");
+        } else {
+            response.sendRedirect("Landlord/login.html?error=invalid");
+        }
+    }
+}

@@ -1,0 +1,571 @@
+﻿<html><head><meta charset='utf-8'><style>
+@page{size:A4 landscape;margin:1.2cm}body{font-family:Arial;color:#17212b;font-size:9pt;line-height:1.25}h1{color:#243c8f;font-size:25pt;margin:0 0 4pt}h2{color:#243c8f;font-size:16pt;border-bottom:2px solid #22c55e;padding-bottom:4pt;page-break-before:always}h2.first{page-break-before:auto}h3{color:#1e3278;font-size:12pt;margin-top:14pt}.meta{color:#52606d;font-size:10pt}.callout{background:#eef4ff;border-left:5px solid #22c55e;padding:10pt;margin:12pt 0}table{border-collapse:collapse;width:100%;margin:6pt 0 14pt;table-layout:fixed}th{background:#243c8f;color:white;font-weight:bold;padding:5pt;border:1px solid #1e3278}td{padding:5pt;border:1px solid #b8c4ca;vertical-align:top;word-wrap:break-word}.small{font-size:8pt}.status{width:5%}.code{font-family:Consolas;background:#17212b;color:#f8fafc;border:1px solid #243c8f;padding:9pt;white-space:pre-wrap;font-size:7.5pt;page-break-inside:avoid}.fig{font-weight:bold;color:#243c8f;margin-top:9pt}.pb{page-break-before:always}ul,ol{margin-top:3pt}.check{font-size:11pt}footer{color:#52606d}</style></head><body>
+<h1>UniNest Admin System Test Report</h1>
+<p class='meta'><b>Scope:</b> Admin frontend, Java servlet backend, MySQL integration and failure handling<br><b>Environment:</b> NetBeans 22 | JDK 11 | Apache Tomcat 9 | MySQL 8 | Context /uninest<br><b>Prepared:</b> 12 August 2026</p>
+<div class='callout'><b>How to use this report:</b> Execute each row, enter the Actual Result, mark Pass or Fail, attach the named evidence, and complete the failure fields only when a test fails. Do not claim a pass until the action and database effect have both been observed.</div>
+
+<h2 class='first'>1. Test Result Fields</h2>
+<table><tr><th>Field</th><th>What to record</th></tr>
+<tr><td>Actual Result</td><td>What the interface, Tomcat log and database actually showed.</td></tr>
+<tr><td>Pass / Fail</td><td>Pass only when actual result matches expected result.</td></tr>
+<tr><td>Failure Observed</td><td>Visible symptom, exact error text and time of failure.</td></tr>
+<tr><td>Error Evidence</td><td>Screenshot filename, Tomcat log line, SQL query result or video timestamp.</td></tr>
+<tr><td>Corrective Action</td><td>Configuration or code change used to resolve the failure.</td></tr>
+<tr><td>Retest Result</td><td>Result after the fix, including new evidence reference.</td></tr></table>
+
+<h2>2. Admin Frontend and Backend Test Register</h2>
+<table class='small'><tr><th style='width:7%'>Test ID</th><th style='width:7%'>Layer</th><th style='width:11%'>Feature / Component</th><th style='width:16%'>Test Action</th><th style='width:17%'>Expected Result</th><th style='width:15%'>Failure Condition</th><th style='width:10%'>Actual Result</th><th style='width:5%'>P/F</th><th style='width:12%'>Evidence Ref.</th></tr>
+<tr><td>ADM-FE-01</td><td>Frontend</td><td>Login</td><td>Open Admin login URL</td><td>Login form loads with email, password and submit controls</td><td>Page does not load, styling is missing, or fields overlap</td></tr>
+<tr><td>ADM-BE-01</td><td>Backend</td><td>LoginServlet</td><td>Submit valid active administrator credentials</td><td>Session is created, last_login is updated and Dashboard opens</td><td>Incorrect query, database unavailable, invalid role/status, or redirect fails</td></tr>
+<tr><td>ADM-BE-02</td><td>Backend</td><td>LoginServlet</td><td>Submit an incorrect password</td><td>Access is denied and a clear error is shown</td><td>Invalid user is authenticated or raw exception is displayed</td></tr>
+<tr><td>ADM-BE-03</td><td>Backend</td><td>LoginServlet</td><td>Submit empty or malformed fields</td><td>Validation prevents authentication</td><td>Blank input reaches database or produces server error</td></tr>
+<tr><td>ADM-FE-02</td><td>Frontend</td><td>Dashboard</td><td>Open Dashboard after login</td><td>Navigation, review summary and pending table render correctly</td><td>Broken links, missing components or unauthorized access</td></tr>
+<tr><td>ADM-FE-03</td><td>Frontend</td><td>Navigation</td><td>Open every sidebar destination</td><td>Each link opens the correct Admin page under /uninest</td><td>404 response, wrong context path or incorrect active state</td></tr>
+<tr><td>ADM-BE-04</td><td>Backend</td><td>AdminPageServlet</td><td>Request mapped Admin routes</td><td>Route redirects to the correct Admin HTML page</td><td>Unknown route is exposed or valid route returns 404</td></tr>
+<tr><td>ADM-FE-04</td><td>Frontend</td><td>Listing Queue</td><td>Search and filter listing submissions</td><td>Queue updates without layout overflow</td><td>Search ignored, filter incorrect, loading state never resolves</td></tr>
+<tr><td>ADM-BE-05</td><td>Backend</td><td>AdminListingQueueServlet</td><td>Request queue as authenticated admin</td><td>JSON contains paginated listings and total count</td><td>401, 500, malformed JSON or incorrect pagination</td></tr>
+<tr><td>ADM-BE-06</td><td>Backend</td><td>AdminListingQueueServlet</td><td>Request queue without admin session</td><td>HTTP 401 is returned</td><td>Private listing data is exposed</td></tr>
+<tr><td>ADM-FE-05</td><td>Frontend</td><td>Listing Verification</td><td>Open a listing and review details</td><td>Property, landlord, rent, location and evidence are visible</td><td>Wrong record, missing data or broken image/layout</td></tr>
+<tr><td>ADM-BE-07</td><td>Backend</td><td>VerifyPropertyServlet</td><td>Approve a valid pending listing</td><td>rooms approval_status becomes approved and decision is confirmed</td><td>No row updated, invalid status or database error</td></tr>
+<tr><td>ADM-BE-08</td><td>Backend</td><td>VerifyPropertyServlet</td><td>Decline a listing with an admin note</td><td>Status and note are saved</td><td>Reason is lost or listing remains pending</td></tr>
+<tr><td>ADM-BE-09</td><td>Backend</td><td>EditPropertyServlet</td><td>Submit permitted listing corrections</td><td>Selected room is updated and success is displayed</td><td>Unauthorized room is updated or invalid values are stored</td></tr>
+<tr><td>ADM-FE-06</td><td>Frontend</td><td>Booking Requests</td><td>Open and filter booking requests</td><td>Current bookings and statuses are readable</td><td>Records missing, controls fail or table overflows</td></tr>
+<tr><td>ADM-BE-10</td><td>Backend</td><td>ApproveBookingServlet</td><td>Approve a pending booking</td><td>Booking status updates and student notification is created</td><td>Booking unchanged or notification missing</td></tr>
+<tr><td>ADM-BE-11</td><td>Backend</td><td>BookingActionServlet</td><td>Decline/cancel booking with reason</td><td>Status and cancellation reason are saved</td><td>Invalid transition accepted or reason lost</td></tr>
+<tr><td>ADM-FE-07</td><td>Frontend</td><td>Enquiries</td><td>Open enquiries and select a status</td><td>Enquiries display and status action is available</td><td>Wrong record or unusable empty/error state</td></tr>
+<tr><td>ADM-BE-12</td><td>Backend</td><td>EnquiriesServlet</td><td>Update an enquiry status</td><td>inquiries.reply_status updates</td><td>Invalid status accepted or no row updated</td></tr>
+<tr><td>ADM-FE-08</td><td>Frontend</td><td>Messages</td><td>Open messages and compose a reply</td><td>Conversation and message validation behave correctly</td><td>Composer fails, message disappears or layout breaks</td></tr>
+<tr><td>ADM-BE-13</td><td>Backend</td><td>SendMessageServlet</td><td>Send a valid non-empty message</td><td>Message and recipient notification are inserted</td><td>Empty message inserted, invalid recipient or database failure</td></tr>
+<tr><td>ADM-BE-14</td><td>Backend</td><td>MessagesServlet</td><td>Mark a message as read</td><td>is_read and read_date update</td><td>Message remains unread or another message is changed</td></tr>
+<tr><td>ADM-FE-09</td><td>Frontend</td><td>Maintenance</td><td>Open and filter maintenance requests</td><td>Requests and resolution controls display</td><td>Missing records or status controls fail</td></tr>
+<tr><td>ADM-BE-15</td><td>Backend</td><td>MaintenanceServlet</td><td>Change request status and notes</td><td>maintenance_requests is updated</td><td>Invalid status, lost resolution notes or wrong row update</td></tr>
+<tr><td>ADM-FE-10</td><td>Frontend</td><td>Records / Payments</td><td>Open activity records and a detail view</td><td>Records render and selected detail is consistent</td><td>Incorrect record, broken link or empty state misleading</td></tr>
+<tr><td>ADM-BE-16</td><td>Backend</td><td>PaymentsServlet</td><td>Update payment status and receipt reference</td><td>payments fields update consistently</td><td>Invalid payment state or receipt not saved</td></tr>
+<tr><td>ADM-BE-17</td><td>Backend</td><td>NotificationServlet</td><td>Mark one/all notifications read</td><td>Correct notification rows receive read timestamps</td><td>Wrong user records updated or action fails</td></tr>
+<tr><td>ADM-FE-11</td><td>Frontend</td><td>Profile</td><td>Edit administrator profile fields</td><td>Form is populated, validates input and confirms save</td><td>Fields reset, invalid email accepted or feedback missing</td></tr>
+<tr><td>ADM-BE-18</td><td>Backend</td><td>ProfileServlet</td><td>Save valid profile changes</td><td>users record and session display values update</td><td>Duplicate/invalid data accepted or record not updated</td></tr>
+<tr><td>ADM-FE-12</td><td>Frontend</td><td>Forgot Password</td><td>Submit registered email</td><td>Neutral confirmation is shown</td><td>Account existence is exposed or request crashes</td></tr>
+<tr><td>ADM-BE-19</td><td>Backend</td><td>ForgotPasswordServlet</td><td>Submit registered and unknown emails</td><td>Registered request creates notification; response remains safe</td><td>SQL error, account enumeration or no notification</td></tr>
+<tr><td>ADM-FE-13</td><td>Frontend</td><td>Admin Access Request</td><td>Submit access request form</td><td>Required-field validation and confirmation work</td><td>Invalid submission accepted or raw backend message shown</td></tr>
+<tr><td>ADM-BE-20</td><td>Backend</td><td>AdminRegisterRequestServlet</td><td>Submit valid admin request</td><td>Notification is recorded for review</td><td>Request lost, duplicate mishandled or database error</td></tr>
+<tr><td>ADM-BE-21</td><td>Backend</td><td>DatabaseStatusServlet</td><td>Request health endpoint while MySQL runs</td><td>Endpoint reports connected status</td><td>Driver missing, credentials invalid or database unavailable</td></tr>
+<tr><td>ADM-BE-22</td><td>Backend</td><td>DatabaseConnection</td><td>Start Tomcat with MySQL running</td><td>Log records Database connection established</td><td>Connection timeout, access denied or unknown database</td></tr>
+<tr><td>ADM-BE-23</td><td>Backend</td><td>LogoutServlet</td><td>Sign out from an authenticated session</td><td>Session is invalidated and login page opens</td><td>Protected session remains active</td></tr>
+<tr><td>ADM-NF-01</td><td>Frontend</td><td>Responsive UI</td><td>Repeat core pages at mobile width</td><td>No overlap or horizontal page overflow</td><td>Controls overlap, clipped text or inaccessible navigation</td></tr>
+<tr><td>ADM-NF-02</td><td>Security</td><td>Session protection</td><td>Open protected actions without login</td><td>Request redirects or returns 401</td><td>Admin action executes anonymously</td></tr>
+<tr><td>ADM-NF-03</td><td>Security</td><td>SQL input handling</td><td>Submit quotes and SQL-like text in inputs</td><td>Prepared statements treat input as data</td><td>SQL error or unintended database change</td></tr>
+<tr><td>ADM-NF-04</td><td>Recovery</td><td>Database unavailable</td><td>Stop MySQL temporarily and repeat health/login request</td><td>Friendly failure; Tomcat remains operational</td><td>Stack trace exposed or application becomes unusable</td></tr></table>
+
+<h2>3. Failure and Retest Register</h2>
+<table><tr><th style='width:8%'>Test ID</th><th style='width:16%'>Failure Observed</th><th style='width:12%'>Error / Log</th><th style='width:16%'>Root Cause</th><th style='width:18%'>Corrective Action</th><th style='width:12%'>Retest Result</th><th style='width:10%'>Evidence</th><th style='width:8%'>Closed?</th></tr>
+<tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr> <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr> <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr> <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr> <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr> <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr> <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr> <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr> <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr> <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr> <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr> <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr></table>
+
+<h2>4. Required Evidence Checklist</h2>
+<p class='check'>Use short, named evidence files. Recommended naming: <b>ADM-BE-01_LoginServlet_Pass.png</b>.</p>
+<table><tr><th>Evidence Group</th><th>Required proof</th><th>Suggested file / clip</th></tr>
+<tr><td>Infrastructure</td><td>Tomcat startup, /uninest deployment, Database connection established, SHOW TABLES result</td><td>01_Infrastructure.mp4 (30-45 seconds)</td></tr>
+<tr><td>Authentication</td><td>Valid login, invalid login, session redirect, logout</td><td>02_Authentication.mp4</td></tr>
+<tr><td>Listings</td><td>Queue, search/filter, approve/decline, SQL row before and after</td><td>03_Listings.mp4</td></tr>
+<tr><td>Operations</td><td>Booking, enquiry/message, maintenance and notification actions</td><td>04_Operations.mp4</td></tr>
+<tr><td>Account / Records</td><td>Profile update, records/payment status, failure response</td><td>05_Account_Records.mp4</td></tr></table>
+
+<h2>5. Backend Code Evidence</h2>
+<p>Each excerpt is generated from the current source tree. It links the servlet mapping and its principal request/database operation to the matching test IDs. These focused excerpts are more legible than full-file screenshots.</p><h3>5.1 AddPropertyServlet - Listing navigation</h3><p class='fig'>Figure 1. Source evidence: Admin\src\java\com\uninest\servlets\properties\AddPropertyServlet.java</p><div class='code'>  15:  */
+  16: @WebServlet(&quot;/AddPropertyServlet&quot;)
+  17: public class AddPropertyServlet extends HttpServlet {
+  18: 
+  19:     @Override
+  20:     protected void doPost(HttpServletRequest request, HttpServletResponse response)
+  21:             throws ServletException, IOException {
+  22:         response.sendRedirect(request.getContextPath()
+  23:                 + &quot;/AddProperty.html?error=&quot;
+  24:                 + java.net.URLEncoder.encode(</div><h3>5.2 AdminListingQueueServlet - ADM-BE-05 and ADM-BE-06</h3><p class='fig'>Figure 2. Source evidence: Admin\src\java\com\uninest\servlets\properties\AdminListingQueueServlet.java</p><div class='code'>  20: 
+  21: @WebServlet(&quot;/AdminListingQueueServlet&quot;)
+  22: public class AdminListingQueueServlet extends HttpServlet {
+  23: 
+  24:     @Override
+  25:     protected void doGet(HttpServletRequest request, HttpServletResponse response)
+  26:             throws ServletException, IOException {
+  27: 
+  32:         if (session == null || session.getAttribute(&quot;adminId&quot;) == null) {
+  33:             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+  34:             response.getWriter().print(&quot;{\&quot;listings\&quot;:[],\&quot;error\&quot;:\&quot;Please sign in as an admin\&quot;}&quot;);
+  35:             return;
+  40:             if (conn == null) {
+  41:                 response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+  42:                 out.print(&quot;{\&quot;listings\&quot;:[],\&quot;error\&quot;:\&quot;Service is temporarily unavailable. Please try again later.\&quot;}&quot;);
+  43:                 return;
+  89: 
+  90:             PreparedStatement stmt = conn.prepareStatement(query);
+  91:             int paramIndex = bindParams(stmt, params, 1);
+  92:             stmt.setInt(paramIndex++, pageSize);
+  93:             stmt.setInt(paramIndex, offset);
+  94:             ResultSet rs = stmt.executeQuery();
+  95: 
+  96:             out.print(&quot;{\&quot;page\&quot;:&quot; + page
+ 113:         } catch (SQLException e) {
+ 114:             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+ 115:             response.getWriter().print(&quot;{\&quot;listings\&quot;:[],\&quot;error\&quot;:\&quot;Could not load listing queue\&quot;}&quot;);
+ 116:             System.err.println(&quot;Database error in AdminListingQueueServlet: &quot; + e.getMessage());
+ 126:                 + where;
+ 127:         PreparedStatement stmt = conn.prepareStatement(query);
+ 128:         bindParams(stmt, params, 1);
+ 129:         ResultSet rs = stmt.executeQuery();
+ 130:         int total = 0;
+ 131:         if (rs.next()) {</div><h3>5.3 AdminPageServlet - ADM-BE-04</h3><p class='fig'>Figure 3. Source evidence: Admin\src\java\com\uninest\servlets\pages\AdminPageServlet.java</p><div class='code'>  11: 
+  12: @WebServlet({
+  13:         &quot;/DashboardServlet&quot;,
+  14:         &quot;/AddPropertyPageServlet&quot;,
+ 101:     @Override
+ 102:     protected void doGet(HttpServletRequest request, HttpServletResponse response)
+ 103:             throws ServletException, IOException {
+ 104: 
+ 106:         if (page == null) {
+ 107:             response.sendError(HttpServletResponse.SC_NOT_FOUND);
+ 108:             return;
+ 109:         }
+ 110: 
+ 111:         response.sendRedirect(request.getContextPath() + &quot;/Admin/web/jsp/&quot; + page);
+ 112:     }
+ 113: }</div><h3>5.4 AdminRegisterRequestServlet - ADM-BE-20</h3><p class='fig'>Figure 4. Source evidence: Admin\src\java\com\uninest\servlets\auth\AdminRegisterRequestServlet.java</p><div class='code'>  20:  */
+  21: @WebServlet(&quot;/AdminRegisterRequestServlet&quot;)
+  22: public class AdminRegisterRequestServlet extends HttpServlet {
+  23: 
+  24:     @Override
+  25:     protected void doPost(HttpServletRequest request, HttpServletResponse response)
+  26:             throws ServletException, IOException {
+  27: 
+  56: 
+  57:             PreparedStatement stmt = conn.prepareStatement(query);
+  58:             stmt.setString(1, message);
+  59:             stmt.executeUpdate();
+  60:             stmt.close();
+  61: 
+  70:     private void redirect(HttpServletResponse response, String key, String message) throws IOException {
+  71:         response.sendRedirect(&quot;Register.html?&quot;
+  72:                 + key
+  73:                 + &quot;=&quot;</div><h3>5.5 ApproveBookingServlet - ADM-BE-10</h3><p class='fig'>Figure 5. Source evidence: Admin\src\java\com\uninest\servlets\bookings\ApproveBookingServlet.java</p><div class='code'>  21:  */
+  22: @WebServlet(&quot;/ApproveBookingServlet&quot;)
+  23: public class ApproveBookingServlet extends HttpServlet {
+  24: 
+  25:     @Override
+  26:     protected void doPost(HttpServletRequest request, HttpServletResponse response)
+  27:             throws ServletException, IOException {
+  28: 
+  30:         if (session == null || session.getAttribute(&quot;adminId&quot;) == null) {
+  31:             response.sendRedirect(request.getContextPath() + &quot;/Login.html&quot;);
+  32:             return;
+  33:         }
+  74:         String query = &quot;UPDATE bookings SET booking_status = ? WHERE booking_id = ?&quot;;
+  75:         PreparedStatement stmt = conn.prepareStatement(query);
+  76:         stmt.setString(1, status);
+  77:         stmt.setInt(2, bookingId);
+  78:         int updated = stmt.executeUpdate();
+  79:         stmt.close();
+  80:         return updated;
+  88: 
+  89:         PreparedStatement stmt = conn.prepareStatement(query);
+  90:         stmt.setInt(1, bookingId);
+  91:         ResultSet rs = stmt.executeQuery();
+  92: 
+  93:         Integer userId = null;
+ 108: 
+ 109:         PreparedStatement stmt = conn.prepareStatement(query);
+ 110:         stmt.setInt(1, userId);
+ 111:         stmt.setString(2, title);
+ 114:         stmt.setString(5, actionUrl);
+ 115:         stmt.executeUpdate();
+ 116:         stmt.close();
+ 117:     }
+ 120:                           String key, String message) throws IOException {</div><h3>5.6 BookingActionServlet - ADM-BE-11</h3><p class='fig'>Figure 6. Source evidence: Admin\src\java\com\uninest\servlets\bookings\BookingActionServlet.java</p><div class='code'>  20:  */
+  21: @WebServlet(&quot;/BookingActionServlet&quot;)
+  22: public class BookingActionServlet extends HttpServlet {
+  23: 
+  24:     @Override
+  25:     protected void doPost(HttpServletRequest request, HttpServletResponse response)
+  26:             throws ServletException, IOException {
+  27: 
+  29:         if (session == null || session.getAttribute(&quot;adminId&quot;) == null) {
+  30:             response.sendRedirect(request.getContextPath() + &quot;/Login.html&quot;);
+  31:             return;
+  32:         }
+  50:             String query = &quot;UPDATE bookings SET booking_status = ?, cancellation_reason = ? WHERE booking_id = ?&quot;;
+  51:             PreparedStatement stmt = conn.prepareStatement(query);
+  52:             stmt.setString(1, status);
+  53:             stmt.setString(2, &quot;cancelled&quot;.equals(status) ? reason : null);
+  54:             stmt.setInt(3, Integer.parseInt(bookingId));
+  55:             int updated = stmt.executeUpdate();
+  56:             stmt.close();
+  57: 
+  82:                           String key, String message) throws IOException {
+  83:         response.sendRedirect(request.getContextPath()
+  84:                 + &quot;/BookingRequests.html?&quot;
+  85:                 + key</div><h3>5.7 DatabaseStatusServlet - ADM-BE-21</h3><p class='fig'>Figure 7. Source evidence: Admin\src\java\com\uninest\servlets\system\DatabaseStatusServlet.java</p><div class='code'>  12: 
+  13: @WebServlet(&quot;/DatabaseStatusServlet&quot;)
+  14: public class DatabaseStatusServlet extends HttpServlet {
+  15: 
+  16:     @Override
+  17:     protected void doGet(HttpServletRequest request, HttpServletResponse response)
+  18:             throws ServletException, IOException {
+  19: </div><h3>5.8 EditPropertyServlet - ADM-BE-09</h3><p class='fig'>Figure 8. Source evidence: Admin\src\java\com\uninest\servlets\properties\EditPropertyServlet.java</p><div class='code'>  20:  */
+  21: @WebServlet(&quot;/EditPropertyServlet&quot;)
+  22: public class EditPropertyServlet extends HttpServlet {
+  23:     
+  24:     @Override
+  25:     protected void doPost(HttpServletRequest request, HttpServletResponse response) 
+  26:             throws ServletException, IOException {
+  27:         
+  30:         if (session == null || session.getAttribute(&quot;landlordId&quot;) == null) {
+  31:             response.sendRedirect(request.getContextPath() + &quot;/Login.html&quot;);
+  32:             return;
+  33:         }
+  40:         } catch (NumberFormatException e) {
+  41:             sendError(request, response, &quot;Invalid property ID&quot;);
+  42:             return;
+  43:         }
+  58:             if (conn == null) {
+  59:                 sendError(request, response, &quot;Service is temporarily unavailable. Please try again later.&quot;);
+  60:                 return;
+  61:             }
+  64:             if (!verifyOwnership(conn, roomId, landlordId)) {
+  65:                 sendError(request, response, &quot;Unauthorized access&quot;);
+  66:                 return;
+  67:             }
+  73:             
+  74:             PreparedStatement stmt = conn.prepareStatement(query);
+  75:             stmt.setString(1, propertyTitle);
+  76:             stmt.setString(2, roomType);
+  86:             
+  87:             stmt.executeUpdate();
+  88:             stmt.close();
+  89:             
+  90:             response.sendRedirect(request.getContextPath() + &quot;/MyProperties.html?success=&quot; +
+  91:                                 java.net.URLEncoder.encode(&quot;Property updated successfully!&quot;, &quot;UTF-8&quot;));</div><h3>5.9 EnquiriesServlet - ADM-BE-12</h3><p class='fig'>Figure 9. Source evidence: Admin\src\java\com\uninest\servlets\enquiries\EnquiriesServlet.java</p><div class='code'>  20:  */
+  21: @WebServlet(&quot;/EnquiriesServlet&quot;)
+  22: public class EnquiriesServlet extends HttpServlet {
+  23: 
+  24:     @Override
+  25:     protected void doGet(HttpServletRequest request, HttpServletResponse response)
+  26:             throws ServletException, IOException {
+  27:         response.sendRedirect(request.getContextPath() + &quot;/Enquiries.html&quot;);
+  28:     }
+  29: 
+  30:     @Override
+  31:     protected void doPost(HttpServletRequest request, HttpServletResponse response)
+  32:             throws ServletException, IOException {
+  33: 
+  34:         if (!isAdmin(request)) {
+  35:             response.sendRedirect(request.getContextPath() + &quot;/Login.html&quot;);
+  36:             return;
+  37:         }
+  54:             String query = &quot;UPDATE inquiries SET reply_status = ? WHERE inquiry_id = ?&quot;;
+  55:             PreparedStatement stmt = conn.prepareStatement(query);
+  56:             stmt.setString(1, status);
+  57:             stmt.setInt(2, Integer.parseInt(inquiryId));
+  58:             int updated = stmt.executeUpdate();
+  59:             stmt.close();
+  60: 
+  83:                           String key, String message) throws IOException {
+  84:         response.sendRedirect(request.getContextPath()
+  85:                 + &quot;/Enquiries.html?&quot;
+  86:                 + key</div><h3>5.10 ForgotPasswordServlet - ADM-BE-19</h3><p class='fig'>Figure 10. Source evidence: Admin\src\java\com\uninest\servlets\auth\ForgotPasswordServlet.java</p><div class='code'>  21:  */
+  22: @WebServlet(&quot;/ForgotPasswordServlet&quot;)
+  23: public class ForgotPasswordServlet extends HttpServlet {
+  24: 
+  25:     @Override
+  26:     protected void doPost(HttpServletRequest request, HttpServletResponse response)
+  27:             throws ServletException, IOException {
+  28: 
+  52:         String query = &quot;SELECT user_id FROM users WHERE email = ?&quot;;
+  53:         PreparedStatement stmt = conn.prepareStatement(query);
+  54:         stmt.setString(1, email);
+  55:         ResultSet rs = stmt.executeQuery();
+  56: 
+  57:         Integer userId = null;
+  71: 
+  72:         PreparedStatement stmt = conn.prepareStatement(query);
+  73:         stmt.setInt(1, userId);
+  74:         stmt.executeUpdate();
+  75:         stmt.close();
+  76:     }
+  79:                           String key, String message) throws IOException {
+  80:         response.sendRedirect(page
+  81:                 + &quot;?&quot;
+  82:                 + key</div><h3>5.11 LoginServlet - ADM-BE-01 to ADM-BE-03</h3><p class='fig'>Figure 11. Source evidence: Admin\src\java\com\uninest\servlets\auth\LoginServlet.java</p><div class='code'>  23:  */
+  24: @WebServlet(&quot;/LoginServlet&quot;)
+  25: public class LoginServlet extends HttpServlet {
+  26: 
+  27:     @Override
+  28:     protected void doPost(HttpServletRequest request, HttpServletResponse response)
+  29:             throws ServletException, IOException {
+  30: 
+  66: 
+  67:             PreparedStatement stmt = conn.prepareStatement(query);
+  68:             stmt.setString(1, email);
+  69: 
+  70:             ResultSet rs = stmt.executeQuery();
+  71: 
+  72:             if (rs.next()) {
+ 106: 
+ 107:                     response.sendRedirect(request.getContextPath() + &quot;/Dashboard.html&quot;);
+ 108:                 } else {
+ 109:                     redirectWithError(response, &quot;Invalid email or password&quot;);
+ 125:             String query = &quot;UPDATE users SET last_login = NOW() WHERE user_id = ?&quot;;
+ 126:             PreparedStatement stmt = conn.prepareStatement(query);
+ 127:             stmt.setInt(1, userId);
+ 128:             stmt.executeUpdate();
+ 129:             stmt.close();
+ 130:         } catch (SQLException e) {
+ 136:             throws IOException {
+ 137:         response.sendRedirect(&quot;Login.html?error=&quot;
+ 138:                 + java.net.URLEncoder.encode(errorMessage, &quot;UTF-8&quot;));
+ 139:     }</div><h3>5.12 LogoutServlet - ADM-BE-23</h3><p class='fig'>Figure 12. Source evidence: Admin\src\java\com\uninest\servlets\auth\LogoutServlet.java</p><div class='code'>  15:  */
+  16: @WebServlet(&quot;/LogoutServlet&quot;)
+  17: public class LogoutServlet extends HttpServlet {
+  18:     
+  19:     @Override
+  20:     protected void doGet(HttpServletRequest request, HttpServletResponse response) 
+  21:             throws ServletException, IOException {
+  22:         
+  42:         // Redirect to login page
+  43:         response.sendRedirect(request.getContextPath() + &quot;/Login.html?message=&quot; + 
+  44:                             java.net.URLEncoder.encode(&quot;Successfully logged out&quot;, &quot;UTF-8&quot;));
+  45:     }
+  47:     @Override
+  48:     protected void doPost(HttpServletRequest request, HttpServletResponse response) 
+  49:             throws ServletException, IOException {
+  50:         doGet(request, response);
+  51:     }
+  52: }</div><h3>5.13 MaintenanceServlet - ADM-BE-15</h3><p class='fig'>Figure 13. Source evidence: Admin\src\java\com\uninest\servlets\maintenance\MaintenanceServlet.java</p><div class='code'>  20:  */
+  21: @WebServlet(&quot;/MaintenanceServlet&quot;)
+  22: public class MaintenanceServlet extends HttpServlet {
+  23: 
+  24:     @Override
+  25:     protected void doGet(HttpServletRequest request, HttpServletResponse response)
+  26:             throws ServletException, IOException {
+  27:         response.sendRedirect(request.getContextPath() + &quot;/Maintenance.html&quot;);
+  28:     }
+  29: 
+  30:     @Override
+  31:     protected void doPost(HttpServletRequest request, HttpServletResponse response)
+  32:             throws ServletException, IOException {
+  33: 
+  34:         if (!isAdmin(request)) {
+  35:             response.sendRedirect(request.getContextPath() + &quot;/Login.html&quot;);
+  36:             return;
+  37:         }
+  57:                     + &quot;WHERE request_id = ?&quot;;
+  58:             PreparedStatement stmt = conn.prepareStatement(query);
+  59:             stmt.setString(1, status);
+  60:             stmt.setString(2, notes);
+  62:             stmt.setInt(4, Integer.parseInt(requestId));
+  63:             int updated = stmt.executeUpdate();
+  64:             stmt.close();
+  65: 
+  89:                           String key, String message) throws IOException {
+  90:         response.sendRedirect(request.getContextPath()
+  91:                 + &quot;/Maintenance.html?&quot;
+  92:                 + key</div><h3>5.14 MessagesServlet - ADM-BE-14</h3><p class='fig'>Figure 14. Source evidence: Admin\src\java\com\uninest\servlets\messages\MessagesServlet.java</p><div class='code'>  20:  */
+  21: @WebServlet(&quot;/MessagesServlet&quot;)
+  22: public class MessagesServlet extends HttpServlet {
+  23: 
+  24:     @Override
+  25:     protected void doGet(HttpServletRequest request, HttpServletResponse response)
+  26:             throws ServletException, IOException {
+  27:         response.sendRedirect(request.getContextPath() + &quot;/Messages.html&quot;);
+  28:     }
+  29: 
+  30:     @Override
+  31:     protected void doPost(HttpServletRequest request, HttpServletResponse response)
+  32:             throws ServletException, IOException {
+  33: 
+  35:         if (session == null || session.getAttribute(&quot;userId&quot;) == null) {
+  36:             response.sendRedirect(request.getContextPath() + &quot;/Login.html&quot;);
+  37:             return;
+  38:         }
+  54:                     + &quot;WHERE message_id = ? AND recipient_id = ?&quot;;
+  55:             PreparedStatement stmt = conn.prepareStatement(query);
+  56:             stmt.setInt(1, Integer.parseInt(messageId));
+  57:             stmt.setInt(2, (Integer) session.getAttribute(&quot;userId&quot;));
+  58:             int updated = stmt.executeUpdate();
+  59:             stmt.close();
+  60: 
+  71:                           String key, String message) throws IOException {
+  72:         response.sendRedirect(request.getContextPath()
+  73:                 + &quot;/Messages.html?&quot;
+  74:                 + key</div><h3>5.15 NotificationServlet - ADM-BE-17</h3><p class='fig'>Figure 15. Source evidence: Admin\src\java\com\uninest\servlets\notifications\NotificationServlet.java</p><div class='code'>  20:  */
+  21: @WebServlet(&quot;/NotificationServlet&quot;)
+  22: public class NotificationServlet extends HttpServlet {
+  23: 
+  24:     @Override
+  25:     protected void doPost(HttpServletRequest request, HttpServletResponse response)
+  26:             throws ServletException, IOException {
+  27: 
+  29:         if (session == null || session.getAttribute(&quot;userId&quot;) == null) {
+  30:             response.sendRedirect(request.getContextPath() + &quot;/Login.html&quot;);
+  31:             return;
+  32:         }
+  58:                 + &quot;WHERE notification_id = ? AND user_id = ?&quot;;
+  59:         PreparedStatement stmt = conn.prepareStatement(query);
+  60:         stmt.setInt(1, notificationId);
+  61:         stmt.setInt(2, userId);
+  62:         int updated = stmt.executeUpdate();
+  63:         stmt.close();
+  64:         return updated;
+  69:                 + &quot;WHERE user_id = ? AND is_read = FALSE&quot;;
+  70:         PreparedStatement stmt = conn.prepareStatement(query);
+  71:         stmt.setInt(1, userId);
+  72:         int updated = stmt.executeUpdate();
+  73:         stmt.close();
+  74:         return updated;
+  82:                 : request.getContextPath() + &quot;/Dashboard.html&quot;;
+  83:         response.sendRedirect(page
+  84:                 + (page.contains(&quot;?&quot;) ? &quot;&amp;&quot; : &quot;?&quot;)
+  85:                 + key</div><h3>5.16 PaymentsServlet - ADM-BE-16</h3><p class='fig'>Figure 16. Source evidence: Admin\src\java\com\uninest\servlets\payments\PaymentsServlet.java</p><div class='code'>  20:  */
+  21: @WebServlet(&quot;/PaymentsServlet&quot;)
+  22: public class PaymentsServlet extends HttpServlet {
+  23: 
+  24:     @Override
+  25:     protected void doGet(HttpServletRequest request, HttpServletResponse response)
+  26:             throws ServletException, IOException {
+  27:         response.sendRedirect(request.getContextPath() + &quot;/Payments.html&quot;);
+  28:     }
+  29: 
+  30:     @Override
+  31:     protected void doPost(HttpServletRequest request, HttpServletResponse response)
+  32:             throws ServletException, IOException {
+  33: 
+  34:         if (!isAdmin(request)) {
+  35:             response.sendRedirect(request.getContextPath() + &quot;/Login.html&quot;);
+  36:             return;
+  37:         }
+  57:                     + &quot;WHERE payment_id = ?&quot;;
+  58:             PreparedStatement stmt = conn.prepareStatement(query);
+  59:             stmt.setString(1, status);
+  60:             stmt.setString(2, emptyToNull(receiptNumber));
+  62:             stmt.setInt(4, Integer.parseInt(paymentId));
+  63:             int updated = stmt.executeUpdate();
+  64:             stmt.close();
+  65: 
+  93:                           String key, String message) throws IOException {
+  94:         response.sendRedirect(request.getContextPath()
+  95:                 + &quot;/Payments.html?&quot;
+  96:                 + key</div><h3>5.17 ProfileServlet - ADM-BE-18</h3><p class='fig'>Figure 17. Source evidence: Admin\src\java\com\uninest\servlets\account\ProfileServlet.java</p><div class='code'>  20:  */
+  21: @WebServlet(&quot;/ProfileServlet&quot;)
+  22: public class ProfileServlet extends HttpServlet {
+  23: 
+  24:     @Override
+  25:     protected void doPost(HttpServletRequest request, HttpServletResponse response)
+  26:             throws ServletException, IOException {
+  27: 
+  29:         if (session == null || session.getAttribute(&quot;userId&quot;) == null) {
+  30:             response.sendRedirect(request.getContextPath() + &quot;/Login.html&quot;);
+  31:             return;
+  32:         }
+  52:             String query = &quot;UPDATE users SET full_name = ?, email = ?, phone = ? WHERE user_id = ?&quot;;
+  53:             PreparedStatement stmt = conn.prepareStatement(query);
+  54:             stmt.setString(1, fullName.trim());
+  55:             stmt.setString(2, email.trim());
+  58: 
+  59:             int updated = stmt.executeUpdate();
+  60:             stmt.close();
+  61: 
+  78:                           String key, String message) throws IOException {
+  79:         response.sendRedirect(request.getContextPath()
+  80:                 + &quot;/Profile.html?&quot;
+  81:                 + key</div><h3>5.18 RegisterServlet - Related registration validation</h3><p class='fig'>Figure 18. Source evidence: Admin\src\java\com\uninest\servlets\auth\RegisterServlet.java</p><div class='code'>  23:  */
+  24: @WebServlet(&quot;/RegisterServlet&quot;)
+  25: @MultipartConfig(
+  26:     maxFileSize = 5242880, // 5MB
+  31:     @Override
+  32:     protected void doPost(HttpServletRequest request, HttpServletResponse response) 
+  33:             throws ServletException, IOException {
+  34:         
+  54:         if (!password.equals(confirmPassword)) {
+  55:             sendError(response, &quot;Passwords do not match&quot;);
+  56:             return;
+  57:         }
+  60:         if (!PasswordUtil.isStrongPassword(password)) {
+  61:             sendError(response, &quot;Password is not strong enough. &quot; + 
+  62:                      PasswordUtil.getPasswordStrengthFeedback(password));
+  63:             return;
+  68:             if (conn == null) {
+  69:                 sendError(response, &quot;Service is temporarily unavailable. Please try again later.&quot;);
+  70:                 return;
+  71:             }
+  74:             if (emailExists(conn, email)) {
+  75:                 sendError(response, &quot;Email already registered&quot;);
+  76:                 return;
+  77:             }
+  80:             if (idExists(conn, idNumber)) {
+  81:                 sendError(response, &quot;ID number already registered&quot;);
+  82:                 return;
+  83:             }
+  94:             
+  95:             PreparedStatement userStmt = conn.prepareStatement(userQuery, 
+  96:                     java.sql.Statement.RETURN_GENERATED_KEYS);
+  97:             userStmt.setString(1, fullName);
+ 101:             
+ 102:             userStmt.executeUpdate();</div><h3>5.19 SendMessageServlet - ADM-BE-13</h3><p class='fig'>Figure 19. Source evidence: Admin\src\java\com\uninest\servlets\messages\SendMessageServlet.java</p><div class='code'>  20:  */
+  21: @WebServlet(&quot;/SendMessageServlet&quot;)
+  22: public class SendMessageServlet extends HttpServlet {
+  23:     
+  24:     @Override
+  25:     protected void doPost(HttpServletRequest request, HttpServletResponse response) 
+  26:             throws ServletException, IOException {
+  27:         
+  30:         if (session == null || session.getAttribute(&quot;userId&quot;) == null) {
+  31:             response.sendRedirect(request.getContextPath() + &quot;/Login.html&quot;);
+  32:             return;
+  33:         }
+  39:         } catch (NumberFormatException e) {
+  40:             response.sendRedirect(request.getContextPath() + &quot;/Messages.html?error=Invalid recipient&quot;);
+  41:             return;
+  42:         }
+  46:         if (messageText == null || messageText.trim().isEmpty()) {
+  47:             response.sendRedirect(request.getContextPath() + &quot;/Messages.html?error=Message cannot be empty&quot;);
+  48:             return;
+  49:         }
+  53:             if (conn == null) {
+  54:                 response.sendRedirect(request.getContextPath() + &quot;/Messages.html?error=Service is temporarily unavailable. Please try again later.&quot;);
+  55:                 return;
+  56:             }
+  62:             
+  63:             PreparedStatement stmt = conn.prepareStatement(query);
+  64:             stmt.setInt(1, senderId);
+  65:             stmt.setInt(2, recipientId);
+  77:             stmt.setString(4, messageText);
+  78:             stmt.executeUpdate();
+  79:             stmt.close();
+  80:             
+  87:             
+  88:             response.sendRedirect(request.getContextPath() + &quot;/Messages.html?success=Message sent&quot;);</div><h3>5.20 VerifyPropertyServlet - ADM-BE-07 and ADM-BE-08</h3><p class='fig'>Figure 20. Source evidence: Admin\src\java\com\uninest\servlets\properties\VerifyPropertyServlet.java</p><div class='code'>  25:  */
+  26: @WebServlet(&quot;/VerifyPropertyServlet&quot;)
+  27: public class VerifyPropertyServlet extends HttpServlet {
+  28: 
+  29:     @Override
+  30:     protected void doPost(HttpServletRequest request, HttpServletResponse response)
+  31:             throws ServletException, IOException {
+  32: 
+  34:         if (session == null || session.getAttribute(&quot;adminId&quot;) == null) {
+  35:             response.sendRedirect(request.getContextPath() + &quot;/createAccount/login.html&quot;);
+  36:             return;
+  37:         }
+  65: 
+  66:             PreparedStatement stmt = conn.prepareStatement(query);
+  67:             stmt.setString(1, approvalStatus);
+  68:             stmt.setString(2, adminNote);
+  71: 
+  72:             int updated = stmt.executeUpdate();
+  73:             stmt.close();
+  74: 
+  92:                           String key, String message) throws IOException {
+  93:         response.sendRedirect(request.getContextPath()
+  94:                 + &quot;/Admin/web/jsp/AddProperty.html?&quot;
+  95:                 + key</div><h2>6. Video Recording Plan and File Size</h2>
+<ol><li>Record at <b>1280 x 720, 30 FPS</b>. Do not record 1080p unless required.</li><li>In OBS Output settings use <b>MKV</b>, encoder H.264, rate control CBR, video bitrate <b>1500-2200 Kbps</b>, audio 96 Kbps.</li><li>Record five short clips using the evidence groups above. Pause between tests; do not leave build waiting time in the recording.</li><li>Show the test ID on screen or say it aloud before each action. Show frontend result, NetBeans/Tomcat result, then the relevant MySQL row.</li><li>After recording, use OBS <b>File - Remux Recordings</b> to create MP4 if the lecturer requires MP4.</li><li>If only one upload is allowed, combine the short clips in order. Keep the original clips until marking is complete.</li></ol>
+<div class='callout'><b>Estimated size:</b> At 1800 Kbps video plus 96 Kbps audio, a 10-minute recording is roughly 142 MB. A 22 MB infrastructure clip is normal. Cutting idle build time and recording at 720p reduces size more effectively than making text unreadable.</div>
+
+<h2>7. Final Submission Checklist</h2>
+<p class='check'>â˜ All Actual Result cells completed<br>â˜ Every test marked Pass or Fail<br>â˜ Every failure entered in the Failure and Retest Register<br>â˜ Database before/after evidence captured for write operations<br>â˜ No passwords visible in screenshots or video<br>â˜ Video test IDs match the report<br>â˜ Final document and clips open successfully before submission</p>
+</body></html>

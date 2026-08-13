@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UniNest - Login</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="container">
+    <div class="header-bar">
+      <a href="../HomePage/home.html" class="home-link" aria-label="Back to homepage">
+        <svg class="home-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+          <path
+            d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"
+            stroke="currentColor"
+            stroke-width="2"
+            fill="none"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </a>
+    </div>
+
+    <div class="content">
+      <img src="uninest-logo.png" class="auth-logo" alt="UniNest logo">
+      <h1>Login</h1>
+      <p class="subtitle">Access your UniNest account</p>
+      <div id="formMessage" class="form-alert" hidden></div>
+
+      <form id="loginForm" action="../AccountLoginServlet" method="post">
+        <div class="form-group column">
+          <label for="login-email">Email Address</label>
+          <input type="email" id="login-email" name="email" placeholder="Enter your email" required>
+        </div>
+
+        <div class="form-group column">
+          <label for="login-password">Password</label>
+          <input type="password" id="login-password" name="password" placeholder="Enter your password" required>
+        </div>
+
+        <div class="roles-box">
+          <div class="roles-title">Select Role</div>
+          <div class="form-group">
+            <select id="login-role" name="role" required>
+              <option value="student">Student</option>
+              <option value="landlord">Landlord</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+        </div>
+
+        <button type="submit" class="btn">Login</button>
+
+        <div class="divider"><span>OR</span></div>
+
+        <div class="switch-link">
+          Don't have an account? <a href="index.html">Register</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const messageBox = document.getElementById('formMessage');
+  const loginForm = document.getElementById('loginForm');
+  const errorMessage = params.get('error');
+  const successMessage = params.get('success');
+
+  loginForm.action = window.location.protocol === 'file:'
+    ? 'http://localhost:8080/uninest/AccountLoginServlet'
+    : '../AccountLoginServlet';
+
+  if (errorMessage || successMessage) {
+    messageBox.textContent = errorMessage || successMessage;
+    messageBox.className = 'form-alert ' + (errorMessage ? 'error' : 'success');
+    messageBox.hidden = false;
+  }
+</script>
+
+  <script src="../system-status.js"></script>
+</body>
+</html>

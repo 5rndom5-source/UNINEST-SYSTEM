@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - UniNest</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        body {
+            min-height: 100vh;
+            background:
+                linear-gradient(135deg, rgba(30, 64, 175, 0.95), rgba(16, 185, 129, 0.88)),
+                #1e40af;
+        }
+
+        .login-container {
+            max-width: 960px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: center;
+            min-height: 100vh;
+            padding: 24px;
+        }
+
+        .login-brand {
+            color: #ffffff;
+        }
+
+        .login-brand h1 {
+            font-size: 44px;
+            margin-bottom: 14px;
+        }
+
+        .login-brand p {
+            color: #dbeafe;
+            font-size: 16px;
+            line-height: 1.8;
+            max-width: 420px;
+        }
+
+        .login-points {
+            display: grid;
+            gap: 12px;
+            margin-top: 30px;
+            max-width: 420px;
+        }
+
+        .login-points div {
+            padding: 12px 14px;
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            border-radius: var(--radius-md);
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .login-form {
+            background: var(--white);
+            padding: 40px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .login-form h2 {
+            color: var(--dark);
+            margin-bottom: 8px;
+            font-size: 24px;
+        }
+
+        .form-intro {
+            color: var(--gray);
+            font-size: 14px;
+            margin-bottom: 26px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--light);
+            border-radius: var(--radius-md);
+            font-size: 14px;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--secondary);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12);
+        }
+
+        .remember-forgot {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            font-size: 13px;
+        }
+
+        .forgot-password {
+            color: var(--secondary);
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--secondary);
+            color: var(--white);
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 16px;
+            font-weight: 800;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .btn-login:hover {
+            background-color: var(--secondary-dark);
+        }
+
+        .login-register {
+            text-align: center;
+            margin-top: 20px;
+            color: var(--gray);
+            font-size: 14px;
+        }
+
+        .alert-error {
+            background-color: #fee2e2;
+            color: #991b1b;
+            padding: 12px;
+            border-radius: var(--radius-md);
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert-error.show {
+            display: block;
+        }
+
+        @media (max-width: 800px) {
+            .login-container {
+                grid-template-columns: 1fr;
+            }
+
+            .login-form {
+                padding: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-brand">
+            <img src="../uninest-logo.png" alt="UniNest" width="72" height="72" style="object-fit: contain; margin-bottom: 18px;">
+            <h1 class="brand-title">UniNest Admin</h1>
+            <p>
+                Review landlord-submitted accommodation, manage support messages, and prepare approved listings for the public UniNest pages.
+            </p>
+            <div class="login-points">
+                <div>Property submission verification</div>
+                <div>Accept or deny listings with admin notes</div>
+                <div>Secure portal access</div>
+            </div>
+        </div>
+
+        <div class="login-form">
+            <h2>Admin Login</h2>
+            <p class="form-intro">Sign in to the UniNest admin workspace.</p>
+
+            <div class="alert-error" id="errorAlert">
+                Please check your admin email and password.
+            </div>
+
+            <form method="POST" action="../../../LoginServlet">
+                <div class="form-group">
+                    <label class="form-label required">Email Address</label>
+                    <input type="email" class="form-control" name="email" placeholder="admin@example.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label required">Password</label>
+                    <input type="password" class="form-control" name="password" placeholder="Enter password" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label required">Role</label>
+                    <select class="form-control" name="role" required>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+
+                <div class="remember-forgot">
+                    <label>
+                        <input type="checkbox" name="remember"> Remember me
+                    </label>
+                    <a href="ForgotPassword.html" class="forgot-password">Forgot Password?</a>
+                </div>
+
+                <button type="submit" class="btn-login">Sign In</button>
+            </form>
+
+            <div class="login-register">
+                Admin access is managed by the project team.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        if (new URLSearchParams(window.location.search).get('error')) {
+            document.getElementById('errorAlert').classList.add('show');
+        }
+    </script>
+  <script src="../../../system-status.js"></script>
+</body>
+</html>
+

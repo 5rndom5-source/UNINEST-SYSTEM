@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Profile - UniNest Landlord Portal</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <a href="index.html" class="brand">
+          <img src="../createAccount/uninest-logo.png" alt="UniNest logo" />
+          <span>
+            <strong>UniNest</strong>
+            <span>Landlord Portal</span>
+          </span>
+        </a>
+        <nav class="side-nav">
+          <a href="index.html">Workspace</a>
+          <a href="listings.html">Listings</a>
+          <a href="booking-requests.html">Requests</a>
+          <a href="reviews.html">Reviews</a>
+          <a href="contact-landlord.html">Contact</a>
+          <a href="profile.html" class="active">Profile</a>
+          <a href="logout.html">Logout</a>
+        </nav>
+      </aside>
+
+      <div class="workspace">
+        <header class="topbar">
+          <div class="topbar-title">
+            <strong>Profile</strong>
+            <span data-user-name>Landlord Account</span>
+          </div>
+          <div class="topbar-actions">
+            <button class="icon-btn" type="button" aria-label="Notifications">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 7h18s-3 0-3-7"></path><path d="M13.7 21a2 2 0 0 1-3.4 0"></path></svg>
+            </button>
+            <div class="profile-menu">
+              <button class="profile-trigger" type="button" aria-label="Open profile menu">
+                <span class="avatar-sm" data-user-initials>UN</span>
+                <strong data-user-name>Landlord Account</strong>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+              </button>
+              <div class="profile-dropdown">
+                <a href="profile.html">View Profile</a>
+                <a href="contact-landlord.html">Contact Page</a>
+                <a href="logout.html">Logout</a>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <main class="content">
+          <div class="page-header">
+            <div>
+              <h1 class="page-title">Profile</h1>
+              <p class="page-subtitle">Manage your landlord account details.</p>
+            </div>
+            <div class="status-note">Account details prepared</div>
+          </div>
+
+          <section class="profile-layout">
+            <aside class="profile-card">
+              <div class="avatar" data-user-initials>UN</div>
+              <h2 data-user-name>Landlord Account</h2>
+              <p class="meta">Landlord Account</p>
+              <p data-user-email></p>
+              <p data-user-phone></p>
+              <form data-profile-image-form enctype="multipart/form-data" style="margin-top: 16px;">
+                <label class="btn btn-soft" for="landlordProfilePhoto">Choose Profile Picture</label>
+                <input id="landlordProfilePhoto" name="photo" type="file" accept="image/jpeg,image/png,image/webp" required hidden />
+                <button class="submit-btn" type="submit" style="margin-top: 8px;">Upload Picture</button>
+                <p data-profile-image-message class="meta" aria-live="polite"></p>
+              </form>
+            </aside>
+
+            <section class="panel">
+              <h2 class="section-title">Account Details</h2>
+              <form id="profileForm" action="../LandlordProfileServlet" method="post">
+                <div class="form-grid">
+                  <label>
+                    Full Name
+                    <input type="text" name="fullName" required autocomplete="name" />
+                  </label>
+                  <label>
+                    Email
+                    <input type="email" name="email" required autocomplete="email" />
+                  </label>
+                  <label>
+                    Phone Number
+                    <input type="tel" name="phone" required autocomplete="tel" />
+                  </label>
+                  <label>
+                    Main Area
+                    <select name="mainArea">
+                      <option>Cape Town CBD</option>
+                      <option>Rondebosch</option>
+                      <option>Observatory</option>
+                      <option>Bellville</option>
+                      <option>Stellenbosch</option>
+                    </select>
+                  </label>
+                  <label class="form-full">
+                    Short Bio
+                    <textarea name="bio" rows="5">Student accommodation landlord profile for UniNest.</textarea>
+                  </label>
+                </div>
+                <div class="button-row">
+                  <button type="submit" class="submit-btn">Save Profile</button>
+                  <button type="reset" class="btn btn-soft">Reset</button>
+                </div>
+                <div class="status-banner" id="profileSuccess"></div>
+              </form>
+            </section>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script src="../portal-identity.js?v=20260813-profile"></script>
+    <script src="../system-status.js"></script>
+</body>
+</html>

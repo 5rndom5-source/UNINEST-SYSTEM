@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Landlord Login - UniNest</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main class="login-wrap">
+      <section class="login-panel">
+        <div class="login-brand">
+          <img src="../createAccount/uninest-logo.png" alt="UniNest logo" />
+          <h1>UniNest Landlord Portal</h1>
+          <p>Access listing submissions, student enquiries, and landlord account details from one secure area.</p>
+        </div>
+
+        <div class="login-form-panel">
+          <h1>Sign In</h1>
+          <form id="landlordLoginForm" action="../LandlordLoginServlet" method="post">
+            <label>
+              Email Address
+              <input
+                type="email"
+                name="landlordEmail"
+                placeholder="landlord@example.com"
+                required
+              />
+            </label>
+
+            <label style="margin-top: 18px;">
+              Password
+              <input
+                type="password"
+                name="landlordPassword"
+                placeholder="Enter password"
+                required
+              />
+            </label>
+
+            <button type="submit" class="submit-btn" style="width: 100%; margin-top: 24px;">
+              Sign In
+            </button>
+          </form>
+        </div>
+      </section>
+    </main>
+
+    <script src="script.js"></script>
+    <script src="../system-status.js"></script>
+</body>
+</html>

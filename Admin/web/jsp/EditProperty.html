@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Review Listing - UniNest Admin Portal</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .page-wrapper {
+            display: grid;
+            grid-template-columns: 250px minmax(0, 1fr);
+            min-height: 100vh;
+        }
+
+        .content {
+            grid-column: 2;
+            padding: 30px;
+            min-width: 0;
+            background: #f3f4f6;
+        }
+
+        .review-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 340px;
+            gap: 22px;
+            align-items: start;
+        }
+
+        .panel {
+            background: var(--white);
+            border: 1px solid rgba(30, 64, 175, 0.12);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            padding: 24px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            margin-bottom: 16px;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+
+        .detail-item {
+            padding: 12px;
+            background: #f8fafc;
+            border: 1px solid var(--light);
+            border-radius: var(--radius-md);
+        }
+
+        .detail-item span {
+            display: block;
+            color: var(--gray);
+            font-size: 12px;
+            margin-bottom: 4px;
+        }
+
+        .detail-item strong {
+            color: var(--dark);
+            font-size: 14px;
+        }
+
+        .readonly-note {
+            padding: 14px 16px;
+            border-left: 4px solid var(--secondary);
+            background: #ecfdf5;
+            color: #065f46;
+            border-radius: var(--radius-md);
+            margin-bottom: 18px;
+            font-size: 14px;
+        }
+
+        .image-strip {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+            margin-top: 14px;
+        }
+
+        .image-placeholder {
+            min-height: 120px;
+            border-radius: var(--radius-md);
+            background: linear-gradient(135deg, #dbeafe, #ecfdf5);
+            border: 1px solid var(--light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-dark);
+            font-weight: 800;
+            text-align: center;
+            padding: 12px;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 120px;
+            border: 1px solid var(--light);
+            border-radius: var(--radius-md);
+            padding: 10px;
+            resize: vertical;
+            font-family: var(--font-main);
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .btn {
+            border: 0;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-weight: 800;
+            padding: 10px 14px;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-outline {
+            background: var(--white);
+            border: 1px solid var(--light);
+            color: var(--primary);
+        }
+
+        .btn-danger-soft {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        @media (max-width: 900px) {
+            .page-wrapper,
+            .review-grid,
+            .detail-grid,
+            .image-strip {
+                grid-template-columns: 1fr;
+            }
+
+            .content {
+                grid-column: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-wrapper">
+        <div class="header" style="background: var(--white); border-bottom: 1px solid var(--light); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center;">
+            <h1 class="brand-title">UniNest Admin</h1>
+            <div style="display: flex; gap: 14px; align-items: center;">
+                <div class="admin-header-actions">
+                    <button class="admin-notification" type="button" aria-label="Notifications">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 7h18s-3 0-3-7"></path><path d="M13.7 21a2 2 0 0 1-3.4 0"></path></svg>
+                    </button>
+                    <div class="admin-profile-menu">
+                        <button class="admin-profile-trigger" type="button" aria-label="Open admin menu">
+                            <span class="admin-avatar">UN</span>
+                            <span>Admin Account</span>
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+                        </button>
+                        <div class="admin-profile-dropdown">
+                            <a href="Profile.html">Profile</a>
+                            <a href="../../../HomePage/contact.html">Contact Us</a>
+                            <a href="Logout.html">Logout</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <aside class="sidebar">
+            <a href="Dashboard.html" class="nav-item"><span></span> Dashboard</a>
+            <a href="MyProperties.html" class="nav-item"><span></span> Listing Queue</a>
+            <a href="AddProperty.html" class="nav-item active"><span></span> Verify Listings</a>
+            <a href="BookingRequests.html" class="nav-item"><span></span> Booking Requests</a>
+            <a href="Enquiries.html" class="nav-item"><span></span> Enquiries</a>
+            <a href="Messages.html" class="nav-item"><span></span> Messages</a>
+            <a href="Payments.html" class="nav-item"><span></span> Records</a>
+            <a href="Maintenance.html" class="nav-item"><span></span> Maintenance</a>
+            <a href="Profile.html" class="nav-item"><span></span> Profile</a>
+            <a href="../../../HomePage/contact.html" class="nav-item"><span></span> Contact Us</a>
+            <a href="Logout.html" class="nav-item"><span></span> Logout</a>
+        </aside>
+
+        <main class="content">
+            <div class="page-header">
+                <h1 class="page-title">Review Details</h1>
+                <p class="page-subtitle">Confirm listing details and record a decision.</p>
+            </div>
+
+            <div class="readonly-note">
+                Admins do not add or edit landlord properties here. Use this page to inspect the submission and record an accept or deny decision.
+            </div>
+
+            <div class="review-grid">
+                <section class="panel">
+                    <h2 class="section-title">Submitted Listing</h2>
+                    <div class="detail-grid">
+                        <div class="detail-item"><span>Property</span><strong>Not connected</strong></div>
+                        <div class="detail-item"><span>Landlord</span><strong>Not connected</strong></div>
+                        <div class="detail-item"><span>Area</span><strong>Not connected</strong></div>
+                        <div class="detail-item"><span>Advertised Rent</span><strong>Not connected</strong></div>
+                        <div class="detail-item"><span>Room Type</span><strong>Not connected</strong></div>
+                        <div class="detail-item"><span>Status</span><strong>No record selected</strong></div>
+                    </div>
+
+                    <h2 class="section-title">Description Supplied By Landlord</h2>
+                    <p style="color: var(--gray); margin-bottom: 18px;">
+                        No landlord description is available until a submitted listing is selected.
+                    </p>
+
+                    <h2 class="section-title">Image Review</h2>
+                    <div class="image-strip">
+                        <div class="image-placeholder">No image</div>
+                        <div class="image-placeholder">No image</div>
+                        <div class="image-placeholder">No image</div>
+                    </div>
+                </section>
+
+                <aside class="panel">
+                    <h2 class="section-title">Admin Decision</h2>
+                    <form method="POST" action="../../../VerifyPropertyServlet">
+                        <input type="hidden" name="propertyId" value="1">
+                        <label class="form-label">Admin Note</label>
+                        <textarea name="adminNote" placeholder="Add a short reason for approval or denial."></textarea>
+                        <div class="actions">
+                            <button class="btn btn-primary" type="submit" name="decision" value="approve">Approve listing</button>
+                            <button class="btn btn-danger-soft" type="submit" name="decision" value="deny">Deny listing</button>
+                            <a class="btn btn-outline" href="AddProperty.html">Back to verification</a>
+                        </div>
+                    </form>
+                </aside>
+            </div>
+        </main>
+    </div>
+  <script src="../../../portal-identity.js?v=20260813-profile"></script>
+  <script src="../../../system-status.js"></script>
+</body>
+</html>
+
+

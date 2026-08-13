@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Landlord Property Listings - UniNest</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body class="landlord-classic">
+    <div class="classic-shell">
+      <header class="classic-header">
+        <a href="index.html" class="classic-brand">
+          <img src="../createAccount/uninest-logo.png" alt="UniNest logo" />
+          <span>
+            <strong>UniNest</strong>
+            <small>Student Accommodation Marketplace</small>
+          </span>
+        </a>
+
+        <nav class="classic-nav" aria-label="Landlord navigation">
+          <a href="index.html">Home</a>
+          <a href="listings.html" class="active">Listings</a>
+          <a href="booking-requests.html">Booking Requests</a>
+          <a href="reviews.html">Reviews</a>
+          <a href="profile.html">Profile</a>
+          <a href="logout.html">Logout</a>
+        </nav>
+
+        <div class="classic-actions">
+          <button class="icon-btn classic-icon" type="button" aria-label="Notifications">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 7h18s-3 0-3-7"></path>
+              <path d="M13.7 21a2 2 0 0 1-3.4 0"></path>
+            </svg>
+          </button>
+          <div class="profile-menu">
+            <button class="profile-trigger classic-profile" type="button" aria-label="Open profile menu">
+              <span class="avatar-sm">UN</span>
+              <strong>Landlord Account</strong>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+            </button>
+            <div class="profile-dropdown">
+              <a href="profile.html">View Profile</a>
+              <a href="contact-landlord.html">Contact Page</a>
+              <a href="logout.html">Logout</a>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main class="classic-content">
+        <h1 class="classic-title">Landlord Property Listings</h1>
+
+        <section class="classic-section">
+          <h2>Add New Property</h2>
+          <form
+            id="propertyForm"
+            class="property-entry-form"
+            action="../LandlordAddPropertyServlet"
+            method="post"
+            enctype="multipart/form-data"
+          >
+            <input type="hidden" id="propertyRoomId" name="roomId" value="" />
+            <label class="wide-field">
+              Title:
+              <input type="text" id="propertyTitle" name="propertyTitle" required />
+            </label>
+
+            <label class="wide-field">
+              Description:
+              <textarea
+                id="propertyDescription"
+                name="description"
+                rows="2"
+                placeholder="Enter property description..."
+                required
+              ></textarea>
+            </label>
+
+            <div class="form-pair">
+              <label>
+                Location:
+                <select id="propertyLocation" name="location" required>
+                  <option value="">Select location</option>
+                  <option>Cape Town CBD</option>
+                  <option>Rondebosch</option>
+                  <option>Observatory</option>
+                  <option>Bellville</option>
+                  <option>Claremont</option>
+                  <option>Stellenbosch</option>
+                </select>
+              </label>
+
+              <label>
+                Price:
+                <span class="classic-price-field">
+                  <span>R</span>
+                  <input type="number" id="propertyPrice" name="price" min="0" step="50" required />
+                </span>
+              </label>
+            </div>
+
+            <div>
+              <span class="field-caption">Upload Photos:</span>
+              <label class="classic-upload" for="propertyPhotos">
+                <img id="uploadPreview" class="upload-preview hidden" alt="Selected property preview" />
+                <span class="upload-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24">
+                    <path d="M12 3v12"></path>
+                    <path d="m7 10 5 5 5-5"></path>
+                    <path d="M5 21h14"></path>
+                  </svg>
+                </span>
+                <strong>Upload Images</strong>
+                <small id="uploadName">No image selected</small>
+              </label>
+              <input id="propertyPhotos" name="photos" type="file" accept="image/*" multiple hidden />
+            </div>
+
+            <div class="classic-checks">
+              <label><input type="checkbox" name="amenities" value="WiFi" checked /> WiFi</label>
+              <label><input type="checkbox" name="amenities" value="Parking" checked /> Parking</label>
+              <label><input type="checkbox" name="amenities" value="Furnished" checked /> Furnished</label>
+            </div>
+
+            <div class="classic-buttons">
+              <button type="submit" class="submit-btn" id="propertySubmitButton">Submit Listing</button>
+              <button type="reset" class="btn">Cancel</button>
+            </div>
+
+            <div class="classic-pending" id="listingStatus">Pending Approval</div>
+          </form>
+        </section>
+
+        <section class="classic-section listings-section">
+          <h2>My Property Listings:</h2>
+          <div class="classic-listings-grid" id="propertyGrid">
+            <article class="classic-empty-listing" id="emptyListingState">
+              No property listings have been added yet.
+            </article>
+          </div>
+          <div class="classic-pagination" id="propertyPagination" aria-label="Landlord listing pages"></div>
+        </section>
+      </main>
+    </div>
+
+    <script src="script.js"></script>
+    <script src="../portal-identity.js?v=20260813-profile"></script>
+    <script src="../system-status.js"></script>
+</body>
+</html>

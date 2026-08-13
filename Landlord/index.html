@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Workspace - UniNest Landlord Portal</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <a href="index.html" class="brand">
+          <img src="../createAccount/uninest-logo.png" alt="UniNest logo" />
+          <span>
+            <strong>UniNest</strong>
+            <span>Landlord Portal</span>
+          </span>
+        </a>
+
+        <nav class="side-nav">
+          <a href="index.html" class="active">Workspace</a>
+          <a href="listings.html">Listings</a>
+          <a href="booking-requests.html">Requests</a>
+          <a href="reviews.html">Reviews</a>
+          <a href="contact-landlord.html">Contact</a>
+          <a href="profile.html">Profile</a>
+          <a href="logout.html">Logout</a>
+        </nav>
+      </aside>
+
+      <div class="workspace">
+        <header class="topbar">
+          <div class="topbar-title">
+            <strong>Landlord Portal</strong>
+            <span>Landlord Account</span>
+          </div>
+
+          <div class="topbar-actions">
+            <button class="icon-btn" type="button" aria-label="Notifications">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 7h18s-3 0-3-7"></path>
+                <path d="M13.7 21a2 2 0 0 1-3.4 0"></path>
+              </svg>
+            </button>
+
+            <div class="profile-menu">
+              <button class="profile-trigger" type="button" aria-label="Open profile menu">
+                <span class="avatar-sm">UN</span>
+                <strong>Landlord Account</strong>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+              </button>
+              <div class="profile-dropdown">
+                <a href="profile.html">View Profile</a>
+                <a href="contact-landlord.html">Contact Page</a>
+                <a href="logout.html">Logout</a>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <main class="content">
+          <div class="page-header">
+            <div>
+              <h1 class="page-title">Workspace</h1>
+              <p class="page-subtitle">Manage property submissions, student enquiries, and landlord profile information from one workspace.</p>
+            </div>
+            <div class="status-note">Landlord workspace</div>
+          </div>
+
+          <section class="hero-panel">
+            <div class="hero-copy">
+              <h2>Ready for landlord records</h2>
+              <p>The portal is prepared for listing submissions and booking requests. New records appear here as landlord and student activity is saved.</p>
+            </div>
+            <div class="hero-media" aria-hidden="true"></div>
+          </section>
+
+          <section class="info-grid" aria-label="Portal readiness">
+            <article class="info-card">
+              <strong>Listings</strong>
+              <span>No property records are loaded yet.</span>
+            </article>
+            <article class="info-card">
+              <strong>Booking Requests</strong>
+              <span></span>
+            </article>
+            <article class="info-card">
+              <strong>Notifications</strong>
+              <span>Alerts will be delivered from saved system events.</span>
+            </article>
+          </section>
+
+          <section class="two-column">
+            <div class="empty-state">
+              <div>
+                <div class="empty-icon">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M4 7h16"></path>
+                    <path d="M5 7v12h14V7"></path>
+                    <path d="M9 7V5h6v2"></path>
+                    <path d="M9 12h6"></path>
+                    <path d="M9 16h4"></path>
+                  </svg>
+                </div>
+                <h2>No landlord activity yet</h2>
+                <p>Submitted listings, student messages, and review activity will be listed here when records are available.</p>
+              </div>
+            </div>
+
+            <aside class="panel">
+              <h2 class="section-title">Shortcuts</h2>
+              <div class="quick-links">
+                <a class="quick-link" href="listings.html">
+                  <strong>Prepare Listings</strong>
+                  <span>Open</span>
+                </a>
+                <a class="quick-link" href="booking-requests.html">
+                  <strong>View Requests</strong>
+                  <span>Open</span>
+                </a>
+                <a class="quick-link" href="profile.html">
+                  <strong>Profile Details</strong>
+                  <span>Open</span>
+                </a>
+              </div>
+            </aside>
+          </section>
+        </main>
+      </div>
+    </div>
+    <script src="../portal-identity.js?v=20260813-profile"></script>
+    <script src="../system-status.js"></script>
+</body>
+</html>

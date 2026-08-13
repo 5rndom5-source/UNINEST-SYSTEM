@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UniNest - Create Account</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Create Account Page -->
+  <div id="createAccountPage" class="container">
+    <div class="header-bar">
+      <a href="../HomePage/home.html" class="home-link" aria-label="Back to homepage">
+        <svg class="home-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+          <path
+            d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"
+            stroke="currentColor"
+            stroke-width="2"
+            fill="none"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </a>
+    </div>
+
+    <div class="content">
+      <img src="uninest-logo.png" class="auth-logo" alt="UniNest logo">
+      <h1>Create Account</h1>
+      <div id="formMessage" class="form-alert" hidden></div>
+
+      <form id="createForm" action="../AccountRegisterServlet" method="post">
+        <div class="form-group row">
+          <label for="fullname">Full Name:</label>
+          <input type="text" id="fullname" name="fullname" required>
+        </div>
+
+        <div class="form-group row">
+          <label for="email">Email:</label>
+          <input type="email" id="email" name="email" required>
+        </div>
+
+        <div class="form-group row">
+          <label for="password">Password:</label>
+          <div class="field-stack">
+            <input type="password" id="password" name="password" required>
+            <p class="field-help">Use 8 or more characters with uppercase, lowercase, number, and symbol.</p>
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <label for="confirm-password">Confirm Password:</label>
+          <input type="password" id="confirm-password" name="confirmPassword" required>
+        </div>
+
+        <div class="roles-box">
+          <div class="roles-title">Select Roles</div>
+          <div class="form-group">
+            <select id="role" name="role" required>
+              <option value="student">Student</option>
+              <option value="landlord">Landlord</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+        </div>
+
+        <button type="submit" class="btn">Register</button>
+
+        <div class="switch-link">
+          Already have an account? <a href="login.html">Login</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const messageBox = document.getElementById('formMessage');
+  const createForm = document.getElementById('createForm');
+  const errorMessage = params.get('error');
+  const successMessage = params.get('success');
+
+  createForm.action = window.location.protocol === 'file:'
+    ? 'http://localhost:8080/uninest/AccountRegisterServlet'
+    : '../AccountRegisterServlet';
+
+  if (errorMessage || successMessage) {
+    messageBox.textContent = errorMessage || successMessage;
+    messageBox.className = 'form-alert ' + (errorMessage ? 'error' : 'success');
+    messageBox.hidden = false;
+  }
+
+  createForm.addEventListener('submit', function(e) {
+    const pwd = document.getElementById('password').value;
+    const cpwd = document.getElementById('confirm-password').value;
+    if (pwd !== cpwd) {
+      e.preventDefault();
+      alert('Passwords do not match');
+      return;
+    }
+
+    const strongPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>?]).{8,}$/.test(pwd);
+    if (!strongPassword) {
+      e.preventDefault();
+      messageBox.textContent = 'Password must be 8+ characters with uppercase, lowercase, number, and symbol.';
+      messageBox.className = 'form-alert error';
+      messageBox.hidden = false;
+    }
+  });
+</script>
+
+  <script src="../system-status.js"></script>
+</body>
+</html>

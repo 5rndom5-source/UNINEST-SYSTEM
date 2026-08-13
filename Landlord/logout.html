@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Logout - UniNest Landlord Portal</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <a href="index.html" class="brand">
+          <img src="../createAccount/uninest-logo.png" alt="UniNest logo" />
+          <span>
+            <strong>UniNest</strong>
+            <span>Landlord Portal</span>
+          </span>
+        </a>
+        <nav class="side-nav">
+          <a href="index.html">Workspace</a>
+          <a href="listings.html">Listings</a>
+          <a href="booking-requests.html">Requests</a>
+          <a href="reviews.html">Reviews</a>
+          <a href="contact-landlord.html">Contact</a>
+          <a href="profile.html">Profile</a>
+          <a href="logout.html" class="active">Logout</a>
+        </nav>
+      </aside>
+
+      <div class="workspace">
+        <header class="topbar">
+          <div class="topbar-title">
+            <strong>Logout</strong>
+            <span>Landlord Account</span>
+          </div>
+          <div class="topbar-actions">
+            <button class="icon-btn" type="button" aria-label="Notifications">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 7h18s-3 0-3-7"></path><path d="M13.7 21a2 2 0 0 1-3.4 0"></path></svg>
+            </button>
+            <div class="profile-menu">
+              <button class="profile-trigger" type="button" aria-label="Open profile menu">
+                <span class="avatar-sm">UN</span>
+                <strong>Landlord Account</strong>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+              </button>
+              <div class="profile-dropdown">
+                <a href="profile.html">View Profile</a>
+                <a href="contact-landlord.html">Contact Page</a>
+                <a href="logout.html">Logout</a>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <main class="content">
+          <section class="logout-box panel">
+            <h1 class="page-title">End Session</h1>
+            <p class="page-subtitle">Close the landlord portal session and return to the login page.</p>
+            <div class="button-row">
+              <a href="../LandlordLogoutServlet" class="btn btn-red">Logout</a>
+              <a href="index.html" class="btn btn-soft">Stay Signed In</a>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+    <script src="../system-status.js"></script>
+</body>
+</html>
