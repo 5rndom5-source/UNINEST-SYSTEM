@@ -1270,6 +1270,43 @@ body.landlord-classic {
   white-space: pre-wrap;
 }
 
+.support-attachment {
+  display: inline-flex;
+  color: var(--teal);
+  font-size: 13px;
+  font-weight: 800;
+  margin-top: 10px;
+  text-decoration: none;
+}
+
+.support-message-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  border-top: 1px solid var(--line);
+  margin-top: 12px;
+  padding-top: 10px;
+}
+
+.support-message-actions button {
+  min-height: 34px;
+  border: 1px solid #dcaca8;
+  border-radius: 6px;
+  background: #fff;
+  color: #9f2018;
+  cursor: pointer;
+  font-weight: 800;
+  padding: 6px 10px;
+}
+
+.classic-contact-form small {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  margin-top: 6px;
+}
+
 .classic-message-success svg {
   width: 24px;
   height: 24px;

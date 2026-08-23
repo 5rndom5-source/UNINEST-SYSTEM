@@ -47,6 +47,7 @@ public class AdminListingQueueServlet extends HttpServlet {
             int page = parsePositiveInt(request.getParameter("page"), 1);
             String status = valueOr(request.getParameter("status"), "all").toLowerCase();
             String search = valueOr(request.getParameter("search"), "");
+            String roomId = valueOr(request.getParameter("id"), "");
 
             StringBuilder where = new StringBuilder("WHERE 1 = 1 ");
             List<String> params = new ArrayList<String>();
@@ -54,6 +55,11 @@ public class AdminListingQueueServlet extends HttpServlet {
             if ("pending".equals(status) || "approved".equals(status) || "denied".equals(status)) {
                 where.append("AND r.approval_status = ? ");
                 params.add(status);
+            }
+
+            if (roomId.matches("[1-9][0-9]*")) {
+                where.append("AND r.room_id = ? ");
+                params.add(roomId);
             }
 
             if (!search.isEmpty()) {
@@ -78,6 +84,8 @@ public class AdminListingQueueServlet extends HttpServlet {
             String query = "SELECT r.room_id, r.room_number, r.room_type, r.location, r.price, "
                     + "r.capacity, r.description, r.availability_status, r.approval_status, "
                     + "r.admin_note, r.reviewed_at, r.created_at, "
+                    + "COALESCE((SELECT ri.image_url FROM room_images ri WHERE ri.room_id = r.room_id "
+                    + "ORDER BY ri.is_primary DESC, ri.display_order, ri.image_id LIMIT 1), '') AS image_url, "
                     + "u.full_name AS landlord_name, u.email AS landlord_email "
                     + "FROM rooms r "
                     + "JOIN landlords l ON l.landlord_id = r.landlord_id "
@@ -162,6 +170,7 @@ public class AdminListingQueueServlet extends HttpServlet {
         field(out, "reviewedAt", valueOr(String.valueOf(rs.getTimestamp("reviewed_at")), ""), false);
         field(out, "landlordName", valueOr(rs.getString("landlord_name"), "Landlord"), false);
         field(out, "landlordEmail", valueOr(rs.getString("landlord_email"), "Email not saved"), false);
+        field(out, "image", valueOr(rs.getString("image_url"), ""), false);
         out.print("}");
     }
 

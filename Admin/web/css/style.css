@@ -1622,3 +1622,48 @@ label,
         width: 100%;
     }
 }
+
+.admin-inline-action {
+    display: grid;
+    grid-template-columns: minmax(120px, 1fr) minmax(140px, 1fr) auto;
+    gap: 7px;
+    align-items: center;
+    min-width: 360px;
+}
+
+.admin-inline-action select,
+.admin-inline-action input,
+.admin-inline-action .btn {
+    min-height: 36px !important;
+    margin: 0;
+}
+
+.badge-confirmed,
+.badge-completed,
+.badge-resolved,
+.badge-approved {
+    background: #dcfce7 !important;
+    color: #166534 !important;
+}
+
+.badge-pending,
+.badge-in-progress,
+.badge-medium {
+    background: #fff7ed !important;
+    color: #9a3412 !important;
+}
+
+.badge-cancelled,
+.badge-failed,
+.badge-denied,
+.badge-urgent,
+.badge-high {
+    background: #fee2e2 !important;
+    color: #991b1b !important;
+}
+
+.badge-overdue,
+.badge-low {
+    background: #eef2f7 !important;
+    color: #475569 !important;
+}

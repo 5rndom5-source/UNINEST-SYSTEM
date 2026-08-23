@@ -69,8 +69,8 @@
 
           <section class="hero-panel">
             <div class="hero-copy">
-              <h2>Ready for landlord records</h2>
-              <p>The portal is prepared for listing submissions and booking requests. New records appear here as landlord and student activity is saved.</p>
+              <h2>Property portfolio</h2>
+              <p>Manage listings, review student requests, and respond to support activity.</p>
             </div>
             <div class="hero-media" aria-hidden="true"></div>
           </section>
@@ -78,20 +78,20 @@
           <section class="info-grid" aria-label="Portal readiness">
             <article class="info-card">
               <strong>Listings</strong>
-              <span>No property records are loaded yet.</span>
+              <span id="landlordListingSummary">Loading portfolio...</span>
             </article>
             <article class="info-card">
               <strong>Booking Requests</strong>
-              <span></span>
+              <span id="landlordRequestSummary">Loading requests...</span>
             </article>
             <article class="info-card">
               <strong>Notifications</strong>
-              <span>Alerts will be delivered from saved system events.</span>
+              <span id="landlordNotificationSummary">Loading notifications...</span>
             </article>
           </section>
 
           <section class="two-column">
-            <div class="empty-state">
+            <div class="empty-state" id="landlordActivity">
               <div>
                 <div class="empty-icon">
                   <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -102,8 +102,8 @@
                     <path d="M9 16h4"></path>
                   </svg>
                 </div>
-                <h2>No landlord activity yet</h2>
-                <p>Submitted listings, student messages, and review activity will be listed here when records are available.</p>
+                <h2>Loading activity</h2>
+                <p>Retrieving your latest listing and request records.</p>
               </div>
             </div>
 
@@ -128,6 +128,49 @@
         </main>
       </div>
     </div>
+    <script>
+      (() => {
+        const context = window.location.pathname.match(/^\/[^/]+/)?.[0] || "";
+        const listingSummary = document.getElementById("landlordListingSummary");
+        const requestSummary = document.getElementById("landlordRequestSummary");
+        const notificationSummary = document.getElementById("landlordNotificationSummary");
+        const activity = document.getElementById("landlordActivity");
+        const get = (path) => fetch(`${context}${path}`, { headers: { Accept: "application/json" }, cache: "no-store" })
+          .then((response) => response.ok ? response.json() : Promise.reject(new Error("unavailable")));
+
+        Promise.all([
+          get("/LandlordListingsServlet?page=1&size=4"),
+          get("/LandlordRequestsServlet"),
+          get("/NotificationServlet")
+        ]).then(([listingData, requestData, notificationData]) => {
+          const listings = listingData.listings || [];
+          const inquiries = requestData.requests || [];
+          const bookings = requestData.bookings || [];
+          listingSummary.textContent = `${listingData.total || listings.length} listing${Number(listingData.total || listings.length) === 1 ? "" : "s"}`;
+          requestSummary.textContent = `${bookings.length} booking${bookings.length === 1 ? "" : "s"}, ${inquiries.length} viewing request${inquiries.length === 1 ? "" : "s"}`;
+          notificationSummary.textContent = `${notificationData.unreadCount || 0} unread notification${Number(notificationData.unreadCount || 0) === 1 ? "" : "s"}`;
+          const latest = bookings[0] || inquiries[0];
+          const heading = activity.querySelector("h2");
+          const copy = activity.querySelector("p");
+          if (latest) {
+            heading.textContent = `Latest request: ${latest.property || "Accommodation"}`;
+            copy.textContent = `${latest.studentName || "Student"} | ${String(latest.status || "pending").replaceAll("_", " ")}`;
+          } else if (listings[0]) {
+            heading.textContent = `Latest listing: ${listings[0].title}`;
+            copy.textContent = `${listings[0].location} | ${String(listings[0].status || "pending").replaceAll("_", " ")}`;
+          } else {
+            heading.textContent = "No activity recorded";
+            copy.textContent = "Create your first listing to start the property review workflow.";
+          }
+        }).catch(() => {
+          listingSummary.textContent = "Portfolio unavailable";
+          requestSummary.textContent = "Requests unavailable";
+          notificationSummary.textContent = "Notifications unavailable";
+          activity.querySelector("h2").textContent = "Activity unavailable";
+          activity.querySelector("p").textContent = "Check the data service status and refresh this page.";
+        });
+      })();
+    </script>
     <script src="../portal-identity.js?v=20260822-auth"></script>
     <script src="../system-status.js"></script>
 </body>

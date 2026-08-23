@@ -1,22 +1,27 @@
 package com.uninest.servlets.student;
 
 import com.uninest.utils.DatabaseConnection;
+import com.uninest.utils.MessageAttachmentSupport;
 import com.uninest.utils.ValidationUtil;
 
 import javax.servlet.ServletException;
+import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import javax.servlet.http.Part;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 @WebServlet("/StudentMessageServlet")
+@MultipartConfig(maxFileSize = 5 * 1024 * 1024, maxRequestSize = 6 * 1024 * 1024)
 public class StudentMessageServlet extends HttpServlet {
 
     @Override
@@ -43,7 +48,10 @@ public class StudentMessageServlet extends HttpServlet {
                 return;
             }
 
-            String query = "SELECT m.message_id, m.message_text, m.sent_date, "
+            markIncomingRead(conn, userId);
+
+            String query = "SELECT m.message_id, m.sender_id, m.recipient_id, m.message_text, "
+                    + "m.attachment_url, m.sent_date, m.is_read, "
                     + "sender.full_name AS sender_name, recipient.full_name AS recipient_name "
                     + "FROM messages m "
                     + "JOIN users sender ON sender.user_id = m.sender_id "
@@ -60,7 +68,7 @@ public class StudentMessageServlet extends HttpServlet {
                     while (rs.next()) {
                         if (!first) out.print(",");
                         first = false;
-                        writeMessage(out, rs);
+                        writeMessage(out, rs, userId);
                     }
                     out.print("]}");
                 }
@@ -90,6 +98,11 @@ public class StudentMessageServlet extends HttpServlet {
             sendResult(request, response, HttpServletResponse.SC_BAD_REQUEST, "error", "Subject and message are required");
             return;
         }
+        if (subject.length() > 120 || message.length() > 4000) {
+            sendResult(request, response, HttpServletResponse.SC_BAD_REQUEST,
+                    "error", "Subject or message is too long");
+            return;
+        }
 
         int senderId = (Integer) session.getAttribute("userId");
 
@@ -109,19 +122,39 @@ public class StudentMessageServlet extends HttpServlet {
             String body = "Subject: " + ValidationUtil.sanitizeXSS(subject)
                     + "\n" + ValidationUtil.sanitizeXSS(message);
 
+            int messageId;
             try (PreparedStatement stmt = conn.prepareStatement(
-                    "INSERT INTO messages (sender_id, recipient_id, message_text) VALUES (?, ?, ?)")) {
+                    "INSERT INTO messages (sender_id, recipient_id, message_text) VALUES (?, ?, ?)",
+                    Statement.RETURN_GENERATED_KEYS)) {
                 stmt.setInt(1, senderId);
                 stmt.setInt(2, recipientId);
                 stmt.setString(3, body);
                 stmt.executeUpdate();
+                try (ResultSet keys = stmt.getGeneratedKeys()) {
+                    if (!keys.next()) throw new SQLException("Message ID was not generated");
+                    messageId = keys.getInt(1);
+                }
+            }
+
+            String storedAttachment = null;
+            try {
+                Part attachment = multipart(request) ? request.getPart("attachment") : null;
+                storedAttachment = MessageAttachmentSupport.save(attachment, messageId);
+                if (storedAttachment != null) updateAttachment(conn, messageId, storedAttachment);
+            } catch (IOException | IllegalArgumentException e) {
+                deleteMessage(conn, messageId);
+                MessageAttachmentSupport.delete(storedAttachment);
+                sendResult(request, response, HttpServletResponse.SC_BAD_REQUEST,
+                        "error", e.getMessage());
+                return;
             }
 
             try (PreparedStatement stmt = conn.prepareStatement(
                     "INSERT INTO notifications (user_id, title, message, notification_type, action_url) "
-                            + "VALUES (?, 'New student message', ?, 'message_received', 'Messages.html')")) {
-                stmt.setInt(1, recipientId);
-                stmt.setString(2, subject);
+                            + "SELECT u.user_id, 'New student message', ?, 'message_received', 'Messages.html' "
+                            + "FROM users u JOIN admins a ON a.user_id = u.user_id "
+                            + "WHERE u.role = 'admin' AND u.status = 'active'")) {
+                stmt.setString(1, subject);
                 stmt.executeUpdate();
             }
 
@@ -136,8 +169,8 @@ public class StudentMessageServlet extends HttpServlet {
     private Integer findSupportUser(Connection conn) throws SQLException {
         String query = "SELECT u.user_id FROM users u "
                 + "JOIN admins a ON a.user_id = u.user_id "
-                + "WHERE u.role = 'admin' "
-                + "ORDER BY CASE WHEN u.status = 'active' THEN 0 ELSE 1 END, u.user_id ASC LIMIT 1";
+                + "WHERE u.role = 'admin' AND u.status = 'active' "
+                + "ORDER BY u.user_id ASC LIMIT 1";
         try (PreparedStatement stmt = conn.prepareStatement(query);
              ResultSet rs = stmt.executeQuery()) {
             return rs.next() ? rs.getInt("user_id") : null;
@@ -150,7 +183,7 @@ public class StudentMessageServlet extends HttpServlet {
                 && "student".equalsIgnoreCase(String.valueOf(session.getAttribute("role")));
     }
 
-    private void writeMessage(PrintWriter out, ResultSet rs) throws SQLException {
+    private void writeMessage(PrintWriter out, ResultSet rs, int userId) throws SQLException {
         String body = valueOr(rs.getString("message_text"), "");
         String subject = "Message";
         String message = body;
@@ -169,7 +202,50 @@ public class StudentMessageServlet extends HttpServlet {
         field(out, "subject", subject, false);
         field(out, "body", message, false);
         field(out, "createdAt", String.valueOf(rs.getTimestamp("sent_date")), false);
+        field(out, "attachmentUrl", rs.getString("attachment_url") == null
+                ? "" : "/MessageAttachmentServlet/" + rs.getInt("message_id"), false);
+        field(out, "attachmentName", MessageAttachmentSupport.displayName(
+                rs.getString("attachment_url")), false);
+        out.print(",\"mine\":" + (rs.getInt("sender_id") == userId));
+        out.print(",\"read\":" + rs.getBoolean("is_read"));
         out.print("}");
+    }
+
+    private void markIncomingRead(Connection conn, int userId) throws SQLException {
+        try (PreparedStatement stmt = conn.prepareStatement(
+                "UPDATE messages SET is_read = TRUE, read_date = COALESCE(read_date, NOW()) "
+                        + "WHERE recipient_id = ? AND is_read = FALSE")) {
+            stmt.setInt(1, userId);
+            stmt.executeUpdate();
+        }
+        try (PreparedStatement stmt = conn.prepareStatement(
+                "UPDATE notifications SET is_read = TRUE, read_at = COALESCE(read_at, NOW()) "
+                        + "WHERE user_id = ? AND notification_type = 'message_received' AND is_read = FALSE")) {
+            stmt.setInt(1, userId);
+            stmt.executeUpdate();
+        }
+    }
+
+    private boolean multipart(HttpServletRequest request) {
+        String contentType = request.getContentType();
+        return contentType != null && contentType.toLowerCase().startsWith("multipart/");
+    }
+
+    private void updateAttachment(Connection conn, int messageId, String storedName) throws SQLException {
+        try (PreparedStatement stmt = conn.prepareStatement(
+                "UPDATE messages SET attachment_url = ? WHERE message_id = ?")) {
+            stmt.setString(1, storedName);
+            stmt.setInt(2, messageId);
+            stmt.executeUpdate();
+        }
+    }
+
+    private void deleteMessage(Connection conn, int messageId) throws SQLException {
+        try (PreparedStatement stmt = conn.prepareStatement(
+                "DELETE FROM messages WHERE message_id = ?")) {
+            stmt.setInt(1, messageId);
+            stmt.executeUpdate();
+        }
     }
 
     private void sendUnauthenticated(HttpServletRequest request, HttpServletResponse response) throws IOException {

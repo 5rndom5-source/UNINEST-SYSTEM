@@ -215,7 +215,7 @@
         }
     </style>
 </head>
-<body>
+<body data-admin-view="dashboard">
     <div class="dashboard-wrapper">
         <div class="header" style="background: var(--white); border-bottom: 1px solid var(--light); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center;">
             <h1 class="brand-title">UniNest Admin</h1>
@@ -248,7 +248,7 @@
             <a href="BookingRequests.html" class="nav-item"><span></span> Booking Requests</a>
             <a href="Enquiries.html" class="nav-item"><span></span> Enquiries</a>
             <a href="Messages.html" class="nav-item"><span></span> Messages</a>
-            <a href="Payments.html" class="nav-item"><span></span> Records</a>
+            <a href="Payments.html" class="nav-item"><span></span> Payments</a>
             <a href="Maintenance.html" class="nav-item"><span></span> Maintenance</a>
             <a href="Profile.html" class="nav-item"><span></span> Profile</a>
             <a href="../../../HomePage/contact.html" class="nav-item"><span></span> Contact Us</a>
@@ -272,15 +272,15 @@
 
             <div class="status-grid">
                 <div class="status-card">
-                    <strong>Review Queue</strong>
+                    <strong><span data-admin-count="pendingListings">0</span> Pending Listings</strong>
                     <span>Properties awaiting an approval decision.</span>
                 </div>
                 <div class="status-card">
-                    <strong>Admin Decision</strong>
-                    <span>Approve, decline, and document listing reviews.</span>
+                    <strong><span data-admin-count="pendingBookings">0</span> Pending Bookings</strong>
+                    <span>Booking requests awaiting a decision.</span>
                 </div>
                 <div class="status-card">
-                    <strong>Landing Page Ready</strong>
+                    <strong><span data-admin-count="approvedListings">0</span> Published Listings</strong>
                     <span>Approved properties available for publication.</span>
                 </div>
             </div>
@@ -302,8 +302,8 @@
                         <span>View pending, approved, and declined submissions.</span>
                     </a>
                     <a href="Payments.html" class="quick-action">
-                        <strong>View Records</strong>
-                        <span>View administrator activity and decisions.</span>
+                        <strong>Payment Records</strong>
+                        <span>Review payment status, due dates, and receipts.</span>
                     </a>
                 </div>
             </div>
@@ -340,19 +340,7 @@
         </main>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            var searchInput = document.getElementById('dashboardSearch');
-            var rows = Array.from(document.querySelectorAll('#submissionTable tbody tr'));
-
-            searchInput.addEventListener('input', function () {
-                var term = searchInput.value.trim().toLowerCase();
-                rows.forEach(function (row) {
-                    row.style.display = row.textContent.toLowerCase().indexOf(term) === -1 ? 'none' : 'table-row';
-                });
-            });
-        });
-    </script>
+  <script src="../js/admin-operations.js"></script>
   <script src="../../../portal-identity.js?v=20260822-auth"></script>
   <script src="../../../system-status.js"></script>
 </body>

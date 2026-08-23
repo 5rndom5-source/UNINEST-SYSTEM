@@ -66,6 +66,35 @@ public class LandlordRequestsServlet extends HttpServlet {
                                 + ",\"status\":\"" + json(rs.getString("reply_status")) + "\""
                                 + ",\"createdAt\":\"" + json(String.valueOf(rs.getTimestamp("inquiry_date"))) + "\"}");
                     }
+                    out.print("],\"bookings\":[");
+                }
+            }
+            String bookingQuery = "SELECT b.booking_id, b.check_in, b.check_out, b.booking_date, "
+                    + "b.booking_status, b.cancellation_reason, u.full_name AS student_name, "
+                    + "u.email AS student_email, r.room_number, r.location FROM bookings b "
+                    + "JOIN students s ON s.student_id = b.student_id "
+                    + "JOIN users u ON u.user_id = s.user_id "
+                    + "JOIN rooms r ON r.room_id = b.room_id WHERE r.landlord_id = ? "
+                    + "ORDER BY CASE b.booking_status WHEN 'pending' THEN 1 WHEN 'confirmed' THEN 2 ELSE 3 END, "
+                    + "b.booking_date DESC LIMIT 100";
+            try (PreparedStatement stmt = conn.prepareStatement(bookingQuery)) {
+                stmt.setInt(1, (Integer) session.getAttribute("landlordId"));
+                try (ResultSet rs = stmt.executeQuery()) {
+                    boolean first = true;
+                    while (rs.next()) {
+                        if (!first) out.print(",");
+                        first = false;
+                        out.print("{\"id\":" + rs.getInt("booking_id")
+                                + ",\"studentName\":\"" + json(rs.getString("student_name")) + "\""
+                                + ",\"studentEmail\":\"" + json(rs.getString("student_email")) + "\""
+                                + ",\"property\":\"" + json(rs.getString("room_number")) + "\""
+                                + ",\"location\":\"" + json(rs.getString("location")) + "\""
+                                + ",\"checkIn\":\"" + json(String.valueOf(rs.getDate("check_in"))) + "\""
+                                + ",\"checkOut\":\"" + json(String.valueOf(rs.getDate("check_out"))) + "\""
+                                + ",\"status\":\"" + json(rs.getString("booking_status")) + "\""
+                                + ",\"reason\":\"" + json(rs.getString("cancellation_reason")) + "\""
+                                + ",\"createdAt\":\"" + json(String.valueOf(rs.getTimestamp("booking_date"))) + "\"}");
+                    }
                     out.print("]}");
                 }
             }

@@ -31,8 +31,9 @@ public class VerifyPropertyServlet extends HttpServlet {
             throws ServletException, IOException {
 
         HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("adminId") == null) {
-            response.sendRedirect(request.getContextPath() + "/createAccount/login.html");
+        if (session == null || session.getAttribute("userId") == null
+                || !"admin".equalsIgnoreCase(String.valueOf(session.getAttribute("role")))) {
+            response.sendRedirect(request.getContextPath() + "/Admin/web/jsp/Login.html");
             return;
         }
 
@@ -49,9 +50,13 @@ public class VerifyPropertyServlet extends HttpServlet {
             redirect(response, request, "error", "Decision must be approve or deny");
             return;
         }
+        if ("deny".equalsIgnoreCase(decision) && !ValidationUtil.isRequired(adminNote)) {
+            redirect(response, request, "error", "An admin note is required when denying a listing");
+            return;
+        }
 
         String approvalStatus = "approve".equalsIgnoreCase(decision) ? "approved" : "denied";
-        int adminId = (Integer) session.getAttribute("adminId");
+        int adminUserId = (Integer) session.getAttribute("userId");
 
         try {
             Connection conn = DatabaseConnection.getInstance().getConnection();
@@ -66,7 +71,7 @@ public class VerifyPropertyServlet extends HttpServlet {
             PreparedStatement stmt = conn.prepareStatement(query);
             stmt.setString(1, approvalStatus);
             stmt.setString(2, adminNote);
-            stmt.setInt(3, adminId);
+            stmt.setInt(3, adminUserId);
             stmt.setInt(4, Integer.parseInt(propertyId));
 
             int updated = stmt.executeUpdate();
@@ -77,14 +82,31 @@ public class VerifyPropertyServlet extends HttpServlet {
                 return;
             }
 
+            notifyLandlord(conn, Integer.parseInt(propertyId), approvalStatus, adminNote);
+
             String message = "approved".equals(approvalStatus)
-                    ? "Listing approved and ready for public pages"
+                    ? "Listing approved and published"
                     : "Listing denied with admin note";
             redirect(response, request, "success", message);
         } catch (SQLException e) {
             System.err.println("Database error in VerifyPropertyServlet: " + e.getMessage());
             e.printStackTrace();
             redirect(response, request, "error", "Could not save verification decision");
+        }
+    }
+
+    private void notifyLandlord(Connection conn, int roomId, String status, String note)
+            throws SQLException {
+        String message = "Listing status changed to " + status
+                + (note == null || note.trim().isEmpty() ? "" : ": " + note.trim());
+        String query = "INSERT INTO notifications (user_id, title, message, notification_type, action_url) "
+                + "SELECT l.user_id, 'Listing review completed', ?, 'document_update', "
+                + "'Landlord/listings.html' FROM rooms r JOIN landlords l ON l.landlord_id = r.landlord_id "
+                + "WHERE r.room_id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, message);
+            stmt.setInt(2, roomId);
+            stmt.executeUpdate();
         }
     }
 

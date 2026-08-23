@@ -44,6 +44,10 @@ public class MaintenanceServlet extends HttpServlet {
             redirect(request, response, "error", "Invalid maintenance update");
             return;
         }
+        if ("resolved".equals(status) && !ValidationUtil.isRequired(notes)) {
+            redirect(request, response, "error", "Resolution notes are required when resolving a request");
+            return;
+        }
 
         try {
             Connection conn = DatabaseConnection.getInstance().getConnection();
@@ -63,6 +67,10 @@ public class MaintenanceServlet extends HttpServlet {
             int updated = stmt.executeUpdate();
             stmt.close();
 
+            if (updated > 0) {
+                notifyStudent(conn, Integer.parseInt(requestId), status, notes);
+            }
+
             redirect(request, response, updated > 0 ? "success" : "error",
                     updated > 0 ? "Maintenance request updated" : "No matching maintenance request was found");
         } catch (SQLException e) {
@@ -74,7 +82,24 @@ public class MaintenanceServlet extends HttpServlet {
 
     private boolean isAdmin(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
-        return session != null && session.getAttribute("adminId") != null;
+        return session != null && session.getAttribute("userId") != null
+                && "admin".equalsIgnoreCase(String.valueOf(session.getAttribute("role")));
+    }
+
+    private void notifyStudent(Connection conn, int requestId, String status, String notes)
+            throws SQLException {
+        String message = "Maintenance request status changed to " + status
+                + (notes == null || notes.trim().isEmpty() ? "" : ": " + notes.trim());
+        String query = "INSERT INTO notifications (user_id, title, message, notification_type, action_url) "
+                + "SELECT u.user_id, 'Maintenance updated', ?, 'maintenance_update', "
+                + "'UserDashboard/requests.html' FROM maintenance_requests m "
+                + "JOIN students s ON s.student_id = m.student_id "
+                + "JOIN users u ON u.user_id = s.user_id WHERE m.request_id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, message);
+            stmt.setInt(2, requestId);
+            stmt.executeUpdate();
+        }
     }
 
     private String normalizeStatus(String value) {

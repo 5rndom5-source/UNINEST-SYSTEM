@@ -141,7 +141,7 @@
         }
     </style>
 </head>
-<body>
+<body data-admin-view="listings">
     <div class="dashboard-wrapper">
         <div class="header" style="background: var(--white); border-bottom: 1px solid var(--light); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center;">
             <h1 class="brand-title">UniNest Admin</h1>
@@ -174,7 +174,7 @@
             <a href="BookingRequests.html" class="nav-item"><span></span> Booking Requests</a>
             <a href="Enquiries.html" class="nav-item"><span></span> Enquiries</a>
             <a href="Messages.html" class="nav-item"><span></span> Messages</a>
-            <a href="Payments.html" class="nav-item"><span></span> Records</a>
+            <a href="Payments.html" class="nav-item"><span></span> Payments</a>
             <a href="Maintenance.html" class="nav-item"><span></span> Maintenance</a>
             <a href="Profile.html" class="nav-item"><span></span> Profile</a>
             <a href="../../../HomePage/contact.html" class="nav-item"><span></span> Contact Us</a>
@@ -240,27 +240,7 @@
         </main>
     </div>
 
-    <script>
-        function filterRows() {
-            var status = document.getElementById('statusFilter').value;
-            var area = document.getElementById('areaFilter').value;
-            var search = document.getElementById('queueSearch').value.trim().toLowerCase();
-            var rows = Array.from(document.querySelectorAll('#queueTable tbody tr'));
-
-            rows.forEach(function (row) {
-                var matchesStatus = status === 'all' || row.dataset.status === status;
-                var matchesArea = area === 'all' || row.dataset.area === area;
-                var matchesSearch = row.textContent.toLowerCase().indexOf(search) !== -1;
-                row.style.display = matchesStatus && matchesArea && matchesSearch ? 'table-row' : 'none';
-            });
-        }
-
-        document.addEventListener('DOMContentLoaded', function () {
-            document.getElementById('statusFilter').addEventListener('change', filterRows);
-            document.getElementById('areaFilter').addEventListener('change', filterRows);
-            document.getElementById('queueSearch').addEventListener('input', filterRows);
-        });
-    </script>
+  <script src="../js/admin-operations.js"></script>
   <script src="../../../portal-identity.js?v=20260822-auth"></script>
   <script src="../../../system-status.js"></script>
 </body>

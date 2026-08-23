@@ -43,11 +43,36 @@
           <div class="page-heading">
             <div>
               <h1>Requests</h1>
-              <p>Viewing enquiries submitted from approved listings.</p>
+              <p>Track booking applications and viewing enquiries.</p>
             </div>
             <a class="primary-link" href="listings.html">New Request</a>
           </div>
-          <section class="panel">
+          <section class="panel request-section">
+            <div class="panel-header">
+              <div><h2>Booking Applications</h2><p>Bookings can be changed while pending or cancelled before completion.</p></div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Listing</th>
+                    <th>Area</th>
+                    <th>Landlord</th>
+                    <th>Stay</th>
+                    <th>Status</th>
+                    <th>Reason</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="bookingRows"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="panel request-section">
+            <div class="panel-header">
+              <div><h2>Viewing Requests</h2><p>Pending viewing requests can be removed before the landlord responds.</p></div>
+            </div>
             <div class="table-wrap">
               <table>
                 <thead>
@@ -57,6 +82,7 @@
                     <th>Request</th>
                     <th>Status</th>
                     <th>Sent</th>
+                    <th>Action</th>
                   </tr>
                 </thead>
                 <tbody id="requestRows"></tbody>

@@ -30,7 +30,8 @@ public class BookingDecisionServlet extends HttpServlet {
         }
 
         HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("landlordId") == null) {
+        if (session == null || session.getAttribute("landlordId") == null
+                || !"landlord".equalsIgnoreCase(String.valueOf(session.getAttribute("role")))) {
             response.sendRedirect("Landlord/login.html?error=session");
             return;
         }
@@ -43,14 +44,17 @@ public class BookingDecisionServlet extends HttpServlet {
             }
 
             String query = "UPDATE bookings b JOIN rooms r ON b.room_id = r.room_id "
-                    + "SET b.booking_status = ? "
+                    + "SET b.booking_status = ?, b.cancellation_reason = ? "
                     + "WHERE b.booking_id = ? AND r.landlord_id = ?";
             PreparedStatement stmt = conn.prepareStatement(query);
             stmt.setString(1, status);
-            stmt.setInt(2, Integer.parseInt(requestId));
-            stmt.setInt(3, (Integer) session.getAttribute("landlordId"));
+            stmt.setString(2, "cancelled".equals(status) ? "Declined by landlord" : null);
+            stmt.setInt(3, Integer.parseInt(requestId));
+            stmt.setInt(4, (Integer) session.getAttribute("landlordId"));
             int updated = stmt.executeUpdate();
             stmt.close();
+
+            if (updated > 0) notifyStudent(conn, Integer.parseInt(requestId), status);
 
             response.sendRedirect("Landlord/booking-requests.html?"
                     + (updated > 0 ? "decision=" + decision : "error=notfound"));
@@ -58,6 +62,20 @@ public class BookingDecisionServlet extends HttpServlet {
             System.err.println("Database error in BookingDecisionServlet: " + e.getMessage());
             e.printStackTrace();
             response.sendRedirect("Landlord/booking-requests.html?error=save");
+        }
+    }
+
+    private void notifyStudent(Connection conn, int bookingId, String status) throws SQLException {
+        String query = "INSERT INTO notifications (user_id, title, message, notification_type, action_url) "
+                + "SELECT u.user_id, 'Booking updated', CONCAT('Your booking for ', r.room_number, "
+                + "' is now ', ?), 'booking_update', 'UserDashboard/requests.html' FROM bookings b "
+                + "JOIN students s ON s.student_id = b.student_id "
+                + "JOIN users u ON u.user_id = s.user_id "
+                + "JOIN rooms r ON r.room_id = b.room_id WHERE b.booking_id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, status);
+            stmt.setInt(2, bookingId);
+            stmt.executeUpdate();
         }
     }
 

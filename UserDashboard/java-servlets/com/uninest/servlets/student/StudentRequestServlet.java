@@ -27,7 +27,7 @@ public class StudentRequestServlet extends HttpServlet {
         response.setContentType("application/json");
 
         HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("userId") == null) {
+        if (!isStudent(session)) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.getWriter().print("{\"error\":\"Login required\"}");
             return;
@@ -82,8 +82,14 @@ public class StudentRequestServlet extends HttpServlet {
             throws ServletException, IOException {
 
         HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("userId") == null) {
+        if (!isStudent(session)) {
             sendUnauthenticated(request, response);
+            return;
+        }
+
+        String action = trim(request.getParameter("action"));
+        if ("delete".equalsIgnoreCase(action)) {
+            deleteRequest(request, response, (Integer) session.getAttribute("userId"));
             return;
         }
 
@@ -117,6 +123,12 @@ public class StudentRequestServlet extends HttpServlet {
                 return;
             }
 
+            if (hasPendingRequest(conn, studentId, roomId)) {
+                sendResult(request, response, HttpServletResponse.SC_CONFLICT, "error",
+                        "You already have a pending request for this listing");
+                return;
+            }
+
             try (PreparedStatement stmt = conn.prepareStatement(
                     "INSERT INTO inquiries (student_id, landlord_id, room_id, message, reply_status) "
                             + "VALUES (?, ?, ?, ?, 'pending')")) {
@@ -127,12 +139,77 @@ public class StudentRequestServlet extends HttpServlet {
                 stmt.executeUpdate();
             }
 
+            notifyLandlord(conn, room.landlordId, room.title);
+
             sendResult(request, response, HttpServletResponse.SC_OK, "success", "Request sent");
         } catch (SQLException e) {
             System.err.println("Database error in StudentRequestServlet: " + e.getMessage());
             e.printStackTrace();
             sendResult(request, response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "error", "Could not send request");
         }
+    }
+
+    private void deleteRequest(HttpServletRequest request, HttpServletResponse response, int userId)
+            throws IOException {
+        Integer requestId = parseRoomId(request.getParameter("requestId"));
+        if (requestId == null) {
+            sendResult(request, response, HttpServletResponse.SC_BAD_REQUEST, "error", "Request not found");
+            return;
+        }
+        try {
+            Connection conn = DatabaseConnection.getInstance().getConnection();
+            if (conn == null) {
+                sendResult(request, response, HttpServletResponse.SC_SERVICE_UNAVAILABLE,
+                        "error", "Service is temporarily unavailable");
+                return;
+            }
+            Integer studentId = findStudentId(conn, userId);
+            if (studentId == null) {
+                sendResult(request, response, HttpServletResponse.SC_NOT_FOUND, "error", "Request not found");
+                return;
+            }
+            try (PreparedStatement stmt = conn.prepareStatement(
+                    "DELETE FROM inquiries WHERE inquiry_id = ? AND student_id = ? AND reply_status = 'pending'")) {
+                stmt.setInt(1, requestId);
+                stmt.setInt(2, studentId);
+                int deleted = stmt.executeUpdate();
+                sendResult(request, response, deleted == 1 ? HttpServletResponse.SC_OK : HttpServletResponse.SC_CONFLICT,
+                        deleted == 1 ? "success" : "error",
+                        deleted == 1 ? "Request deleted" : "Only pending requests can be deleted");
+            }
+        } catch (SQLException e) {
+            getServletContext().log("Unable to delete student request", e);
+            sendResult(request, response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    "error", "Request could not be deleted");
+        }
+    }
+
+    private boolean hasPendingRequest(Connection conn, int studentId, int roomId) throws SQLException {
+        try (PreparedStatement stmt = conn.prepareStatement(
+                "SELECT 1 FROM inquiries WHERE student_id = ? AND room_id = ? "
+                        + "AND reply_status = 'pending' LIMIT 1")) {
+            stmt.setInt(1, studentId);
+            stmt.setInt(2, roomId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next();
+            }
+        }
+    }
+
+    private void notifyLandlord(Connection conn, int landlordId, String title) throws SQLException {
+        String query = "INSERT INTO notifications (user_id, title, message, notification_type, action_url) "
+                + "SELECT user_id, 'New viewing request', ?, 'inquiry_response', "
+                + "'Landlord/booking-requests.html' FROM landlords WHERE landlord_id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, "A student requested a viewing for " + title);
+            stmt.setInt(2, landlordId);
+            stmt.executeUpdate();
+        }
+    }
+
+    private boolean isStudent(HttpSession session) {
+        return session != null && session.getAttribute("userId") instanceof Integer
+                && "student".equalsIgnoreCase(String.valueOf(session.getAttribute("role")));
     }
 
     private Integer findStudentId(Connection conn, int userId) throws SQLException {

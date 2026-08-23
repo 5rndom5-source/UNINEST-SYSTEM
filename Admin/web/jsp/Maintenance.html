@@ -83,7 +83,7 @@
         }
     </style>
 </head>
-<body>
+<body data-admin-view="maintenance">
     <div class="dashboard-wrapper">
         <div class="header" style="background: var(--white); border-bottom: 1px solid var(--light); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center;">
             <h1 class="brand-title">UniNest Admin</h1>
@@ -116,7 +116,7 @@
             <a href="BookingRequests.html" class="nav-item"><span></span> Booking Requests</a>
             <a href="Enquiries.html" class="nav-item"><span></span> Enquiries</a>
             <a href="Messages.html" class="nav-item"><span></span> Messages</a>
-            <a href="Payments.html" class="nav-item"><span></span> Records</a>
+            <a href="Payments.html" class="nav-item"><span></span> Payments</a>
             <a href="Maintenance.html" class="nav-item active"><span></span> Maintenance</a>
             <a href="Profile.html" class="nav-item"><span></span> Profile</a>
             <a href="../../../HomePage/contact.html" class="nav-item"><span></span> Contact Us</a>
@@ -129,7 +129,7 @@
                 <p class="page-subtitle">Track maintenance requests and resolution progress.</p>
             </div>
 
-            <section class="section empty-panel">
+            <section class="section empty-panel" id="maintenanceEmpty">
                 <div>
                     <h2>No maintenance requests</h2>
                     <p>There are no maintenance requests requiring attention.</p>
@@ -138,19 +138,21 @@
 
             <section class="section">
                 <div class="table-responsive">
-                    <table class="table">
+                    <table class="table" id="maintenanceTable">
                         <thead>
                             <tr>
-                                <th>Request</th>
+                                <th>Student</th>
                                 <th>Property</th>
+                                <th>Issue</th>
                                 <th>Priority</th>
                                 <th>Status</th>
+                                <th>Resolution</th>
                                 <th>Admin Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                <td class="empty-record" colspan="5">No maintenance requests found.</td>
+                                <td class="empty-record" colspan="7">Loading maintenance requests...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -158,6 +160,7 @@
             </section>
         </main>
     </div>
+  <script src="../js/admin-operations.js"></script>
   <script src="../../../portal-identity.js?v=20260822-auth"></script>
   <script src="../../../system-status.js"></script>
 </body>

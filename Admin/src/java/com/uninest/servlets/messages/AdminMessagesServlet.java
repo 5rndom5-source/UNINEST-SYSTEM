@@ -1,6 +1,7 @@
 package com.uninest.servlets.messages;
 
 import com.uninest.utils.DatabaseConnection;
+import com.uninest.utils.MessageAttachmentSupport;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -41,8 +42,10 @@ public class AdminMessagesServlet extends HttpServlet {
                 return;
             }
 
+            markIncomingRead(conn, (Integer) session.getAttribute("userId"));
+
             String query = "SELECT m.message_id, m.sender_id, m.recipient_id, m.message_text, "
-                    + "m.sent_date, m.is_read, sender.full_name AS sender_name, "
+                    + "m.attachment_url, m.sent_date, m.is_read, sender.full_name AS sender_name, "
                     + "sender.role AS sender_role, recipient.full_name AS recipient_name, "
                     + "recipient.role AS recipient_role "
                     + "FROM messages m "
@@ -101,8 +104,27 @@ public class AdminMessagesServlet extends HttpServlet {
         stringField(out, "subject", subject, false);
         stringField(out, "body", body, false);
         stringField(out, "sentAt", String.valueOf(rs.getTimestamp("sent_date")), false);
+        stringField(out, "attachmentUrl", rs.getString("attachment_url") == null
+                ? "" : "/MessageAttachmentServlet/" + rs.getInt("message_id"), false);
+        stringField(out, "attachmentName", MessageAttachmentSupport.displayName(
+                rs.getString("attachment_url")), false);
         booleanField(out, "read", rs.getBoolean("is_read"), false);
         out.print("}");
+    }
+
+    private void markIncomingRead(Connection conn, int adminUserId) throws SQLException {
+        try (PreparedStatement stmt = conn.prepareStatement(
+                "UPDATE messages m JOIN users recipient ON recipient.user_id = m.recipient_id "
+                        + "SET m.is_read = TRUE, m.read_date = COALESCE(m.read_date, NOW()) "
+                        + "WHERE recipient.role = 'admin' AND m.is_read = FALSE")) {
+            stmt.executeUpdate();
+        }
+        try (PreparedStatement stmt = conn.prepareStatement(
+                "UPDATE notifications SET is_read = TRUE, read_at = COALESCE(read_at, NOW()) "
+                        + "WHERE user_id = ? AND notification_type = 'message_received' AND is_read = FALSE")) {
+            stmt.setInt(1, adminUserId);
+            stmt.executeUpdate();
+        }
     }
 
     private void numberField(PrintWriter out, String key, int value, boolean first) {

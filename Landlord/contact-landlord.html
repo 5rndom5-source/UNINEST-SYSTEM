@@ -64,6 +64,7 @@
             class="classic-contact-form"
             action="../ContactLandlordServlet"
             method="post"
+            enctype="multipart/form-data"
           >
             <h2>New Support Message</h2>
             <label>
@@ -73,6 +74,11 @@
             <label>
               Message
               <textarea name="message" rows="8" placeholder="Describe the issue" required></textarea>
+            </label>
+            <label>
+              Attachment (optional)
+              <input name="attachment" type="file" accept="image/jpeg,image/png,image/webp,application/pdf" />
+              <small>JPG, PNG, WebP, or PDF. Maximum 5 MB.</small>
             </label>
             <div class="classic-buttons contact-buttons">
               <button type="submit" class="submit-btn">Send Message</button>
@@ -120,8 +126,38 @@
               const body = document.createElement("p");
               body.textContent = message.body;
               item.append(heading, meta, body);
+              if (message.attachmentUrl) {
+                const attachment = document.createElement("a");
+                attachment.className = "support-attachment";
+                attachment.href = `${context}${message.attachmentUrl}`;
+                attachment.target = "_blank";
+                attachment.rel = "noopener";
+                attachment.textContent = `Open attachment: ${message.attachmentName || "file"}`;
+                item.appendChild(attachment);
+              }
+              const actions = document.createElement("div");
+              actions.className = "support-message-actions";
+              const state = document.createElement("small");
+              state.textContent = message.mine ? (message.read ? "Read" : "Sent") : "Received";
+              const remove = document.createElement("button");
+              remove.type = "button";
+              remove.textContent = "Delete";
+              remove.addEventListener("click", async () => {
+                if (!window.confirm("Delete this message? This cannot be undone.")) return;
+                const body = new URLSearchParams({ messageId: message.id, action: "delete" });
+                const response = await fetch(`${context}/MessageActionServlet`, {
+                  method: "POST",
+                  headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded" },
+                  body
+                });
+                if (response.ok) window.location.reload();
+                else remove.textContent = "Failed";
+              });
+              actions.append(state, remove);
+              item.appendChild(actions);
               list.appendChild(item);
             });
+            if (window.uninestRefreshNotifications) window.uninestRefreshNotifications();
           })
           .catch((error) => {
             list.textContent = error.message;

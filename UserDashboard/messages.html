@@ -64,7 +64,7 @@
                   <p>Send a message to UniNest support.</p>
                 </div>
               </div>
-              <form id="messageForm" class="stacked-form" action="../StudentMessageServlet" method="post">
+              <form id="messageForm" class="stacked-form" action="../StudentMessageServlet" method="post" enctype="multipart/form-data">
                 <label>
                   Recipient
                   <select id="messageRecipient" name="recipient" required>
@@ -78,6 +78,11 @@
                 <label>
                   Message
                   <textarea id="messageBody" name="message" rows="6" placeholder="Type your message" required></textarea>
+                </label>
+                <label>
+                  Attachment (optional)
+                  <input id="messageAttachment" name="attachment" type="file" accept="image/jpeg,image/png,image/webp,application/pdf" />
+                  <small>JPG, PNG, WebP, or PDF. Maximum 5 MB.</small>
                 </label>
                 <button class="primary-button" type="submit">Send Message</button>
               </form>

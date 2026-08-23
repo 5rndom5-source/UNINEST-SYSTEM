@@ -1,22 +1,27 @@
 package com.uninest.servlets.landlord;
 
 import com.uninest.utils.DatabaseConnection;
+import com.uninest.utils.MessageAttachmentSupport;
 import com.uninest.utils.ValidationUtil;
 
 import javax.servlet.ServletException;
+import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import javax.servlet.http.Part;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 @WebServlet("/ContactLandlordServlet")
+@MultipartConfig(maxFileSize = 5 * 1024 * 1024, maxRequestSize = 6 * 1024 * 1024)
 public class ContactLandlordServlet extends HttpServlet {
 
     @Override
@@ -42,7 +47,10 @@ public class ContactLandlordServlet extends HttpServlet {
                 return;
             }
 
-            String query = "SELECT m.message_id, m.message_text, m.sent_date, "
+            markIncomingRead(conn, userId);
+
+            String query = "SELECT m.message_id, m.sender_id, m.recipient_id, m.message_text, "
+                    + "m.attachment_url, m.sent_date, m.is_read, "
                     + "sender.full_name AS sender_name, recipient.full_name AS recipient_name "
                     + "FROM messages m "
                     + "JOIN users sender ON sender.user_id = m.sender_id "
@@ -58,7 +66,7 @@ public class ContactLandlordServlet extends HttpServlet {
                     while (rs.next()) {
                         if (!first) out.print(",");
                         first = false;
-                        writeMessage(out, rs);
+                        writeMessage(out, rs, userId);
                     }
                     out.print("]}");
                 }
@@ -85,6 +93,10 @@ public class ContactLandlordServlet extends HttpServlet {
             redirect(response, "error", "Subject and message are required");
             return;
         }
+        if (subject.length() > 120 || message.length() > 4000) {
+            redirect(response, "error", "Subject or message is too long");
+            return;
+        }
 
         try {
             Connection conn = DatabaseConnection.getInstance().getConnection();
@@ -101,19 +113,38 @@ public class ContactLandlordServlet extends HttpServlet {
 
             String body = "Subject: " + ValidationUtil.sanitizeXSS(subject)
                     + "\n" + ValidationUtil.sanitizeXSS(message);
+            int messageId;
             try (PreparedStatement stmt = conn.prepareStatement(
-                    "INSERT INTO messages (sender_id, recipient_id, message_text) VALUES (?, ?, ?)")) {
+                    "INSERT INTO messages (sender_id, recipient_id, message_text) VALUES (?, ?, ?)",
+                    Statement.RETURN_GENERATED_KEYS)) {
                 stmt.setInt(1, (Integer) session.getAttribute("userId"));
                 stmt.setInt(2, recipientId);
                 stmt.setString(3, body);
                 stmt.executeUpdate();
+                try (ResultSet keys = stmt.getGeneratedKeys()) {
+                    if (!keys.next()) throw new SQLException("Message ID was not generated");
+                    messageId = keys.getInt(1);
+                }
+            }
+
+            String storedAttachment = null;
+            try {
+                Part attachment = multipart(request) ? request.getPart("attachment") : null;
+                storedAttachment = MessageAttachmentSupport.save(attachment, messageId);
+                if (storedAttachment != null) updateAttachment(conn, messageId, storedAttachment);
+            } catch (IOException | IllegalArgumentException e) {
+                deleteMessage(conn, messageId);
+                MessageAttachmentSupport.delete(storedAttachment);
+                redirect(response, "error", e.getMessage());
+                return;
             }
 
             try (PreparedStatement stmt = conn.prepareStatement(
                     "INSERT INTO notifications (user_id, title, message, notification_type, action_url) "
-                            + "VALUES (?, 'New landlord message', ?, 'message_received', 'Messages.html')")) {
-                stmt.setInt(1, recipientId);
-                stmt.setString(2, subject);
+                            + "SELECT u.user_id, 'New landlord message', ?, 'message_received', 'Messages.html' "
+                            + "FROM users u JOIN admins a ON a.user_id = u.user_id "
+                            + "WHERE u.role = 'admin' AND u.status = 'active'")) {
+                stmt.setString(1, subject);
                 stmt.executeUpdate();
             }
 
@@ -139,7 +170,7 @@ public class ContactLandlordServlet extends HttpServlet {
         }
     }
 
-    private void writeMessage(PrintWriter out, ResultSet rs) throws SQLException {
+    private void writeMessage(PrintWriter out, ResultSet rs, int userId) throws SQLException {
         String body = valueOr(rs.getString("message_text"), "");
         String subject = "Message";
         if (body.startsWith("Subject: ")) {
@@ -154,7 +185,50 @@ public class ContactLandlordServlet extends HttpServlet {
                 + ",\"recipient\":\"" + json(rs.getString("recipient_name")) + "\""
                 + ",\"subject\":\"" + json(subject) + "\""
                 + ",\"body\":\"" + json(body) + "\""
-                + ",\"createdAt\":\"" + json(String.valueOf(rs.getTimestamp("sent_date"))) + "\"}");
+                + ",\"createdAt\":\"" + json(String.valueOf(rs.getTimestamp("sent_date"))) + "\""
+                + ",\"attachmentUrl\":\"" + (rs.getString("attachment_url") == null ? ""
+                        : "/MessageAttachmentServlet/" + rs.getInt("message_id")) + "\""
+                + ",\"attachmentName\":\"" + json(MessageAttachmentSupport.displayName(
+                        rs.getString("attachment_url"))) + "\""
+                + ",\"mine\":" + (rs.getInt("sender_id") == userId)
+                + ",\"read\":" + rs.getBoolean("is_read") + "}");
+    }
+
+    private void markIncomingRead(Connection conn, int userId) throws SQLException {
+        try (PreparedStatement stmt = conn.prepareStatement(
+                "UPDATE messages SET is_read = TRUE, read_date = COALESCE(read_date, NOW()) "
+                        + "WHERE recipient_id = ? AND is_read = FALSE")) {
+            stmt.setInt(1, userId);
+            stmt.executeUpdate();
+        }
+        try (PreparedStatement stmt = conn.prepareStatement(
+                "UPDATE notifications SET is_read = TRUE, read_at = COALESCE(read_at, NOW()) "
+                        + "WHERE user_id = ? AND notification_type = 'message_received' AND is_read = FALSE")) {
+            stmt.setInt(1, userId);
+            stmt.executeUpdate();
+        }
+    }
+
+    private boolean multipart(HttpServletRequest request) {
+        String contentType = request.getContentType();
+        return contentType != null && contentType.toLowerCase().startsWith("multipart/");
+    }
+
+    private void updateAttachment(Connection conn, int messageId, String storedName) throws SQLException {
+        try (PreparedStatement stmt = conn.prepareStatement(
+                "UPDATE messages SET attachment_url = ? WHERE message_id = ?")) {
+            stmt.setString(1, storedName);
+            stmt.setInt(2, messageId);
+            stmt.executeUpdate();
+        }
+    }
+
+    private void deleteMessage(Connection conn, int messageId) throws SQLException {
+        try (PreparedStatement stmt = conn.prepareStatement(
+                "DELETE FROM messages WHERE message_id = ?")) {
+            stmt.setInt(1, messageId);
+            stmt.executeUpdate();
+        }
     }
 
     private void redirect(HttpServletResponse response, String key, String message) throws IOException {

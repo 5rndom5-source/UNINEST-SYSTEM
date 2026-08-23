@@ -1,24 +1,29 @@
 package com.uninest.servlets.messages;
 
 import com.uninest.utils.DatabaseConnection;
+import com.uninest.utils.MessageAttachmentSupport;
 
 import javax.servlet.ServletException;
+import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import javax.servlet.http.Part;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 /**
  * SendMessageServlet - Sends message to student
  * Path: /SendMessageServlet
  */
 @WebServlet("/SendMessageServlet")
+@MultipartConfig(maxFileSize = 5 * 1024 * 1024, maxRequestSize = 6 * 1024 * 1024)
 public class SendMessageServlet extends HttpServlet {
     
     @Override
@@ -49,6 +54,10 @@ public class SendMessageServlet extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/Messages.html?error=Message cannot be empty");
             return;
         }
+        if (messageText.trim().length() > 4000 || (subject != null && subject.trim().length() > 120)) {
+            response.sendRedirect(request.getContextPath() + "/Messages.html?error=Message is too long");
+            return;
+        }
         
         try {
             Connection conn = DatabaseConnection.getInstance().getConnection();
@@ -73,7 +82,7 @@ public class SendMessageServlet extends HttpServlet {
                          "(sender_id, recipient_id, inquiry_id, message_text, sent_date, is_read) " +
                          "VALUES (?, ?, ?, ?, NOW(), FALSE)";
             
-            PreparedStatement stmt = conn.prepareStatement(query);
+            PreparedStatement stmt = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
             stmt.setInt(1, senderId);
             stmt.setInt(2, recipientId);
             
@@ -89,7 +98,27 @@ public class SendMessageServlet extends HttpServlet {
             
             stmt.setString(4, storedMessage);
             stmt.executeUpdate();
+            int messageId;
+            try (ResultSet keys = stmt.getGeneratedKeys()) {
+                if (!keys.next()) throw new SQLException("Message ID was not generated");
+                messageId = keys.getInt(1);
+            }
             stmt.close();
+
+            Part attachment = multipart(request) ? request.getPart("attachment") : null;
+            String storedAttachment = null;
+            try {
+                storedAttachment = MessageAttachmentSupport.save(attachment, messageId);
+                if (storedAttachment != null) {
+                    updateAttachment(conn, messageId, storedAttachment);
+                }
+            } catch (IOException | IllegalArgumentException e) {
+                deleteMessage(conn, messageId);
+                MessageAttachmentSupport.delete(storedAttachment);
+                response.sendRedirect(request.getContextPath() + "/Messages.html?error="
+                        + java.net.URLEncoder.encode(e.getMessage(), "UTF-8"));
+                return;
+            }
             
             // Create notification for recipient
             createNotification(conn, recipientId, 
@@ -105,6 +134,28 @@ public class SendMessageServlet extends HttpServlet {
         } catch (SQLException e) {
             System.err.println("Database error: " + e.getMessage());
             response.sendRedirect(request.getContextPath() + "/Messages.html?error=Error sending message");
+        }
+    }
+
+    private boolean multipart(HttpServletRequest request) {
+        String contentType = request.getContentType();
+        return contentType != null && contentType.toLowerCase().startsWith("multipart/");
+    }
+
+    private void updateAttachment(Connection conn, int messageId, String storedName) throws SQLException {
+        try (PreparedStatement stmt = conn.prepareStatement(
+                "UPDATE messages SET attachment_url = ? WHERE message_id = ?")) {
+            stmt.setString(1, storedName);
+            stmt.setInt(2, messageId);
+            stmt.executeUpdate();
+        }
+    }
+
+    private void deleteMessage(Connection conn, int messageId) throws SQLException {
+        try (PreparedStatement stmt = conn.prepareStatement(
+                "DELETE FROM messages WHERE message_id = ?")) {
+            stmt.setInt(1, messageId);
+            stmt.executeUpdate();
         }
     }
 

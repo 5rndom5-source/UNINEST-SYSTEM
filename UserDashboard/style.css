@@ -742,6 +742,134 @@ td {
   margin: 4px 0 7px;
 }
 
+.message-attachment {
+  display: inline-flex;
+  margin-top: 10px;
+  color: var(--teal);
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.message-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  border-top: 1px solid var(--line);
+  margin-top: 12px;
+  padding-top: 10px;
+}
+
+.message-actions small {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.message-delete {
+  border: 1px solid #dcaca8;
+  border-radius: 6px;
+  background: #fff;
+  color: #9f2018;
+  cursor: pointer;
+  font-weight: 800;
+  min-height: 34px;
+  padding: 6px 10px;
+}
+
+.request-section + .request-section {
+  margin-top: 18px;
+}
+
+.table-action {
+  min-height: 34px;
+  border: 1px solid #9bcfc9;
+  border-radius: 6px;
+  background: #ffffff;
+  color: var(--teal);
+  cursor: pointer;
+  font-weight: 800;
+  margin: 2px 5px 2px 0;
+  padding: 6px 10px;
+}
+
+.table-action.danger {
+  border-color: #dcaca8;
+  color: #9f2018;
+}
+
+.booking-dialog {
+  width: min(460px, calc(100vw - 32px));
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.28);
+}
+
+.booking-dialog::backdrop {
+  background: rgba(15, 23, 42, 0.55);
+}
+
+.booking-dialog-form {
+  display: grid;
+  gap: 16px;
+  padding: 22px;
+}
+
+.booking-dialog-head,
+.booking-dialog-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.booking-dialog-head h2 {
+  color: var(--navy);
+  font-size: 18px;
+}
+
+.booking-dialog-head button {
+  width: 36px;
+  height: 36px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 28px;
+}
+
+.booking-dialog-form label {
+  color: #26364d;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.booking-dialog-form input {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid #cfd8e5;
+  border-radius: var(--radius);
+  margin-top: 7px;
+  padding: 10px 12px;
+}
+
+.booking-dialog-status {
+  min-height: 18px;
+  color: #9f2018;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.stacked-form small {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  margin-top: 6px;
+}
+
 .stacked-form,
 .profile-form {
   display: grid;

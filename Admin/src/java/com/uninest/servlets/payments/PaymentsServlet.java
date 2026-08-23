@@ -44,6 +44,10 @@ public class PaymentsServlet extends HttpServlet {
             redirect(request, response, "error", "Invalid payment update");
             return;
         }
+        if ("completed".equals(status) && !ValidationUtil.isRequired(receiptNumber)) {
+            redirect(request, response, "error", "A receipt number is required for completed payments");
+            return;
+        }
 
         try {
             Connection conn = DatabaseConnection.getInstance().getConnection();
@@ -63,6 +67,11 @@ public class PaymentsServlet extends HttpServlet {
             int updated = stmt.executeUpdate();
             stmt.close();
 
+            if (updated > 0) {
+                recordTransaction(conn, Integer.parseInt(paymentId), status, emptyToNull(receiptNumber));
+                notifyParties(conn, Integer.parseInt(paymentId), status);
+            }
+
             redirect(request, response, updated > 0 ? "success" : "error",
                     updated > 0 ? "Payment updated" : "No matching payment was found");
         } catch (SQLException e) {
@@ -74,7 +83,39 @@ public class PaymentsServlet extends HttpServlet {
 
     private boolean isAdmin(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
-        return session != null && session.getAttribute("adminId") != null;
+        return session != null && session.getAttribute("userId") != null
+                && "admin".equalsIgnoreCase(String.valueOf(session.getAttribute("role")));
+    }
+
+    private void recordTransaction(Connection conn, int paymentId, String status, String receipt)
+            throws SQLException {
+        if (!"completed".equals(status)) return;
+        String query = "INSERT INTO transaction_history "
+                + "(payment_id, transaction_type, amount, reference_number, notes) "
+                + "SELECT p.payment_id, 'credit', p.amount, ?, 'Payment completed by admin' "
+                + "FROM payments p WHERE p.payment_id = ? AND NOT EXISTS "
+                + "(SELECT 1 FROM transaction_history t WHERE t.payment_id = p.payment_id "
+                + "AND t.transaction_type = 'credit')";
+        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, receipt);
+            stmt.setInt(2, paymentId);
+            stmt.executeUpdate();
+        }
+    }
+
+    private void notifyParties(Connection conn, int paymentId, String status) throws SQLException {
+        String query = "INSERT INTO notifications (user_id, title, message, notification_type, action_url) "
+                + "SELECT u.user_id, 'Payment updated', ?, 'payment_due', "
+                + "CASE WHEN u.role = 'student' THEN 'UserDashboard/requests.html' "
+                + "ELSE 'Landlord/index.html' END FROM payments p "
+                + "JOIN students s ON s.student_id = p.student_id "
+                + "JOIN landlords l ON l.landlord_id = p.landlord_id "
+                + "JOIN users u ON u.user_id IN (s.user_id, l.user_id) WHERE p.payment_id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, "Payment status changed to " + status);
+            stmt.setInt(2, paymentId);
+            stmt.executeUpdate();
+        }
     }
 
     private String normalizeStatus(String value) {

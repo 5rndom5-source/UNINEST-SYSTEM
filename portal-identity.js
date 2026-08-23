@@ -171,6 +171,187 @@
     });
   }
 
+  function notificationButton() {
+    return document.querySelector(
+      '.admin-notification, .icon-btn[aria-label*="Notification"], .icon-button[aria-label*="notification"]'
+    );
+  }
+
+  function installNotificationStyles() {
+    if (document.getElementById("uninest-notification-styles")) return;
+    var style = document.createElement("style");
+    style.id = "uninest-notification-styles";
+    style.textContent = `
+      .uninest-notification-button { position: relative !important; }
+      .uninest-notification-badge {
+        position: absolute; top: -5px; right: -5px; min-width: 19px; height: 19px;
+        display: grid; place-items: center; padding: 0 5px; border: 2px solid #fff;
+        border-radius: 999px; background: #b42318; color: #fff; font: 700 11px/1 Arial, sans-serif;
+      }
+      .uninest-notification-panel {
+        position: fixed; z-index: 1100; top: 72px; right: 22px; width: min(390px, calc(100vw - 28px));
+        max-height: min(620px, calc(100vh - 92px)); overflow: auto; border: 1px solid #d7e0e7;
+        border-radius: 8px; background: #fff; color: #1f2937; box-shadow: 0 18px 50px rgba(15,23,42,.2);
+      }
+      .uninest-notification-panel[hidden] { display: none; }
+      .uninest-notification-head { position: sticky; top: 0; display: flex; justify-content: space-between;
+        align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid #e5e7eb; background: #fff; }
+      .uninest-notification-head strong { font-size: 15px; }
+      .uninest-notification-head button, .uninest-notification-delete {
+        border: 0; background: transparent; color: #075f59; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer;
+      }
+      .uninest-notification-list { display: grid; }
+      .uninest-notification-item { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 8px;
+        padding: 13px 16px; border-bottom: 1px solid #edf0f2; background: #fff; }
+      .uninest-notification-item.unread { background: #eef8f7; }
+      .uninest-notification-open { border: 0; background: transparent; color: inherit; text-align: left; cursor: pointer; padding: 0; }
+      .uninest-notification-open strong, .uninest-notification-open span, .uninest-notification-open small { display: block; }
+      .uninest-notification-open strong { font-size: 13px; margin-bottom: 4px; }
+      .uninest-notification-open span { color: #475569; font-size: 12px; line-height: 1.45; }
+      .uninest-notification-open small { color: #768396; font-size: 11px; margin-top: 5px; }
+      .uninest-notification-empty { padding: 28px 18px; color: #64748b; text-align: center; font-size: 13px; }
+      @media (max-width: 640px) { .uninest-notification-panel { top: 62px; right: 14px; } }
+    `;
+    document.head.appendChild(style);
+  }
+
+  function notificationUrl(actionUrl) {
+    var target = String(actionUrl || "").trim();
+    if (!target) return "";
+    if (/^https?:/i.test(target)) return "";
+    if (target.charAt(0) === "/") return contextPath() + target;
+    if (target.indexOf("/") >= 0) return contextPath() + "/" + target.replace(/^\/+/, "");
+    return new URL(target, window.location.href).href;
+  }
+
+  async function notificationAction(action, notificationId) {
+    var body = new URLSearchParams({ action: action });
+    if (notificationId) body.set("notificationId", notificationId);
+    var response = await fetch(contextPath() + "/NotificationServlet", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
+      body: body.toString()
+    });
+    if (!response.ok) {
+      var result = await response.json().catch(function () { return {}; });
+      throw new Error(result.message || "Notification could not be updated");
+    }
+  }
+
+  function renderNotificationPanel(panel, data) {
+    var list = panel.querySelector(".uninest-notification-list");
+    var badge = notificationButton() && notificationButton().querySelector(".uninest-notification-badge");
+    var unread = Number(data.unreadCount || 0);
+    if (badge) {
+      badge.textContent = unread > 99 ? "99+" : String(unread);
+      badge.hidden = unread === 0;
+    }
+    list.replaceChildren();
+    var items = data.notifications || [];
+    if (!items.length) {
+      var empty = document.createElement("div");
+      empty.className = "uninest-notification-empty";
+      empty.textContent = "No notifications";
+      list.appendChild(empty);
+      return;
+    }
+    items.forEach(function (item) {
+      var row = document.createElement("article");
+      row.className = "uninest-notification-item" + (item.read ? "" : " unread");
+      var open = document.createElement("button");
+      open.type = "button";
+      open.className = "uninest-notification-open";
+      var title = document.createElement("strong");
+      title.textContent = item.title || "Notification";
+      var message = document.createElement("span");
+      message.textContent = item.message || "";
+      var date = document.createElement("small");
+      date.textContent = item.createdAt || "";
+      open.append(title, message, date);
+      open.addEventListener("click", async function () {
+        try { await notificationAction("read", item.id); } catch (error) { return; }
+        var target = notificationUrl(item.actionUrl);
+        if (target) window.location.href = target;
+        else window.uninestRefreshNotifications();
+      });
+      var remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "uninest-notification-delete";
+      remove.textContent = "Delete";
+      remove.setAttribute("aria-label", "Delete notification");
+      remove.addEventListener("click", async function () {
+        try {
+          await notificationAction("delete", item.id);
+          window.uninestRefreshNotifications();
+        } catch (error) {
+          remove.textContent = "Failed";
+        }
+      });
+      row.append(open, remove);
+      list.appendChild(row);
+    });
+  }
+
+  function setupNotifications() {
+    var button = notificationButton();
+    if (!button || button.dataset.notificationReady === "true") return;
+    installNotificationStyles();
+    button.dataset.notificationReady = "true";
+    button.classList.add("uninest-notification-button");
+    var badge = document.createElement("span");
+    badge.className = "uninest-notification-badge";
+    badge.hidden = true;
+    button.appendChild(badge);
+
+    var panel = document.createElement("section");
+    panel.className = "uninest-notification-panel";
+    panel.hidden = true;
+    panel.setAttribute("aria-label", "Notifications");
+    var head = document.createElement("div");
+    head.className = "uninest-notification-head";
+    var heading = document.createElement("strong");
+    heading.textContent = "Notifications";
+    var markAll = document.createElement("button");
+    markAll.type = "button";
+    markAll.textContent = "Mark all read";
+    head.append(heading, markAll);
+    var list = document.createElement("div");
+    list.className = "uninest-notification-list";
+    panel.append(head, list);
+    document.body.appendChild(panel);
+
+    window.uninestRefreshNotifications = async function () {
+      try {
+        var response = await fetch(contextPath() + "/NotificationServlet", {
+          credentials: "same-origin", headers: { Accept: "application/json" }, cache: "no-store"
+        });
+        if (!response.ok) return;
+        renderNotificationPanel(panel, await response.json());
+      } catch (error) {
+        // Keep portal navigation usable if notifications are temporarily unavailable.
+      }
+    };
+    button.addEventListener("click", function (event) {
+      event.preventDefault();
+      panel.hidden = !panel.hidden;
+      if (!panel.hidden) window.uninestRefreshNotifications();
+    });
+    markAll.addEventListener("click", async function () {
+      try {
+        await notificationAction("readAll");
+        window.uninestRefreshNotifications();
+      } catch (error) {
+        markAll.textContent = "Try again";
+      }
+    });
+    document.addEventListener("click", function (event) {
+      if (!panel.hidden && !panel.contains(event.target) && !button.contains(event.target)) panel.hidden = true;
+    });
+    window.uninestRefreshNotifications();
+    window.setInterval(window.uninestRefreshNotifications, 30000);
+  }
+
   async function loadIdentity() {
     ensureLogo();
     bindLogoutLinks();
@@ -192,6 +373,7 @@
         return;
       }
       applyIdentity(user);
+      setupNotifications();
     } catch (error) {
       document.documentElement.dataset.identityStatus = "unavailable";
     }

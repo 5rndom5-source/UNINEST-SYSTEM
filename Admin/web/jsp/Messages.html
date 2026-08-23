@@ -116,7 +116,8 @@
         .chat-input {
             border-top: 1px solid var(--light);
             padding: 16px;
-            display: flex;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
             gap: 10px;
         }
 
@@ -128,6 +129,28 @@
             resize: vertical;
             padding: 12px;
             font-family: var(--font-main);
+        }
+
+        .chat-input input[type="file"] {
+            grid-column: 1 / -1;
+        }
+
+        .message-detail-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            border-top: 1px solid var(--light);
+            margin-top: 22px;
+            padding-top: 14px;
+        }
+
+        .message-attachment {
+            display: inline-flex;
+            color: var(--secondary-dark);
+            font-weight: 700;
+            margin-top: 14px;
+            text-decoration: none;
         }
 
         @media (max-width: 900px) {
@@ -181,7 +204,7 @@
             <a href="BookingRequests.html" class="nav-item"><span></span> Booking Requests</a>
             <a href="Enquiries.html" class="nav-item"><span></span> Enquiries</a>
             <a href="Messages.html" class="nav-item active"><span></span> Messages</a>
-            <a href="Payments.html" class="nav-item"><span></span> Records</a>
+            <a href="Payments.html" class="nav-item"><span></span> Payments</a>
             <a href="Maintenance.html" class="nav-item"><span></span> Maintenance</a>
             <a href="Profile.html" class="nav-item"><span></span> Profile</a>
             <a href="../../../HomePage/contact.html" class="nav-item"><span></span> Contact Us</a>
@@ -212,11 +235,12 @@
                             <span>Select a student or landlord message.</span>
                         </div>
                     </div>
-                    <form class="chat-input" method="post" action="../../../SendMessageServlet">
+                    <form class="chat-input" method="post" action="../../../SendMessageServlet" enctype="multipart/form-data">
                         <input id="messageRecipientId" type="hidden" name="recipientId" value="">
                         <input id="messageSubject" type="hidden" name="subject" value="">
                         <textarea id="messageReply" name="message" placeholder="Write a reply" disabled required></textarea>
                         <button class="btn btn-primary" type="submit" disabled>Send</button>
+                        <input id="messageAttachment" type="file" name="attachment" accept="image/jpeg,image/png,image/webp,application/pdf" disabled>
                     </form>
                 </div>
             </section>
@@ -248,10 +272,53 @@
         body.className = "message-body";
         body.textContent = message.body;
         detail.append(heading, meta, body);
+        if (message.attachmentUrl) {
+          const attachment = document.createElement("a");
+          attachment.className = "message-attachment";
+          attachment.href = `${context}${message.attachmentUrl}`;
+          attachment.target = "_blank";
+          attachment.rel = "noopener";
+          attachment.textContent = `Open attachment: ${message.attachmentName || "file"}`;
+          detail.appendChild(attachment);
+        }
+        const actions = document.createElement("div");
+        actions.className = "message-detail-actions";
+        const read = document.createElement("span");
+        read.className = "message-meta";
+        read.textContent = message.read ? "Read" : "Unread";
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.className = "btn btn-danger";
+        remove.textContent = "Delete Message";
+        remove.addEventListener("click", async () => {
+          if (!window.confirm("Delete this message? This cannot be undone.")) return;
+          const response = await fetch(`${context}/MessageActionServlet`, {
+            method: "POST",
+            headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams({ messageId: message.id, action: "delete" })
+          });
+          const result = await response.json().catch(() => ({}));
+          if (!response.ok) {
+            feedback.textContent = result.message || "Message could not be deleted";
+            return;
+          }
+          feedback.textContent = "Message deleted";
+          messages = messages.filter((item) => item.id !== message.id);
+          detail.className = "chat-empty message-detail";
+          detail.textContent = "Select a student or landlord message.";
+          recipient.value = "";
+          reply.disabled = true;
+          send.disabled = true;
+          document.getElementById("messageAttachment").disabled = true;
+          renderList();
+        });
+        actions.append(read, remove);
+        detail.appendChild(actions);
         recipient.value = message.contactId;
         subject.value = `Re: ${message.subject.replace(/^Re:\s*/i, "")}`;
         reply.disabled = false;
         send.disabled = false;
+        document.getElementById("messageAttachment").disabled = false;
       };
 
       const renderList = () => {
@@ -294,6 +361,7 @@
           if (!response.ok) throw new Error(data.error || "Messages could not be loaded");
           messages = data.messages || [];
           renderList();
+          if (window.uninestRefreshNotifications) window.uninestRefreshNotifications();
         })
         .catch((error) => {
           list.textContent = error.message;

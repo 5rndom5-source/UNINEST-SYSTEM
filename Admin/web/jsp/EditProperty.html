@@ -179,7 +179,7 @@
             <a href="BookingRequests.html" class="nav-item"><span></span> Booking Requests</a>
             <a href="Enquiries.html" class="nav-item"><span></span> Enquiries</a>
             <a href="Messages.html" class="nav-item"><span></span> Messages</a>
-            <a href="Payments.html" class="nav-item"><span></span> Records</a>
+            <a href="Payments.html" class="nav-item"><span></span> Payments</a>
             <a href="Maintenance.html" class="nav-item"><span></span> Maintenance</a>
             <a href="Profile.html" class="nav-item"><span></span> Profile</a>
             <a href="../../../HomePage/contact.html" class="nav-item"><span></span> Contact Us</a>
@@ -192,39 +192,37 @@
                 <p class="page-subtitle">Confirm listing details and record a decision.</p>
             </div>
 
-            <div class="readonly-note">
-                Admins do not add or edit landlord properties here. Use this page to inspect the submission and record an accept or deny decision.
+            <div class="readonly-note" id="reviewStatus" role="status">
+                Loading the selected listing...
             </div>
 
             <div class="review-grid">
                 <section class="panel">
                     <h2 class="section-title">Submitted Listing</h2>
                     <div class="detail-grid">
-                        <div class="detail-item"><span>Property</span><strong>Not connected</strong></div>
-                        <div class="detail-item"><span>Landlord</span><strong>Not connected</strong></div>
-                        <div class="detail-item"><span>Area</span><strong>Not connected</strong></div>
-                        <div class="detail-item"><span>Advertised Rent</span><strong>Not connected</strong></div>
-                        <div class="detail-item"><span>Room Type</span><strong>Not connected</strong></div>
-                        <div class="detail-item"><span>Status</span><strong>No record selected</strong></div>
+                        <div class="detail-item"><span>Property</span><strong id="reviewPropertyName">-</strong></div>
+                        <div class="detail-item"><span>Landlord</span><strong id="reviewLandlord">-</strong></div>
+                        <div class="detail-item"><span>Area</span><strong id="reviewArea">-</strong></div>
+                        <div class="detail-item"><span>Advertised Rent</span><strong id="reviewRent">-</strong></div>
+                        <div class="detail-item"><span>Room Type</span><strong id="reviewType">-</strong></div>
+                        <div class="detail-item"><span>Status</span><strong id="reviewListingStatus">-</strong></div>
                     </div>
 
                     <h2 class="section-title">Description Supplied By Landlord</h2>
-                    <p style="color: var(--gray); margin-bottom: 18px;">
-                        No landlord description is available until a submitted listing is selected.
+                    <p id="reviewDescription" style="color: var(--gray); margin-bottom: 18px;">
+                        Loading description...
                     </p>
 
                     <h2 class="section-title">Image Review</h2>
-                    <div class="image-strip">
-                        <div class="image-placeholder">No image</div>
-                        <div class="image-placeholder">No image</div>
-                        <div class="image-placeholder">No image</div>
+                    <div class="image-strip" id="reviewImages">
+                        <div class="image-placeholder">Loading image...</div>
                     </div>
                 </section>
 
                 <aside class="panel">
                     <h2 class="section-title">Admin Decision</h2>
-                    <form method="POST" action="../../../VerifyPropertyServlet">
-                        <input type="hidden" name="propertyId" value="1">
+                    <form id="reviewDecisionForm" method="POST" action="../../../VerifyPropertyServlet">
+                        <input id="reviewPropertyId" type="hidden" name="propertyId" value="">
                         <label class="form-label">Admin Note</label>
                         <textarea name="adminNote" placeholder="Add a short reason for approval or denial."></textarea>
                         <div class="actions">
@@ -237,6 +235,60 @@
             </div>
         </main>
     </div>
+  <script>
+    (() => {
+      const context = window.location.pathname.match(/^\/[^/]+/)?.[0] || "";
+      const id = new URLSearchParams(window.location.search).get("id");
+      const status = document.getElementById("reviewStatus");
+      const form = document.getElementById("reviewDecisionForm");
+      const buttons = form.querySelectorAll("button[type='submit']");
+      const set = (target, value) => { document.getElementById(target).textContent = value || "-"; };
+      const fail = (message) => {
+        status.textContent = message;
+        buttons.forEach((button) => button.disabled = true);
+      };
+      if (!id || !/^\d+$/.test(id)) {
+        fail("Select a listing from the verification queue.");
+        return;
+      }
+      fetch(`${context}/AdminListingQueueServlet?id=${encodeURIComponent(id)}&size=1`, {
+        headers: { Accept: "application/json" }, cache: "no-store"
+      }).then((response) => response.json().then((data) => ({ response, data })))
+        .then(({ response, data }) => {
+          if (!response.ok) throw new Error(data.error || "Listing could not be loaded");
+          const listing = (data.listings || [])[0];
+          if (!listing) throw new Error("The selected listing was not found");
+          document.getElementById("reviewPropertyId").value = listing.id;
+          set("reviewPropertyName", listing.title);
+          set("reviewLandlord", `${listing.landlordName} | ${listing.landlordEmail}`);
+          set("reviewArea", listing.location);
+          set("reviewRent", listing.price);
+          set("reviewType", listing.type);
+          set("reviewListingStatus", listing.status);
+          set("reviewDescription", listing.description || "No description supplied.");
+          status.textContent = listing.status === "pending"
+            ? "Review the submitted evidence and record a decision."
+            : `This listing is currently ${listing.status}. A new decision will replace the previous one.`;
+          const images = document.getElementById("reviewImages");
+          images.replaceChildren();
+          if (listing.image) {
+            const image = document.createElement("img");
+            image.src = listing.image.startsWith("/") ? `${context}${listing.image}` : listing.image;
+            image.alt = listing.title;
+            image.style.width = "100%";
+            image.style.maxHeight = "260px";
+            image.style.objectFit = "cover";
+            image.style.borderRadius = "6px";
+            images.appendChild(image);
+          } else {
+            const empty = document.createElement("div");
+            empty.className = "image-placeholder";
+            empty.textContent = "No image submitted";
+            images.appendChild(empty);
+          }
+        }).catch((error) => fail(error.message));
+    })();
+  </script>
   <script src="../../../portal-identity.js?v=20260822-auth"></script>
   <script src="../../../system-status.js"></script>
 </body>

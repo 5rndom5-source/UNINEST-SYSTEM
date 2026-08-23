@@ -26,7 +26,8 @@ public class BookingActionServlet extends HttpServlet {
             throws ServletException, IOException {
 
         HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("adminId") == null) {
+        if (session == null || session.getAttribute("userId") == null
+                || !"admin".equalsIgnoreCase(String.valueOf(session.getAttribute("role")))) {
             response.sendRedirect(request.getContextPath() + "/Login.html");
             return;
         }
@@ -37,6 +38,10 @@ public class BookingActionServlet extends HttpServlet {
 
         if (!ValidationUtil.isInteger(bookingId) || status == null) {
             redirect(request, response, "error", "Invalid booking action");
+            return;
+        }
+        if ("cancelled".equals(status) && !ValidationUtil.isRequired(reason)) {
+            redirect(request, response, "error", "A cancellation reason is required");
             return;
         }
 
@@ -55,12 +60,31 @@ public class BookingActionServlet extends HttpServlet {
             int updated = stmt.executeUpdate();
             stmt.close();
 
+            if (updated > 0) {
+                notifyStudent(conn, Integer.parseInt(bookingId), status, reason);
+            }
+
             redirect(request, response, updated > 0 ? "success" : "error",
                     updated > 0 ? "Booking updated" : "No matching booking was found");
         } catch (SQLException e) {
             System.err.println("Database error in BookingActionServlet: " + e.getMessage());
             e.printStackTrace();
             redirect(request, response, "error", "Could not update booking");
+        }
+    }
+
+    private void notifyStudent(Connection conn, int bookingId, String status, String reason)
+            throws SQLException {
+        String message = "Your booking is now " + status
+                + ("cancelled".equals(status) && reason != null ? ": " + reason.trim() : "");
+        String query = "INSERT INTO notifications (user_id, title, message, notification_type, action_url) "
+                + "SELECT u.user_id, 'Booking updated', ?, 'booking_update', 'UserDashboard/requests.html' "
+                + "FROM bookings b JOIN students s ON s.student_id = b.student_id "
+                + "JOIN users u ON u.user_id = s.user_id WHERE b.booking_id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, message);
+            stmt.setInt(2, bookingId);
+            stmt.executeUpdate();
         }
     }
 

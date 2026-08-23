@@ -98,7 +98,7 @@
         }
     </style>
 </head>
-<body>
+<body data-admin-view="bookings">
     <div class="dashboard-wrapper">
         <div class="header" style="background: var(--white); border-bottom: 1px solid var(--light); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center;">
             <h1 class="brand-title">UniNest Admin</h1>
@@ -131,7 +131,7 @@
             <a href="BookingRequests.html" class="nav-item active"><span></span> Booking Requests</a>
             <a href="Enquiries.html" class="nav-item"><span></span> Enquiries</a>
             <a href="Messages.html" class="nav-item"><span></span> Messages</a>
-            <a href="Payments.html" class="nav-item"><span></span> Records</a>
+            <a href="Payments.html" class="nav-item"><span></span> Payments</a>
             <a href="Maintenance.html" class="nav-item"><span></span> Maintenance</a>
             <a href="Profile.html" class="nav-item"><span></span> Profile</a>
             <a href="../../../HomePage/contact.html" class="nav-item"><span></span> Contact Us</a>
@@ -146,19 +146,17 @@
 
             <section class="section">
                 <div class="filters">
-                    <select>
-                        <option>All properties</option>
-                    </select>
-                    <select>
-                        <option>All statuses</option>
-                    </select>
-                    <select>
-                        <option>Newest first</option>
+                    <select id="bookingStatusFilter">
+                        <option value="all">All statuses</option>
+                        <option value="pending">Pending</option>
+                        <option value="confirmed">Confirmed</option>
+                        <option value="cancelled">Cancelled</option>
+                        <option value="completed">Completed</option>
                     </select>
                 </div>
             </section>
 
-            <section class="section empty-panel">
+            <section class="section empty-panel" id="bookingEmpty">
                 <div>
                     <h2>No booking requests</h2>
                     <p>There are no booking requests requiring attention.</p>
@@ -167,19 +165,21 @@
 
             <section class="section">
                 <div class="table-responsive">
-                    <table class="table">
+                    <table class="table" id="bookingTable">
                         <thead>
                             <tr>
                                 <th>Student</th>
                                 <th>Property</th>
-                                <th>Request Type</th>
+                                <th>Check-in</th>
+                                <th>Landlord</th>
                                 <th>Status</th>
+                                <th>Reason</th>
                                 <th>Admin Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                <td class="empty-record" colspan="5">No booking requests found.</td>
+                                <td class="empty-record" colspan="7">Loading booking requests...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -187,6 +187,7 @@
             </section>
         </main>
     </div>
+  <script src="../js/admin-operations.js"></script>
   <script src="../../../portal-identity.js?v=20260822-auth"></script>
   <script src="../../../system-status.js"></script>
 </body>

@@ -96,6 +96,21 @@ const postForm = async (url, values) => {
   return data;
 };
 
+const postMultipart = async (url, form) => {
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { Accept: "application/json" },
+    body: new FormData(form)
+  });
+  if (response.status === 401) {
+    window.location.href = endpoint("/createAccount/login.html");
+    return null;
+  }
+  const data = await response.json();
+  if (!response.ok || data.status === "error") throw new Error(data.message || "Request failed");
+  return data;
+};
+
 const setActiveNavigation = () => {
   document.querySelectorAll("[data-page-link]").forEach((link) => {
     link.classList.toggle("active", link.dataset.pageLink === pageName);
@@ -272,7 +287,14 @@ const makeListingCard = (listing, context = "browse", index = 0) => {
   requestButton.dataset.roomRequest = id;
   requestButton.textContent = "Request Viewing";
 
-  actions.append(favoriteButton, requestButton);
+  const bookingButton = document.createElement("button");
+  bookingButton.className = "listing-action";
+  bookingButton.type = "button";
+  bookingButton.dataset.roomBooking = id;
+  bookingButton.dataset.bookingTitle = listing.title || "Student accommodation";
+  bookingButton.textContent = "Book";
+
+  actions.append(favoriteButton, requestButton, bookingButton);
 
   if (context === "saved") {
     const removeButton = document.createElement("button");
@@ -463,7 +485,11 @@ const renderRequests = (requests) => {
 
   if (!requests.length) {
     const row = document.createElement("tr");
-    row.innerHTML = '<td colspan="5" class="empty-state">No listing requests have been sent yet.</td>';
+    const cell = document.createElement("td");
+    cell.colSpan = 6;
+    cell.className = "empty-state";
+    cell.textContent = "No viewing requests have been sent yet.";
+    row.appendChild(cell);
     tbody.appendChild(row);
     return;
   }
@@ -476,13 +502,95 @@ const renderRequests = (requests) => {
       request.requestType,
       request.status
     ].join(" ").toLowerCase();
-    row.innerHTML = `
-      <td><strong>${request.listingTitle}</strong></td>
-      <td>${request.area}</td>
-      <td>${request.requestType}</td>
-      <td><span class="status-pill pending">${request.status}</span></td>
-      <td>${request.createdAt}</td>
-    `;
+    const listing = document.createElement("td");
+    const listingName = document.createElement("strong");
+    listingName.textContent = request.listingTitle;
+    listing.appendChild(listingName);
+    const area = document.createElement("td");
+    area.textContent = request.area;
+    const type = document.createElement("td");
+    type.textContent = request.requestType;
+    const status = document.createElement("td");
+    const badge = document.createElement("span");
+    badge.className = "status-pill " + String(request.status || "pending").toLowerCase();
+    badge.textContent = request.status;
+    status.appendChild(badge);
+    const created = document.createElement("td");
+    created.textContent = request.createdAt;
+    const action = document.createElement("td");
+    if (String(request.status).toLowerCase() === "pending") {
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "table-action danger";
+      remove.dataset.requestDelete = request.id;
+      remove.textContent = "Delete";
+      action.appendChild(remove);
+    } else {
+      action.textContent = "-";
+    }
+    row.append(listing, area, type, status, created, action);
+    tbody.appendChild(row);
+  });
+};
+
+const renderBookings = (bookings) => {
+  const tbody = byId("bookingRows");
+  if (!tbody) return;
+  tbody.replaceChildren();
+  if (!bookings.length) {
+    const row = document.createElement("tr");
+    const cell = document.createElement("td");
+    cell.colSpan = 7;
+    cell.className = "empty-state";
+    cell.textContent = "No booking requests have been submitted yet.";
+    row.appendChild(cell);
+    tbody.appendChild(row);
+    return;
+  }
+  bookings.forEach((booking) => {
+    const row = document.createElement("tr");
+    row.dataset.search = Object.values(booking).join(" ").toLowerCase();
+    [booking.listingTitle, booking.area, booking.landlord,
+      `${booking.checkIn}${booking.checkOut ? ` to ${booking.checkOut}` : ""}`].forEach((value, index) => {
+      const cell = document.createElement("td");
+      if (index === 0) {
+        const strong = document.createElement("strong");
+        strong.textContent = value;
+        cell.appendChild(strong);
+      } else cell.textContent = value || "-";
+      row.appendChild(cell);
+    });
+    const status = document.createElement("td");
+    const badge = document.createElement("span");
+    badge.className = "status-pill " + String(booking.status || "pending").toLowerCase();
+    badge.textContent = String(booking.status || "pending").replaceAll("_", " ");
+    status.appendChild(badge);
+    row.appendChild(status);
+    const reason = document.createElement("td");
+    reason.textContent = booking.reason || "-";
+    row.appendChild(reason);
+    const action = document.createElement("td");
+    if (booking.status === "pending") {
+      const edit = document.createElement("button");
+      edit.type = "button";
+      edit.className = "table-action";
+      edit.textContent = "Change Dates";
+      edit.dataset.bookingEdit = booking.id;
+      edit.dataset.bookingTitle = booking.listingTitle;
+      edit.dataset.checkIn = booking.checkIn;
+      edit.dataset.checkOut = booking.checkOut || "";
+      action.appendChild(edit);
+    }
+    if (booking.status === "pending" || booking.status === "confirmed") {
+      const cancel = document.createElement("button");
+      cancel.type = "button";
+      cancel.className = "table-action danger";
+      cancel.textContent = "Cancel";
+      cancel.dataset.bookingCancel = booking.id;
+      action.appendChild(cancel);
+    }
+    if (!action.children.length) action.textContent = "-";
+    row.appendChild(action);
     tbody.appendChild(row);
   });
 };
@@ -493,6 +601,15 @@ const loadRequests = async () => {
     renderRequests(data?.requests || []);
   } catch {
     renderRequests([]);
+  }
+};
+
+const loadBookings = async () => {
+  try {
+    const data = await getJson(endpoint("/StudentBookingServlet"));
+    renderBookings(data?.bookings || []);
+  } catch {
+    renderBookings([]);
   }
 };
 
@@ -510,11 +627,33 @@ const renderMessages = (messages) => {
     const item = document.createElement("article");
     item.className = "message-item";
     item.dataset.search = [message.sender, message.recipient, message.subject, message.body].join(" ").toLowerCase();
-    item.innerHTML = `
-      <strong>${message.subject}</strong>
-      <span>${message.sender} to ${message.recipient} | ${message.createdAt}</span>
-      <p>${message.body}</p>
-    `;
+    const heading = document.createElement("strong");
+    heading.textContent = message.subject;
+    const meta = document.createElement("span");
+    meta.textContent = `${message.sender} to ${message.recipient} | ${message.createdAt}`;
+    const body = document.createElement("p");
+    body.textContent = message.body;
+    item.append(heading, meta, body);
+    if (message.attachmentUrl) {
+      const attachment = document.createElement("a");
+      attachment.className = "message-attachment";
+      attachment.href = endpoint(message.attachmentUrl);
+      attachment.target = "_blank";
+      attachment.rel = "noopener";
+      attachment.textContent = `Open attachment: ${message.attachmentName || "file"}`;
+      item.appendChild(attachment);
+    }
+    const actions = document.createElement("div");
+    actions.className = "message-actions";
+    const stateLabel = document.createElement("small");
+    stateLabel.textContent = message.mine ? (message.read ? "Read" : "Sent") : "Received";
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "message-delete";
+    remove.textContent = "Delete";
+    remove.dataset.messageDelete = message.id;
+    actions.append(stateLabel, remove);
+    item.appendChild(actions);
     list.appendChild(item);
   });
 };
@@ -523,6 +662,7 @@ const loadMessages = async () => {
   try {
     const data = await getJson(endpoint("/StudentMessageServlet"));
     renderMessages(data?.messages || []);
+    if (window.uninestRefreshNotifications) window.uninestRefreshNotifications();
   } catch {
     renderMessages([]);
   }
@@ -588,6 +728,68 @@ const submitReview = async (form) => {
   }, 450);
 };
 
+const bookingDialog = () => {
+  let dialog = byId("bookingDialog");
+  if (dialog) return dialog;
+  dialog = document.createElement("dialog");
+  dialog.id = "bookingDialog";
+  dialog.className = "booking-dialog";
+  const form = document.createElement("form");
+  form.method = "dialog";
+  form.className = "booking-dialog-form";
+  form.innerHTML = `
+    <div class="booking-dialog-head"><h2 id="bookingDialogTitle">Book Accommodation</h2><button type="button" data-booking-close aria-label="Close">&times;</button></div>
+    <input type="hidden" name="action" value="create">
+    <input type="hidden" name="roomId" value="">
+    <input type="hidden" name="bookingId" value="">
+    <label>Check-in date<input name="checkIn" type="date" required></label>
+    <label>Check-out date (optional)<input name="checkOut" type="date"></label>
+    <p class="booking-dialog-status" aria-live="polite"></p>
+    <div class="booking-dialog-actions"><button type="button" class="listing-action secondary" data-booking-close>Cancel</button><button type="submit" class="listing-action">Submit Booking</button></div>
+  `;
+  dialog.appendChild(form);
+  document.body.appendChild(dialog);
+  dialog.querySelectorAll("[data-booking-close]").forEach((button) => button.addEventListener("click", () => dialog.close()));
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const status = form.querySelector(".booking-dialog-status");
+    status.textContent = "Saving booking...";
+    try {
+      const values = Object.fromEntries(new FormData(form).entries());
+      const data = await postForm(endpoint("/StudentBookingServlet"), values);
+      if (!data) return;
+      dialog.close();
+      toast(data.message || "Booking saved");
+      loadBookings();
+      loadCounts();
+    } catch (error) {
+      status.textContent = error.message;
+    }
+  });
+  return dialog;
+};
+
+const openBookingDialog = (details = {}) => {
+  const dialog = bookingDialog();
+  const form = dialog.querySelector("form");
+  const today = new Date();
+  today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
+  const minimum = today.toISOString().slice(0, 10);
+  form.reset();
+  form.elements.action.value = details.bookingId ? "update" : "create";
+  form.elements.roomId.value = details.roomId || "";
+  form.elements.bookingId.value = details.bookingId || "";
+  form.elements.checkIn.min = minimum;
+  form.elements.checkOut.min = minimum;
+  form.elements.checkIn.value = details.checkIn || minimum;
+  form.elements.checkOut.value = details.checkOut || "";
+  byId("bookingDialogTitle").textContent = details.bookingId
+    ? `Change dates for ${details.title || "booking"}`
+    : `Book ${details.title || "accommodation"}`;
+  form.querySelector(".booking-dialog-status").textContent = "";
+  dialog.showModal();
+};
+
 const bindGlobalSearch = () => {
   const input = byId("globalSearch");
   if (!input) return;
@@ -603,11 +805,9 @@ const bindForms = () => {
     messageForm.addEventListener("submit", async (event) => {
       event.preventDefault();
       try {
-        const data = await postForm(endpoint("/StudentMessageServlet"), {
-          recipient: byId("messageRecipient").value,
-          subject: byId("messageSubject").value.trim(),
-          message: byId("messageBody").value.trim()
-        });
+        const file = byId("messageAttachment")?.files?.[0];
+        if (file && file.size > 5 * 1024 * 1024) throw new Error("Attachments must be 5 MB or smaller");
+        const data = await postMultipart(endpoint("/StudentMessageServlet"), messageForm);
         if (!data) return;
         messageForm.reset();
         toast(data.message || "Message sent.");
@@ -645,6 +845,80 @@ const bindForms = () => {
 
 const bindPageActions = () => {
   document.addEventListener("click", async (event) => {
+    const bookButton = event.target.closest("[data-room-booking]");
+    if (bookButton) {
+      event.preventDefault();
+      openBookingDialog({ roomId: bookButton.dataset.roomBooking, title: bookButton.dataset.bookingTitle });
+      return;
+    }
+
+    const editBookingButton = event.target.closest("[data-booking-edit]");
+    if (editBookingButton) {
+      event.preventDefault();
+      openBookingDialog({
+        bookingId: editBookingButton.dataset.bookingEdit,
+        title: editBookingButton.dataset.bookingTitle,
+        checkIn: editBookingButton.dataset.checkIn,
+        checkOut: editBookingButton.dataset.checkOut
+      });
+      return;
+    }
+
+    const cancelBookingButton = event.target.closest("[data-booking-cancel]");
+    if (cancelBookingButton) {
+      event.preventDefault();
+      if (!window.confirm("Cancel this booking request?")) return;
+      try {
+        const data = await postForm(endpoint("/StudentBookingServlet"), {
+          action: "cancel",
+          bookingId: cancelBookingButton.dataset.bookingCancel,
+          reason: "Cancelled by student"
+        });
+        toast(data?.message || "Booking cancelled");
+        loadBookings();
+        loadCounts();
+      } catch (error) {
+        toast(error.message);
+      }
+      return;
+    }
+
+    const deleteRequestButton = event.target.closest("[data-request-delete]");
+    if (deleteRequestButton) {
+      event.preventDefault();
+      if (!window.confirm("Delete this pending viewing request?")) return;
+      try {
+        const data = await postForm(endpoint("/StudentRequestServlet"), {
+          action: "delete",
+          requestId: deleteRequestButton.dataset.requestDelete
+        });
+        toast(data?.message || "Request deleted");
+        loadRequests();
+        loadCounts();
+      } catch (error) {
+        toast(error.message);
+      }
+      return;
+    }
+
+    const deleteMessageButton = event.target.closest("[data-message-delete]");
+    if (deleteMessageButton) {
+      event.preventDefault();
+      if (!window.confirm("Delete this message? This cannot be undone.")) return;
+      try {
+        await postForm(endpoint("/MessageActionServlet"), {
+          messageId: deleteMessageButton.dataset.messageDelete,
+          action: "delete"
+        });
+        toast("Message deleted");
+        loadMessages();
+        loadCounts();
+      } catch (error) {
+        toast(error.message);
+      }
+      return;
+    }
+
     const favoriteButton = event.target.closest("[data-favorite-action]");
     if (favoriteButton) {
       event.preventDefault();
@@ -710,7 +984,10 @@ const initPage = async () => {
     loadListings(1);
   }
   if (pageName === "saved") loadSavedListings();
-  if (pageName === "requests") loadRequests();
+  if (pageName === "requests") {
+    loadRequests();
+    loadBookings();
+  }
   if (pageName === "messages") loadMessages();
   if (pageName === "profile") loadProfile();
 };

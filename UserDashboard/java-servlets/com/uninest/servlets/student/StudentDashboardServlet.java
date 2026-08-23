@@ -49,7 +49,9 @@ public class StudentDashboardServlet extends HttpServlet {
 
             Integer studentId = findStudentId(conn, userId);
             int savedCount = studentId == null ? 0 : count(conn, "SELECT COUNT(*) FROM favorites WHERE student_id = ?", studentId);
-            int requestCount = studentId == null ? 0 : count(conn, "SELECT COUNT(*) FROM inquiries WHERE student_id = ?", studentId);
+            int requestCount = studentId == null ? 0
+                    : count(conn, "SELECT COUNT(*) FROM inquiries WHERE student_id = ?", studentId)
+                    + count(conn, "SELECT COUNT(*) FROM bookings WHERE student_id = ?", studentId);
             int messageCount = count(conn, "SELECT COUNT(*) FROM messages WHERE sender_id = ? OR recipient_id = ?", userId, userId);
 
             out.print("{");

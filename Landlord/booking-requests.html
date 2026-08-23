@@ -76,7 +76,27 @@
           </section>
 
           <section class="panel">
-            <h2 class="section-title">Request Queue</h2>
+            <h2 class="section-title">Booking Applications</h2>
+            <div class="table-shell">
+              <table class="portal-table">
+                <thead>
+                  <tr>
+                    <th>Student</th>
+                    <th>Property</th>
+                    <th>Stay</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="bookingTableBody">
+                  <tr><td class="table-empty" colspan="5">Loading bookings...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="panel">
+            <h2 class="section-title">Viewing Requests</h2>
             <div class="table-shell">
               <table class="portal-table">
                 <thead>
@@ -103,6 +123,7 @@
       (() => {
         const context = window.location.pathname.match(/^\/[^/]+/)?.[0] || "";
         const tableBody = document.getElementById("requestTableBody");
+        const bookingBody = document.getElementById("bookingTableBody");
         const emptyState = document.getElementById("requestEmptyState");
         const count = document.getElementById("requestCount");
         const params = new URLSearchParams(window.location.search);
@@ -135,13 +156,59 @@
           return form;
         };
 
+        const bookingActionForm = (bookingId, decision, label) => {
+          const form = document.createElement("form");
+          form.method = "post";
+          form.action = `${context}/BookingDecisionServlet`;
+          const id = document.createElement("input");
+          id.type = "hidden";
+          id.name = "bookingId";
+          id.value = bookingId;
+          const action = document.createElement("input");
+          action.type = "hidden";
+          action.name = "decision";
+          action.value = decision;
+          const button = document.createElement("button");
+          button.type = "submit";
+          button.className = decision === "approve" ? "submit-btn" : "btn btn-soft";
+          button.textContent = label;
+          form.append(id, action, button);
+          return form;
+        };
+
         fetch(`${context}/LandlordRequestsServlet`, { headers: { Accept: "application/json" }, cache: "no-store" })
           .then((response) => response.json().then((data) => ({ response, data })))
           .then(({ response, data }) => {
             if (!response.ok) throw new Error(data.error || "Requests could not be loaded");
             const requests = data.requests || [];
-            count.textContent = pageMessage || `${requests.length} request${requests.length === 1 ? "" : "s"}`;
-            emptyState.hidden = requests.length > 0;
+            const bookings = data.bookings || [];
+            const total = requests.length + bookings.length;
+            count.textContent = pageMessage || `${total} request${total === 1 ? "" : "s"}`;
+            emptyState.hidden = total > 0;
+            bookingBody.replaceChildren();
+            if (!bookings.length) {
+              const row = document.createElement("tr");
+              const cell = addCell(row, "No booking applications have been received.");
+              cell.className = "table-empty";
+              cell.colSpan = 5;
+              bookingBody.appendChild(row);
+            } else {
+              bookings.forEach((booking) => {
+                const row = document.createElement("tr");
+                addCell(row, `${booking.studentName}\n${booking.studentEmail}`).style.whiteSpace = "pre-line";
+                addCell(row, `${booking.property}${booking.location ? ` | ${booking.location}` : ""}`);
+                addCell(row, `${booking.checkIn}${booking.checkOut ? ` to ${booking.checkOut}` : ""}`);
+                addCell(row, booking.status.replaceAll("_", " "));
+                const actions = document.createElement("td");
+                actions.className = "classic-card-actions";
+                if (booking.status === "pending") {
+                  actions.append(bookingActionForm(booking.id, "approve", "Approve"),
+                    bookingActionForm(booking.id, "reject", "Decline"));
+                } else actions.textContent = booking.reason || "Decision recorded";
+                row.appendChild(actions);
+                bookingBody.appendChild(row);
+              });
+            }
             tableBody.replaceChildren();
             if (!requests.length) {
               const row = document.createElement("tr");
@@ -170,6 +237,7 @@
           .catch((error) => {
             count.textContent = "Requests unavailable";
             tableBody.textContent = error.message;
+            bookingBody.textContent = error.message;
           });
       })();
     </script>

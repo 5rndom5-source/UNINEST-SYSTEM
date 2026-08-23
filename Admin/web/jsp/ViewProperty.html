@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Listing Details - UniNest Admin Portal</title>
     <link rel="stylesheet" href="../css/style.css">
+    <script>
+      (() => {
+        const id = new URLSearchParams(window.location.search).get("id");
+        window.location.replace(id ? `EditProperty.html?id=${encodeURIComponent(id)}` : "MyProperties.html");
+      })();
+    </script>
     <style>
         .detail-grid {
             display: grid;
@@ -70,7 +76,7 @@
             <a href="BookingRequests.html" class="nav-item"><span></span> Booking Requests</a>
             <a href="Enquiries.html" class="nav-item"><span></span> Enquiries</a>
             <a href="Messages.html" class="nav-item"><span></span> Messages</a>
-            <a href="Payments.html" class="nav-item"><span></span> Records</a>
+            <a href="Payments.html" class="nav-item"><span></span> Payments</a>
             <a href="Maintenance.html" class="nav-item"><span></span> Maintenance</a>
             <a href="Profile.html" class="nav-item"><span></span> Profile</a>
             <a href="../../../HomePage/contact.html" class="nav-item"><span></span> Contact Us</a>
@@ -85,16 +91,16 @@
 
             <section class="card">
                 <div class="detail-grid">
-                    <div class="detail-item"><span>Listing</span><strong>Not connected</strong></div>
-                    <div class="detail-item"><span>Landlord</span><strong>Not connected</strong></div>
-                    <div class="detail-item"><span>Area</span><strong>Not connected</strong></div>
-                    <div class="detail-item"><span>Advertised Rent</span><strong>Not connected</strong></div>
-                    <div class="detail-item"><span>Room Type</span><strong>Not connected</strong></div>
+                    <div class="detail-item"><span>Listing</span><strong>Select from listing queue</strong></div>
+                    <div class="detail-item"><span>Landlord</span><strong>-</strong></div>
+                    <div class="detail-item"><span>Area</span><strong>-</strong></div>
+                    <div class="detail-item"><span>Advertised Rent</span><strong>-</strong></div>
+                    <div class="detail-item"><span>Room Type</span><strong>-</strong></div>
                     <div class="detail-item"><span>Review Status</span><strong>No record selected</strong></div>
                 </div>
 
                 <div class="mt-2">
-                    <a href="EditProperty.html?id=1" class="btn btn-primary">Open review decision</a>
+                    <a href="MyProperties.html" class="btn btn-primary">Open listing queue</a>
                     <a href="../../../HomePage/search.html" class="btn btn-outline-primary">View public listings page</a>
                 </div>
             </section>
