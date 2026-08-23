@@ -41,7 +41,7 @@
             </button>
             <div class="profile-dropdown">
               <a href="profile.html">View Profile</a>
-              <a href="contact-landlord.html">Contact Page</a>
+                <a href="contact-landlord.html">Support</a>
               <a href="../LogoutServlet?portal=landlord">Logout</a>
             </div>
           </div>
@@ -49,74 +49,85 @@
       </header>
 
       <main class="classic-content">
-        <h1 class="classic-title">Contact Landlord</h1>
+        <h1 class="classic-title">Support Messages</h1>
 
         <section class="classic-contact-layout">
-          <div>
-            <article class="classic-property-preview" id="contactPropertyPreview">
-              <div class="classic-property-image" id="contactPropertyImage">Image</div>
-              <div class="classic-property-copy">
-                <h2 id="contactPropertyTitle">No listing selected</h2>
-                <p id="contactPropertyLocation">Add a property from the Listings page.</p>
-                <p id="contactPropertyPrice">Price not available</p>
-                <span class="classic-available neutral" id="contactPropertyStatus">No Listing Yet</span>
-              </div>
-            </article>
-
-            <form
-              id="contactLandlordForm"
-              class="classic-contact-form"
-              action="../ContactLandlordServlet"
-              method="post"
-            >
-              <input type="hidden" id="contactPropertyInput" name="propertyTitle" value="No listing selected" />
-
-              <label>
-                Student Name
-                <input type="text" name="studentName" placeholder="Student Name" required />
-              </label>
-
-              <label>
-                Email
-                <input type="email" name="studentEmail" placeholder="Email" required />
-              </label>
-
-              <label>
-                Message
-                <textarea name="message" rows="6" placeholder="Enter your message" required></textarea>
-              </label>
-
-              <div class="classic-buttons contact-buttons">
-                <button type="submit" class="submit-btn">Send Message</button>
-                <a href="listings.html" class="btn">Cancel</a>
-              </div>
-            </form>
+          <div class="classic-landlord-card">
+            <h2>Conversation History</h2>
+            <div id="supportMessageList" class="support-message-list">
+              <p>Loading messages...</p>
+            </div>
           </div>
 
-          <aside class="classic-landlord-card">
-            <h2>Landlord Information</h2>
-            <div class="landlord-info-row">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21a8 8 0 0 0-16 0"></path><circle cx="12" cy="7" r="4"></circle></svg>
-              <span>Landlord Account</span>
+          <form
+            id="contactLandlordForm"
+            class="classic-contact-form"
+            action="../ContactLandlordServlet"
+            method="post"
+          >
+            <h2>New Support Message</h2>
+            <label>
+              Subject
+              <input type="text" name="subject" placeholder="What do you need help with?" required />
+            </label>
+            <label>
+              Message
+              <textarea name="message" rows="8" placeholder="Describe the issue" required></textarea>
+            </label>
+            <div class="classic-buttons contact-buttons">
+              <button type="submit" class="submit-btn">Send Message</button>
+              <button type="reset" class="btn">Clear</button>
             </div>
-            <div class="landlord-info-row">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.3 1.8.6 2.6a2 2 0 0 1-.5 2.1L8 9.6a16 16 0 0 0 6.4 6.4l1.2-1.2a2 2 0 0 1 2.1-.5c.8.3 1.7.5 2.6.6a2 2 0 0 1 1.7 2z"></path></svg>
-              <span>082 154 6897</span>
-            </div>
-            <div class="landlord-info-row">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4z"></path><path d="m4 7 8 6 8-6"></path></svg>
-              <span>landlord@example.com</span>
-            </div>
-          </aside>
+          </form>
         </section>
 
         <div class="classic-message-success" id="messageSuccess">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
-          Message sent successfully!
+          <span id="supportMessageStatus"></span>
         </div>
       </main>
     </div>
 
+    <script>
+      (() => {
+        const context = window.location.pathname.match(/^\/[^/]+/)?.[0] || "";
+        const list = document.getElementById("supportMessageList");
+        const status = document.getElementById("messageSuccess");
+        const statusText = document.getElementById("supportMessageStatus");
+        const params = new URLSearchParams(window.location.search);
+        const pageMessage = params.get("success") || params.get("error");
+        if (pageMessage) {
+          statusText.textContent = pageMessage;
+          status.classList.add("show");
+        }
+
+        fetch(`${context}/ContactLandlordServlet`, { headers: { Accept: "application/json" }, cache: "no-store" })
+          .then((response) => response.json().then((data) => ({ response, data })))
+          .then(({ response, data }) => {
+            if (!response.ok) throw new Error(data.error || "Messages could not be loaded");
+            const messages = data.messages || [];
+            list.replaceChildren();
+            if (!messages.length) {
+              list.textContent = "No support messages have been sent.";
+              return;
+            }
+            messages.forEach((message) => {
+              const item = document.createElement("article");
+              item.className = "support-message";
+              const heading = document.createElement("strong");
+              heading.textContent = message.subject;
+              const meta = document.createElement("span");
+              meta.textContent = `${message.sender} to ${message.recipient} | ${message.createdAt}`;
+              const body = document.createElement("p");
+              body.textContent = message.body;
+              item.append(heading, meta, body);
+              list.appendChild(item);
+            });
+          })
+          .catch((error) => {
+            list.textContent = error.message;
+          });
+      })();
+    </script>
     <script src="script.js"></script>
     <script src="../portal-identity.js?v=20260822-auth"></script>
     <script src="../system-status.js"></script>

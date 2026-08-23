@@ -11,8 +11,8 @@ import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.LocalDateTime;
 
 /**
  * SendMessageServlet - Sends message to student
@@ -27,7 +27,8 @@ public class SendMessageServlet extends HttpServlet {
         
         // Check session
         HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("userId") == null) {
+        if (session == null || session.getAttribute("userId") == null
+                || !"admin".equalsIgnoreCase(String.valueOf(session.getAttribute("role")))) {
             response.sendRedirect(request.getContextPath() + "/Login.html");
             return;
         }
@@ -41,6 +42,7 @@ public class SendMessageServlet extends HttpServlet {
             return;
         }
         String messageText = request.getParameter("message");
+        String subject = request.getParameter("subject");
         String inquiryId = request.getParameter("inquiryId");
         
         if (messageText == null || messageText.trim().isEmpty()) {
@@ -53,6 +55,17 @@ public class SendMessageServlet extends HttpServlet {
             if (conn == null) {
                 response.sendRedirect(request.getContextPath() + "/Messages.html?error=Service is temporarily unavailable. Please try again later.");
                 return;
+            }
+
+            String recipientRole = findRecipientRole(conn, recipientId);
+            if (recipientRole == null || senderId == recipientId) {
+                response.sendRedirect(request.getContextPath() + "/Messages.html?error=Invalid recipient");
+                return;
+            }
+
+            String storedMessage = messageText.trim();
+            if (subject != null && !subject.trim().isEmpty()) {
+                storedMessage = "Subject: " + subject.trim() + "\n" + storedMessage;
             }
             
             // Insert message
@@ -74,7 +87,7 @@ public class SendMessageServlet extends HttpServlet {
                 stmt.setNull(3, java.sql.Types.INTEGER);
             }
             
-            stmt.setString(4, messageText);
+            stmt.setString(4, storedMessage);
             stmt.executeUpdate();
             stmt.close();
             
@@ -83,13 +96,26 @@ public class SendMessageServlet extends HttpServlet {
                              "New Message", 
                              "You have received a new message",
                              "message_received",
-                             "Messages.html");
+                             "student".equals(recipientRole)
+                                     ? "UserDashboard/messages.html"
+                                     : "Landlord/contact-landlord.html");
             
             response.sendRedirect(request.getContextPath() + "/Messages.html?success=Message sent");
             
         } catch (SQLException e) {
             System.err.println("Database error: " + e.getMessage());
             response.sendRedirect(request.getContextPath() + "/Messages.html?error=Error sending message");
+        }
+    }
+
+    private String findRecipientRole(Connection conn, int recipientId) throws SQLException {
+        String query = "SELECT role FROM users WHERE user_id = ? AND status NOT IN ('inactive', 'suspended') "
+                + "AND role IN ('student', 'landlord')";
+        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setInt(1, recipientId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() ? rs.getString("role") : null;
+            }
         }
     }
     

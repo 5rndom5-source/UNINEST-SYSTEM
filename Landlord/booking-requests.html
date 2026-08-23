@@ -21,7 +21,7 @@
           <a href="listings.html">Listings</a>
           <a href="booking-requests.html" class="active">Requests</a>
           <a href="reviews.html">Reviews</a>
-          <a href="contact-landlord.html">Contact</a>
+          <a href="contact-landlord.html">Support</a>
           <a href="profile.html">Profile</a>
           <a href="../LogoutServlet?portal=landlord">Logout</a>
         </nav>
@@ -45,7 +45,7 @@
               </button>
               <div class="profile-dropdown">
                 <a href="profile.html">View Profile</a>
-                <a href="contact-landlord.html">Contact Page</a>
+                <a href="contact-landlord.html">Support</a>
                 <a href="../LogoutServlet?portal=landlord">Logout</a>
               </div>
             </div>
@@ -56,12 +56,12 @@
           <div class="page-header">
             <div>
               <h1 class="page-title">Requests</h1>
-              <p class="page-subtitle">Student viewing and booking requests will be displayed here once request records are stored.</p>
+              <p class="page-subtitle">Review viewing and accommodation requests for your listings.</p>
             </div>
-            <div class="status-note">No student requests</div>
+            <div id="requestCount" class="status-note">Loading requests</div>
           </div>
 
-          <section class="empty-state">
+          <section id="requestEmptyState" class="empty-state" hidden>
             <div>
               <div class="empty-icon">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -88,9 +88,9 @@
                     <th>Action</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody id="requestTableBody">
                   <tr>
-                    <td class="table-empty" colspan="5">No request records are available.</td>
+                    <td class="table-empty" colspan="5">Loading requests...</td>
                   </tr>
                 </tbody>
               </table>
@@ -99,6 +99,80 @@
         </main>
       </div>
     </div>
+    <script>
+      (() => {
+        const context = window.location.pathname.match(/^\/[^/]+/)?.[0] || "";
+        const tableBody = document.getElementById("requestTableBody");
+        const emptyState = document.getElementById("requestEmptyState");
+        const count = document.getElementById("requestCount");
+        const params = new URLSearchParams(window.location.search);
+        const pageMessage = params.get("success") || params.get("error");
+
+        const addCell = (row, value) => {
+          const cell = document.createElement("td");
+          cell.textContent = value;
+          row.appendChild(cell);
+          return cell;
+        };
+
+        const actionForm = (requestId, action, label) => {
+          const form = document.createElement("form");
+          form.method = "post";
+          form.action = `${context}/LandlordRequestsServlet`;
+          const id = document.createElement("input");
+          id.type = "hidden";
+          id.name = "inquiryId";
+          id.value = requestId;
+          const actionInput = document.createElement("input");
+          actionInput.type = "hidden";
+          actionInput.name = "action";
+          actionInput.value = action;
+          const button = document.createElement("button");
+          button.type = "submit";
+          button.className = action === "resolve" ? "btn btn-soft" : "submit-btn";
+          button.textContent = label;
+          form.append(id, actionInput, button);
+          return form;
+        };
+
+        fetch(`${context}/LandlordRequestsServlet`, { headers: { Accept: "application/json" }, cache: "no-store" })
+          .then((response) => response.json().then((data) => ({ response, data })))
+          .then(({ response, data }) => {
+            if (!response.ok) throw new Error(data.error || "Requests could not be loaded");
+            const requests = data.requests || [];
+            count.textContent = pageMessage || `${requests.length} request${requests.length === 1 ? "" : "s"}`;
+            emptyState.hidden = requests.length > 0;
+            tableBody.replaceChildren();
+            if (!requests.length) {
+              const row = document.createElement("tr");
+              const cell = addCell(row, "No student requests have been received.");
+              cell.className = "table-empty";
+              cell.colSpan = 5;
+              tableBody.appendChild(row);
+              return;
+            }
+
+            requests.forEach((request) => {
+              const row = document.createElement("tr");
+              addCell(row, `${request.studentName}\n${request.studentEmail}`).style.whiteSpace = "pre-line";
+              addCell(row, `${request.property}${request.location ? ` | ${request.location}` : ""}`);
+              addCell(row, request.message);
+              addCell(row, request.status.replaceAll("_", " "));
+              const actions = document.createElement("td");
+              actions.className = "classic-card-actions";
+              if (request.status === "pending") actions.appendChild(actionForm(request.id, "reply", "Acknowledge"));
+              if (request.status !== "resolved") actions.appendChild(actionForm(request.id, "resolve", "Resolve"));
+              if (!actions.childElementCount) actions.textContent = "Completed";
+              row.appendChild(actions);
+              tableBody.appendChild(row);
+            });
+          })
+          .catch((error) => {
+            count.textContent = "Requests unavailable";
+            tableBody.textContent = error.message;
+          });
+      })();
+    </script>
     <script src="../portal-identity.js?v=20260822-auth"></script>
     <script src="../system-status.js"></script>
 </body>

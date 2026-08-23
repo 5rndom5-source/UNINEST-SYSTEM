@@ -27,7 +27,7 @@ public class StudentMessageServlet extends HttpServlet {
         response.setContentType("application/json");
 
         HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("userId") == null) {
+        if (!isStudent(session)) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.getWriter().print("{\"error\":\"Login required\"}");
             return;
@@ -78,7 +78,7 @@ public class StudentMessageServlet extends HttpServlet {
             throws ServletException, IOException {
 
         HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("userId") == null) {
+        if (!isStudent(session)) {
             sendUnauthenticated(request, response);
             return;
         }
@@ -117,6 +117,14 @@ public class StudentMessageServlet extends HttpServlet {
                 stmt.executeUpdate();
             }
 
+            try (PreparedStatement stmt = conn.prepareStatement(
+                    "INSERT INTO notifications (user_id, title, message, notification_type, action_url) "
+                            + "VALUES (?, 'New student message', ?, 'message_received', 'Messages.html')")) {
+                stmt.setInt(1, recipientId);
+                stmt.setString(2, subject);
+                stmt.executeUpdate();
+            }
+
             sendResult(request, response, HttpServletResponse.SC_OK, "success", "Message sent");
         } catch (SQLException e) {
             System.err.println("Database error in StudentMessageServlet: " + e.getMessage());
@@ -134,6 +142,12 @@ public class StudentMessageServlet extends HttpServlet {
              ResultSet rs = stmt.executeQuery()) {
             return rs.next() ? rs.getInt("user_id") : null;
         }
+    }
+
+    private boolean isStudent(HttpSession session) {
+        return session != null
+                && session.getAttribute("userId") != null
+                && "student".equalsIgnoreCase(String.valueOf(session.getAttribute("role")));
     }
 
     private void writeMessage(PrintWriter out, ResultSet rs) throws SQLException {

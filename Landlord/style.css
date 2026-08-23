@@ -1241,6 +1241,35 @@ body.landlord-classic {
   display: flex;
 }
 
+.support-message-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.support-message {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--white);
+  padding: 14px;
+}
+
+.support-message strong,
+.support-message span {
+  display: block;
+}
+
+.support-message span {
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.support-message p {
+  margin-top: 10px;
+  white-space: pre-wrap;
+}
+
 .classic-message-success svg {
   width: 24px;
   height: 24px;

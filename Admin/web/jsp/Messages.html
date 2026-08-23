@@ -57,6 +57,62 @@
             margin-bottom: 8px;
         }
 
+        .conversation-items {
+            display: grid;
+            gap: 8px;
+        }
+
+        .conversation-item {
+            width: 100%;
+            border: 1px solid var(--light);
+            border-radius: var(--radius-md);
+            background: var(--white);
+            color: var(--dark);
+            cursor: pointer;
+            padding: 12px;
+            text-align: left;
+        }
+
+        .conversation-item:hover,
+        .conversation-item.active {
+            border-color: var(--secondary);
+            background: #eef6ff;
+        }
+
+        .conversation-item strong,
+        .conversation-item span {
+            display: block;
+        }
+
+        .conversation-item span,
+        .message-meta {
+            color: var(--gray);
+            font-size: 12px;
+            margin-top: 4px;
+        }
+
+        .message-detail {
+            min-height: 440px;
+            padding: 24px;
+        }
+
+        .message-detail h2 {
+            color: var(--primary-dark);
+            margin-bottom: 6px;
+        }
+
+        .message-body {
+            margin-top: 20px;
+            white-space: pre-wrap;
+            line-height: 1.65;
+        }
+
+        .message-feedback {
+            min-height: 22px;
+            margin: 0 0 12px;
+            font-weight: 700;
+        }
+
         .chat-input {
             border-top: 1px solid var(--light);
             padding: 16px;
@@ -140,30 +196,110 @@
 
             <section class="messages-shell">
                 <aside class="conversation-list">
-                    <div class="conversation-empty">
+                    <div id="messageList" class="conversation-items">
+                      <div class="conversation-empty">
                         <div>
-                            <strong>No conversations</strong>
-                            <span>Student, landlord, and support conversations will be listed here.</span>
+                            <strong>Loading messages</strong>
                         </div>
+                      </div>
                     </div>
                 </aside>
 
                 <div>
-                    <div class="chat-empty">
+                    <div id="messageDetail" class="chat-empty message-detail">
                         <div>
                             <strong>No message selected</strong>
-                            <span>Select a conversation after records are available.</span>
+                            <span>Select a student or landlord message.</span>
                         </div>
                     </div>
                     <form class="chat-input" method="post" action="../../../SendMessageServlet">
-                        <input type="hidden" name="recipientId" value="">
-                        <textarea name="message" placeholder="Message composer" disabled></textarea>
+                        <input id="messageRecipientId" type="hidden" name="recipientId" value="">
+                        <input id="messageSubject" type="hidden" name="subject" value="">
+                        <textarea id="messageReply" name="message" placeholder="Write a reply" disabled required></textarea>
                         <button class="btn btn-primary" type="submit" disabled>Send</button>
                     </form>
                 </div>
             </section>
+            <p id="messageFeedback" class="message-feedback" aria-live="polite"></p>
         </main>
     </div>
+  <script>
+    (() => {
+      const context = window.location.pathname.match(/^\/[^/]+/)?.[0] || "";
+      const list = document.getElementById("messageList");
+      const detail = document.getElementById("messageDetail");
+      const search = document.getElementById("messageSearch");
+      const recipient = document.getElementById("messageRecipientId");
+      const subject = document.getElementById("messageSubject");
+      const reply = document.getElementById("messageReply");
+      const send = document.querySelector(".chat-input button[type='submit']");
+      const feedback = document.getElementById("messageFeedback");
+      let messages = [];
+
+      const renderDetail = (message) => {
+        detail.className = "message-detail";
+        detail.replaceChildren();
+        const heading = document.createElement("h2");
+        heading.textContent = message.subject;
+        const meta = document.createElement("p");
+        meta.className = "message-meta";
+        meta.textContent = `${message.senderName} | ${message.contactRole} | ${message.sentAt}`;
+        const body = document.createElement("p");
+        body.className = "message-body";
+        body.textContent = message.body;
+        detail.append(heading, meta, body);
+        recipient.value = message.contactId;
+        subject.value = `Re: ${message.subject.replace(/^Re:\s*/i, "")}`;
+        reply.disabled = false;
+        send.disabled = false;
+      };
+
+      const renderList = () => {
+        const query = search.value.trim().toLowerCase();
+        const filtered = messages.filter((item) =>
+          [item.contactName, item.contactRole, item.subject, item.body]
+            .join(" ").toLowerCase().includes(query));
+        list.replaceChildren();
+        if (!filtered.length) {
+          const empty = document.createElement("div");
+          empty.className = "conversation-empty";
+          empty.textContent = messages.length ? "No messages match this search." : "No support messages have been received.";
+          list.appendChild(empty);
+          return;
+        }
+        filtered.forEach((message) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "conversation-item";
+          const name = document.createElement("strong");
+          name.textContent = message.contactName;
+          const line = document.createElement("span");
+          line.textContent = `${message.subject} | ${message.sentAt}`;
+          button.append(name, line);
+          button.addEventListener("click", () => {
+            document.querySelectorAll(".conversation-item").forEach((item) => item.classList.remove("active"));
+            button.classList.add("active");
+            renderDetail(message);
+          });
+          list.appendChild(button);
+        });
+      };
+
+      const params = new URLSearchParams(window.location.search);
+      feedback.textContent = params.get("success") || params.get("error") || "";
+      search.addEventListener("input", renderList);
+      fetch(`${context}/AdminMessagesServlet`, { headers: { Accept: "application/json" }, cache: "no-store" })
+        .then((response) => response.json().then((data) => ({ response, data })))
+        .then(({ response, data }) => {
+          if (!response.ok) throw new Error(data.error || "Messages could not be loaded");
+          messages = data.messages || [];
+          renderList();
+        })
+        .catch((error) => {
+          list.textContent = error.message;
+        });
+    })();
+  </script>
   <script src="../../../portal-identity.js?v=20260822-auth"></script>
   <script src="../../../system-status.js"></script>
 </body>

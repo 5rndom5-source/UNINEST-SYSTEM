@@ -129,10 +129,10 @@
                 <p class="page-subtitle">Review and respond to student and landlord enquiries.</p>
             </div>
 
-            <section class="section empty-panel">
+            <section id="enquirySummary" class="section empty-panel">
                 <div>
-                    <h2>No open enquiries</h2>
-                    <p>There are no enquiries requiring a response.</p>
+                    <h2>Loading enquiries</h2>
+                    <p>Checking public contact submissions.</p>
                 </div>
             </section>
 
@@ -141,14 +141,14 @@
                     <table class="table">
                         <thead>
                             <tr>
-                                <th>Sender</th>
-                                <th>Subject</th>
-                                <th>Source</th>
+                                <th>Received</th>
+                                <th>Type</th>
+                                <th>Message</th>
                                 <th>Status</th>
                                 <th>Admin Action</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="enquiryTableBody">
                             <tr>
                                 <td class="empty-record" colspan="5">No enquiries found.</td>
                             </tr>
@@ -158,6 +158,90 @@
             </section>
         </main>
     </div>
+  <script>
+    (() => {
+      const context = window.location.pathname.match(/^\/[^/]+/)?.[0] || "";
+      const summary = document.getElementById("enquirySummary");
+      const body = document.getElementById("enquiryTableBody");
+      const search = document.getElementById("enquirySearch");
+      let enquiries = [];
+
+      const addCell = (row, value) => {
+        const cell = document.createElement("td");
+        cell.textContent = value;
+        row.appendChild(cell);
+        return cell;
+      };
+
+      const render = () => {
+        const query = search.value.trim().toLowerCase();
+        const filtered = enquiries.filter((item) =>
+          [item.title, item.message, item.createdAt].join(" ").toLowerCase().includes(query));
+        const unread = enquiries.filter((item) => !item.read).length;
+        summary.innerHTML = "";
+        const summaryContent = document.createElement("div");
+        const heading = document.createElement("h2");
+        heading.textContent = enquiries.length ? `${unread} unread enquiries` : "No public enquiries";
+        const text = document.createElement("p");
+        text.textContent = enquiries.length
+          ? `${enquiries.length} public contact submissions are stored for this admin account.`
+          : "Public contact submissions will appear here.";
+        summaryContent.append(heading, text);
+        summary.appendChild(summaryContent);
+
+        body.replaceChildren();
+        if (!filtered.length) {
+          const row = document.createElement("tr");
+          const cell = addCell(row, enquiries.length ? "No enquiries match this search." : "No enquiries found.");
+          cell.colSpan = 5;
+          cell.className = "empty-record";
+          body.appendChild(row);
+          return;
+        }
+
+        filtered.forEach((enquiry) => {
+          const row = document.createElement("tr");
+          addCell(row, enquiry.createdAt);
+          addCell(row, enquiry.title);
+          addCell(row, enquiry.message);
+          addCell(row, enquiry.read ? "Read" : "Unread");
+          const action = document.createElement("td");
+          if (!enquiry.read) {
+            const form = document.createElement("form");
+            form.method = "post";
+            form.action = `${context}/NotificationServlet`;
+            const id = document.createElement("input");
+            id.type = "hidden";
+            id.name = "notificationId";
+            id.value = enquiry.id;
+            const button = document.createElement("button");
+            button.type = "submit";
+            button.className = "btn btn-primary";
+            button.textContent = "Mark Read";
+            form.append(id, button);
+            action.appendChild(form);
+          } else {
+            action.textContent = "Completed";
+          }
+          row.appendChild(action);
+          body.appendChild(row);
+        });
+      };
+
+      search.addEventListener("input", render);
+      fetch(`${context}/AdminEnquiriesServlet`, { headers: { Accept: "application/json" }, cache: "no-store" })
+        .then((response) => response.json().then((data) => ({ response, data })))
+        .then(({ response, data }) => {
+          if (!response.ok) throw new Error(data.error || "Enquiries could not be loaded");
+          enquiries = data.enquiries || [];
+          render();
+        })
+        .catch((error) => {
+          summary.querySelector("h2").textContent = "Enquiries unavailable";
+          summary.querySelector("p").textContent = error.message;
+        });
+    })();
+  </script>
   <script src="../../../portal-identity.js?v=20260822-auth"></script>
   <script src="../../../system-status.js"></script>
 </body>

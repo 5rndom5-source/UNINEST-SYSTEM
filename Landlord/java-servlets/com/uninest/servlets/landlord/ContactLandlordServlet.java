@@ -3,94 +3,179 @@ package com.uninest.servlets.landlord;
 import com.uninest.utils.DatabaseConnection;
 import com.uninest.utils.ValidationUtil;
 
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 @WebServlet("/ContactLandlordServlet")
 public class ContactLandlordServlet extends HttpServlet {
+
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        response.setCharacterEncoding("UTF-8");
+        response.setContentType("application/json");
+        response.setHeader("Cache-Control", "no-store");
+
+        HttpSession session = request.getSession(false);
+        if (!isLandlord(session)) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().print("{\"messages\":[],\"error\":\"Landlord login required\"}");
+            return;
+        }
+
+        int userId = (Integer) session.getAttribute("userId");
+        try (PrintWriter out = response.getWriter()) {
+            Connection conn = DatabaseConnection.getInstance().getConnection();
+            if (conn == null) {
+                response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+                out.print("{\"messages\":[],\"error\":\"Service is temporarily unavailable\"}");
+                return;
+            }
+
+            String query = "SELECT m.message_id, m.message_text, m.sent_date, "
+                    + "sender.full_name AS sender_name, recipient.full_name AS recipient_name "
+                    + "FROM messages m "
+                    + "JOIN users sender ON sender.user_id = m.sender_id "
+                    + "JOIN users recipient ON recipient.user_id = m.recipient_id "
+                    + "WHERE m.sender_id = ? OR m.recipient_id = ? "
+                    + "ORDER BY m.sent_date DESC LIMIT 50";
+            try (PreparedStatement stmt = conn.prepareStatement(query)) {
+                stmt.setInt(1, userId);
+                stmt.setInt(2, userId);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    out.print("{\"messages\":[");
+                    boolean first = true;
+                    while (rs.next()) {
+                        if (!first) out.print(",");
+                        first = false;
+                        writeMessage(out, rs);
+                    }
+                    out.print("]}");
+                }
+            }
+        } catch (SQLException e) {
+            getServletContext().log("Unable to load landlord support messages", e);
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.getWriter().print("{\"messages\":[],\"error\":\"Messages could not be loaded\"}");
+        }
+    }
+
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        if (!isLandlord(session)) {
+            response.sendRedirect(request.getContextPath() + "/Landlord/login.html");
+            return;
+        }
 
-        String propertyTitle = request.getParameter("propertyTitle");
-        String studentName = request.getParameter("studentName");
-        String studentEmail = request.getParameter("studentEmail");
-        String message = request.getParameter("message");
-
-        if (!ValidationUtil.isRequired(propertyTitle)
-                || !ValidationUtil.isRequired(studentName)
-                || !ValidationUtil.isValidEmail(studentEmail)
-                || !ValidationUtil.isRequired(message)) {
-            response.sendRedirect("Landlord/contact-landlord.html?error=missing");
+        String subject = trim(request.getParameter("subject"));
+        String message = trim(request.getParameter("message"));
+        if (!ValidationUtil.isRequired(subject) || !ValidationUtil.isRequired(message)) {
+            redirect(response, "error", "Subject and message are required");
             return;
         }
 
         try {
             Connection conn = DatabaseConnection.getInstance().getConnection();
             if (conn == null) {
-                response.sendRedirect("Landlord/contact-landlord.html?error=db");
+                redirect(response, "error", "Service is temporarily unavailable");
                 return;
             }
 
-            Integer landlordUserId = findLandlordUserId(conn, request.getParameter("landlordEmail"));
-            if (landlordUserId != null) {
-                createNotification(
-                        conn,
-                        landlordUserId,
-                        "New property contact",
-                        studentName.trim() + " asked about " + propertyTitle.trim()
-                                + ". Email: " + studentEmail.trim()
-                                + ". Message: " + ValidationUtil.sanitizeXSS(message.trim()),
-                        "message_received",
-                        "Landlord/contact-landlord.html");
+            Integer recipientId = findSupportUser(conn);
+            if (recipientId == null) {
+                redirect(response, "error", "Support account is not available");
+                return;
             }
 
-            response.sendRedirect("Landlord/contact-landlord.html?sent=true");
+            String body = "Subject: " + ValidationUtil.sanitizeXSS(subject)
+                    + "\n" + ValidationUtil.sanitizeXSS(message);
+            try (PreparedStatement stmt = conn.prepareStatement(
+                    "INSERT INTO messages (sender_id, recipient_id, message_text) VALUES (?, ?, ?)")) {
+                stmt.setInt(1, (Integer) session.getAttribute("userId"));
+                stmt.setInt(2, recipientId);
+                stmt.setString(3, body);
+                stmt.executeUpdate();
+            }
+
+            try (PreparedStatement stmt = conn.prepareStatement(
+                    "INSERT INTO notifications (user_id, title, message, notification_type, action_url) "
+                            + "VALUES (?, 'New landlord message', ?, 'message_received', 'Messages.html')")) {
+                stmt.setInt(1, recipientId);
+                stmt.setString(2, subject);
+                stmt.executeUpdate();
+            }
+
+            redirect(response, "success", "Message sent");
         } catch (SQLException e) {
-            System.err.println("Database error in ContactLandlordServlet: " + e.getMessage());
-            e.printStackTrace();
-            response.sendRedirect("Landlord/contact-landlord.html?error=save");
+            getServletContext().log("Unable to send landlord support message", e);
+            redirect(response, "error", "Could not send message");
         }
     }
 
-    private Integer findLandlordUserId(Connection conn, String landlordEmail) throws SQLException {
-        String email = ValidationUtil.isValidEmail(landlordEmail)
-                ? landlordEmail
-                : "molebogeng.ramushu@uninest.co.za";
-
-        PreparedStatement stmt = conn.prepareStatement(
-                "SELECT user_id FROM users WHERE email = ? AND role = 'landlord'");
-        stmt.setString(1, email);
-        ResultSet rs = stmt.executeQuery();
-
-        Integer userId = null;
-        if (rs.next()) {
-            userId = rs.getInt("user_id");
-        }
-        stmt.close();
-        return userId;
+    private boolean isLandlord(HttpSession session) {
+        return session != null
+                && session.getAttribute("userId") != null
+                && "landlord".equalsIgnoreCase(String.valueOf(session.getAttribute("role")));
     }
 
-    private void createNotification(Connection conn, int userId, String title,
-                                    String message, String type, String actionUrl)
-            throws SQLException {
-        PreparedStatement stmt = conn.prepareStatement(
-                "INSERT INTO notifications (user_id, title, message, notification_type, action_url) "
-                        + "VALUES (?, ?, ?, ?, ?)");
-        stmt.setInt(1, userId);
-        stmt.setString(2, title);
-        stmt.setString(3, message);
-        stmt.setString(4, type);
-        stmt.setString(5, actionUrl);
-        stmt.executeUpdate();
-        stmt.close();
+    private Integer findSupportUser(Connection conn) throws SQLException {
+        String query = "SELECT u.user_id FROM users u JOIN admins a ON a.user_id = u.user_id "
+                + "WHERE u.role = 'admin' AND u.status = 'active' ORDER BY u.user_id LIMIT 1";
+        try (PreparedStatement stmt = conn.prepareStatement(query);
+             ResultSet rs = stmt.executeQuery()) {
+            return rs.next() ? rs.getInt("user_id") : null;
+        }
+    }
+
+    private void writeMessage(PrintWriter out, ResultSet rs) throws SQLException {
+        String body = valueOr(rs.getString("message_text"), "");
+        String subject = "Message";
+        if (body.startsWith("Subject: ")) {
+            int splitAt = body.indexOf('\n');
+            if (splitAt >= 0) {
+                subject = body.substring(9, splitAt).trim();
+                body = body.substring(splitAt + 1).trim();
+            }
+        }
+        out.print("{\"id\":" + rs.getInt("message_id")
+                + ",\"sender\":\"" + json(rs.getString("sender_name")) + "\""
+                + ",\"recipient\":\"" + json(rs.getString("recipient_name")) + "\""
+                + ",\"subject\":\"" + json(subject) + "\""
+                + ",\"body\":\"" + json(body) + "\""
+                + ",\"createdAt\":\"" + json(String.valueOf(rs.getTimestamp("sent_date"))) + "\"}");
+    }
+
+    private void redirect(HttpServletResponse response, String key, String message) throws IOException {
+        response.sendRedirect("Landlord/contact-landlord.html?" + key + "="
+                + java.net.URLEncoder.encode(message, "UTF-8"));
+    }
+
+    private String trim(String value) {
+        return value == null ? "" : value.trim();
+    }
+
+    private String valueOr(String value, String fallback) {
+        return value == null || value.trim().isEmpty() ? fallback : value.trim();
+    }
+
+    private String json(String value) {
+        if (value == null) return "";
+        return value.replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\r", "\\r")
+                .replace("\n", "\\n")
+                .replace("\t", "\\t");
     }
 }
