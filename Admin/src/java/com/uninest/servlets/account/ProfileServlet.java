@@ -26,7 +26,8 @@ public class ProfileServlet extends HttpServlet {
             throws ServletException, IOException {
 
         HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("userId") == null) {
+        if (session == null || session.getAttribute("userId") == null
+                || !"admin".equalsIgnoreCase(String.valueOf(session.getAttribute("role")))) {
             response.sendRedirect(request.getContextPath() + "/Login.html");
             return;
         }
@@ -34,11 +35,12 @@ public class ProfileServlet extends HttpServlet {
         String fullName = request.getParameter("fullName");
         String email = request.getParameter("email");
         String phone = request.getParameter("phone");
+        String normalizedPhone = phone == null ? "" : phone.trim();
 
         if (!ValidationUtil.isRequired(fullName)
                 || !ValidationUtil.isValidEmail(email)
-                || !ValidationUtil.isValidPhone(phone)) {
-            redirect(request, response, "error", "Please enter a valid name, email, and phone number");
+                || (!normalizedPhone.isEmpty() && !ValidationUtil.isValidPhone(normalizedPhone))) {
+            redirect(request, response, "error", "Enter a valid name, email, and phone number");
             return;
         }
 
@@ -53,7 +55,7 @@ public class ProfileServlet extends HttpServlet {
             PreparedStatement stmt = conn.prepareStatement(query);
             stmt.setString(1, fullName.trim());
             stmt.setString(2, email.trim());
-            stmt.setString(3, phone.trim());
+            stmt.setString(3, normalizedPhone);
             stmt.setInt(4, (Integer) session.getAttribute("userId"));
 
             int updated = stmt.executeUpdate();
@@ -65,6 +67,7 @@ public class ProfileServlet extends HttpServlet {
             }
 
             session.setAttribute("adminName", fullName.trim());
+            session.setAttribute("fullName", fullName.trim());
             session.setAttribute("email", email.trim());
             redirect(request, response, "success", "Profile updated");
         } catch (SQLException e) {

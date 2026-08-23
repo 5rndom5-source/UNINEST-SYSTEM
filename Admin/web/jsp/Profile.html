@@ -223,7 +223,7 @@
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Phone Number</label>
-                                <input type="tel" class="form-control" name="phone" required autocomplete="tel">
+                                <input type="tel" class="form-control" name="phone" autocomplete="tel" placeholder="e.g. 082 123 4567">
                             </div>
                         </div>
 
@@ -237,15 +237,21 @@
                             <button type="submit" class="btn btn-primary">Save Changes</button>
                         </div>
                     </form>
-                    <p id="saveMessage" class="success-message" style="display: none; margin-top: 12px;">Profile updated successfully.</p>
+                    <p id="saveMessage" class="success-message" style="display: none; margin-top: 12px;" aria-live="polite"></p>
                 </section>
             </div>
         </main>
     </div>
 
     <script>
-        if (new URLSearchParams(window.location.search).has('success')) {
-            document.getElementById('saveMessage').style.display = 'block';
+        const profileParams = new URLSearchParams(window.location.search);
+        const profileSuccess = profileParams.get('success');
+        const profileError = profileParams.get('error');
+        if (profileSuccess || profileError) {
+            const message = document.getElementById('saveMessage');
+            message.textContent = profileSuccess || profileError;
+            message.className = profileError ? 'error-message' : 'success-message';
+            message.style.display = 'block';
         }
     </script>
   <script src="../../../portal-identity.js?v=20260822-auth"></script>

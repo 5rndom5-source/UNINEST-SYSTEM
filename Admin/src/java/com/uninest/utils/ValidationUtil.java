@@ -12,9 +12,9 @@ public class ValidationUtil {
     private static final Pattern EMAIL_PATTERN = 
         Pattern.compile("^[A-Za-z0-9+_.-]+@(.+)$");
     
-    // Phone number pattern (international format)
+    // Accept international numbers and common 10-digit South African local numbers.
     private static final Pattern PHONE_PATTERN = 
-        Pattern.compile("^\\+?[1-9]\\d{1,14}$");
+        Pattern.compile("^(?:\\+?[1-9]\\d{7,14}|0\\d{9})$");
     
     // URL pattern
     private static final Pattern URL_PATTERN = 
