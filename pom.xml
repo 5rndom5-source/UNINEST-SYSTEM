@@ -60,52 +60,85 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.14.1</version>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.5.4</version>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.4.0</version>
+                <executions>
+                    <execution>
+                        <id>stage-web-resources</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/${project.build.finalName}</outputDirectory>
+                            <overwrite>true</overwrite>
+                            <resources>
+                                <resource>
+                                    <directory>${project.basedir}</directory>
+                                    <includes>
+                                        <include>index.html</include>
+                                        <include>style.css</include>
+                                        <include>portal-identity.js</include>
+                                        <include>system-status.js</include>
+                                    </includes>
+                                </resource>
+                                <resource>
+                                    <directory>${project.basedir}/Admin/web</directory>
+                                    <targetPath>Admin/web</targetPath>
+                                </resource>
+                                <resource>
+                                    <directory>${project.basedir}/HomePage</directory>
+                                    <targetPath>HomePage</targetPath>
+                                    <excludes>
+                                        <exclude>java-servlets/**</exclude>
+                                    </excludes>
+                                </resource>
+                                <resource>
+                                    <directory>${project.basedir}/Landlord</directory>
+                                    <targetPath>Landlord</targetPath>
+                                    <excludes>
+                                        <exclude>java-servlets/**</exclude>
+                                    </excludes>
+                                </resource>
+                                <resource>
+                                    <directory>${project.basedir}/UserDashboard</directory>
+                                    <targetPath>UserDashboard</targetPath>
+                                    <excludes>
+                                        <exclude>java-servlets/**</exclude>
+                                    </excludes>
+                                </resource>
+                                <resource>
+                                    <directory>${project.basedir}/createAccount</directory>
+                                    <targetPath>createAccount</targetPath>
+                                    <excludes>
+                                        <exclude>java-servlets/**</exclude>
+                                    </excludes>
+                                </resource>
+                                <resource>
+                                    <directory>${project.basedir}/META-INF</directory>
+                                    <targetPath>META-INF</targetPath>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-war-plugin</artifactId>
                 <version>3.4.0</version>
                 <configuration>
-                    <warSourceDirectory>${project.basedir}</warSourceDirectory>
+                    <warSourceDirectory>${project.build.directory}/war-source</warSourceDirectory>
                     <failOnMissingWebXml>false</failOnMissingWebXml>
-                    <warSourceExcludes>
-                        .git/**,
-                        .m2/**,
-                        .vscode/**,
-                        lib/**,
-                        target/**,
-                        tools/**,
-                        **/java-servlets/**,
-                        Admin/src/**,
-                        Admin/database/**,
-                        Database/**,
-                        ServletGuide/**,
-                        UniNest/**,
-                        VS CODE TOOLS/**,
-                        Admin/*.md,
-                        Admin/*.sh,
-                        *.ps1,
-                        pom.xml,
-                        nb-configuration.xml,
-                        **/*.rtf,
-                        **/~$*
-                    </warSourceExcludes>
-                    <packagingExcludes>
-                        .m2/**,
-                        lib/**,
-                        target/**,
-                        tools/**,
-                        **/java-servlets/**,
-                        Admin/src/**,
-                        Admin/database/**,
-                        ServletGuide/**,
-                        Admin/*.md,
-                        Admin/*.sh,
-                        *.ps1,
-                        pom.xml,
-                        **/*.rtf,
-                        **/~$*
-                    </packagingExcludes>
                 </configuration>
             </plugin>
         </plugins>

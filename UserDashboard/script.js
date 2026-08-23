@@ -17,6 +17,7 @@ const state = {
   listings: [],
   favoriteIds: new Set()
 };
+let searchTimer;
 
 const pageName = document.body.dataset.page || "overview";
 const byId = (id) => document.getElementById(id);
@@ -108,8 +109,10 @@ const setProfileLabels = (profile = {}) => {
   const initials = initialsFromName(name);
 
   if (byId("profileNameLabel")) byId("profileNameLabel").textContent = name;
-  if (byId("profileInitials")) byId("profileInitials").textContent = initials;
-  if (byId("profileAvatarLarge")) byId("profileAvatarLarge").textContent = initials;
+  [byId("profileInitials"), byId("profileAvatarLarge")].filter(Boolean).forEach((avatar) => {
+    avatar.dataset.avatarFallback = initials;
+    if (!avatar.querySelector("img[data-profile-image]")) avatar.textContent = initials;
+  });
   if (byId("profileCardName")) byId("profileCardName").textContent = name;
   if (byId("profileCardEmail")) byId("profileCardEmail").textContent = email;
   if (byId("profileCardPhone")) byId("profileCardPhone").textContent = phone;
@@ -157,6 +160,58 @@ const addTag = (wrapper, text) => {
   wrapper.appendChild(span);
 };
 
+const addRating = (wrapper, listing) => {
+  const average = Number(listing.ratingAverage || 0);
+  const count = Number(listing.ratingCount || 0);
+  const rating = document.createElement("div");
+  rating.className = "listing-rating";
+  rating.setAttribute("aria-label", `${average.toFixed(1)} out of 5 from ${count} reviews`);
+  const stars = document.createElement("span");
+  stars.className = "rating-stars";
+  stars.textContent = "★★★★★";
+  stars.style.setProperty("--rating-width", `${Math.max(0, Math.min(100, average * 20))}%`);
+  const summary = document.createElement("span");
+  summary.textContent = count ? `${average.toFixed(1)} (${count})` : "No reviews yet";
+  rating.append(stars, summary);
+  wrapper.appendChild(rating);
+};
+
+const makeReviewForm = (roomId) => {
+  const form = document.createElement("form");
+  form.className = "review-form";
+  form.dataset.reviewForm = roomId;
+  const fieldset = document.createElement("fieldset");
+  const legend = document.createElement("legend");
+  legend.textContent = "Rate this accommodation";
+  const stars = document.createElement("div");
+  stars.className = "review-stars";
+  for (let value = 5; value >= 1; value -= 1) {
+    const input = document.createElement("input");
+    input.type = "radio";
+    input.name = `rating-${roomId}`;
+    input.id = `rating-${roomId}-${value}`;
+    input.value = String(value);
+    input.required = true;
+    const label = document.createElement("label");
+    label.htmlFor = input.id;
+    label.title = `${value} star${value === 1 ? "" : "s"}`;
+    label.textContent = "★";
+    stars.append(input, label);
+  }
+  const comment = document.createElement("textarea");
+  comment.name = "reviewText";
+  comment.maxLength = 1000;
+  comment.rows = 2;
+  comment.placeholder = "Share a short comment (optional)";
+  const submit = document.createElement("button");
+  submit.type = "submit";
+  submit.className = "listing-action";
+  submit.textContent = "Submit Review";
+  fieldset.append(legend, stars, comment, submit);
+  form.appendChild(fieldset);
+  return form;
+};
+
 const makeListingCard = (listing, context = "browse", index = 0) => {
   const id = String(listing.id || "");
   const card = document.createElement("article");
@@ -198,6 +253,9 @@ const makeListingCard = (listing, context = "browse", index = 0) => {
   tags.className = "listing-tags";
   (listing.tags || []).forEach((tag) => addTag(tags, tag));
 
+  const rating = document.createElement("div");
+  addRating(rating, listing);
+
   const actions = document.createElement("div");
   actions.className = "card-actions";
 
@@ -226,7 +284,8 @@ const makeListingCard = (listing, context = "browse", index = 0) => {
     actions.appendChild(removeButton);
   }
 
-  body.append(title, price, meta, tags, actions);
+  body.append(title, price, meta, rating, tags, actions);
+  if (context === "browse") body.appendChild(makeReviewForm(id));
   card.append(image, body);
   return card;
 };
@@ -297,23 +356,26 @@ const addFilterOption = (select, value) => {
   select.appendChild(option);
 };
 
-const syncFilters = () => {
+const syncFilters = (locations = [], types = []) => {
   const area = byId("areaFilter");
   const type = byId("typeFilter");
-  state.listings.forEach((listing) => {
-    addFilterOption(area, listing.area);
-    addFilterOption(type, listing.type);
-  });
+  locations.forEach((location) => addFilterOption(area, location));
+  types.forEach((value) => addFilterOption(type, value.replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase())));
 };
 
 const filteredListings = () => {
-  const area = byId("areaFilter")?.value || "all";
-  const type = byId("typeFilter")?.value || "all";
-  return state.listings.filter((listing) => {
-    const areaMatch = area === "all" || listing.area === area;
-    const typeMatch = type === "all" || listing.type === type;
-    return areaMatch && typeMatch;
-  });
+  return state.listings;
+};
+
+const listingQuery = (page) => {
+  const params = new URLSearchParams({ page: String(page), size: String(LISTING_PAGE_SIZE) });
+  const search = byId("globalSearch")?.value.trim();
+  const area = byId("areaFilter")?.value;
+  const type = byId("typeFilter")?.value;
+  if (search) params.set("search", search);
+  if (area && area !== "all") params.set("location", area);
+  if (type && type !== "all") params.set("type", type.toLowerCase().replaceAll(" ", "_"));
+  return params;
 };
 
 const loadFavorites = async () => {
@@ -333,7 +395,7 @@ const loadListings = async (page = 1, target = "browseListings") => {
   if (container) container.innerHTML = '<div class="empty-state">Loading listings...</div>';
 
   try {
-    const data = await getJson(endpoint(`/PublicListingsServlet?page=${page}&size=${LISTING_PAGE_SIZE}`));
+    const data = await getJson(endpoint(`/PublicListingsServlet?${listingQuery(page).toString()}`));
     if (!data) return;
 
     state.page = Number(data.page || page);
@@ -345,10 +407,12 @@ const loadListings = async (page = 1, target = "browseListings") => {
       type: listing.type,
       price: listing.price,
       image: normalizeImage(listing.image, index),
-      tags: Array.isArray(listing.tags) ? listing.tags : []
+      tags: Array.isArray(listing.tags) ? listing.tags : [],
+      ratingAverage: listing.ratingAverage,
+      ratingCount: listing.ratingCount
     }));
 
-    syncFilters();
+    syncFilters(data.locations || [], data.types || []);
     renderListingGrid(container, filteredListings(), "No approved listings are available yet.", "browse");
     renderPagination();
   } catch (error) {
@@ -373,7 +437,9 @@ const loadOverviewListings = async () => {
       type: listing.type,
       price: listing.price,
       image: normalizeImage(listing.image, index),
-      tags: Array.isArray(listing.tags) ? listing.tags : []
+      tags: Array.isArray(listing.tags) ? listing.tags : [],
+      ratingAverage: listing.ratingAverage,
+      ratingCount: listing.ratingCount
     }));
     renderListingGrid(container, listings, "No approved listings are available yet.", "overview");
   } catch {
@@ -507,14 +573,27 @@ const sendListingRequest = async (roomId) => {
   window.location.href = `requests.html?success=${encodeURIComponent(data.message || "Request sent")}`;
 };
 
+const submitReview = async (form) => {
+  const selected = form.querySelector('input[type="radio"]:checked');
+  if (!selected) throw new Error("Choose a star rating first");
+  const data = await postForm(endpoint("/StudentReviewServlet"), {
+    roomId: form.dataset.reviewForm,
+    rating: selected.value,
+    reviewText: form.querySelector("textarea")?.value.trim() || ""
+  });
+  if (!data) return;
+  toast(data.message || "Review saved");
+  window.setTimeout(() => {
+    window.location.href = endpoint(`/${data.redirectUrl || "HomePage/home.html?review=success"}`);
+  }, 450);
+};
+
 const bindGlobalSearch = () => {
   const input = byId("globalSearch");
   if (!input) return;
   input.addEventListener("input", () => {
-    const term = input.value.trim().toLowerCase();
-    document.querySelectorAll("[data-search]").forEach((item) => {
-      item.style.display = !term || item.dataset.search.includes(term) ? "" : "none";
-    });
+    window.clearTimeout(searchTimer);
+    searchTimer = window.setTimeout(() => loadListings(1), 250);
   });
 };
 
@@ -594,13 +673,22 @@ const bindPageActions = () => {
     }
   });
 
+  document.addEventListener("submit", async (event) => {
+    const form = event.target.closest("[data-review-form]");
+    if (!form) return;
+    event.preventDefault();
+    try {
+      await submitReview(form);
+    } catch (error) {
+      toast(error.message);
+    }
+  });
+
   byId("areaFilter")?.addEventListener("change", () => {
-    renderListingGrid(byId("browseListings"), filteredListings(), "No listings match the selected area.", "browse");
-    renderPagination();
+    loadListings(1);
   });
   byId("typeFilter")?.addEventListener("change", () => {
-    renderListingGrid(byId("browseListings"), filteredListings(), "No listings match the selected type.", "browse");
-    renderPagination();
+    loadListings(1);
   });
 };
 

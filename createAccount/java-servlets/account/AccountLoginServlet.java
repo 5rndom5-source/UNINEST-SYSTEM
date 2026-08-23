@@ -27,9 +27,9 @@ public class AccountLoginServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        String email = request.getParameter("email");
+        String email = normalizeEmail(request.getParameter("email"));
         String password = request.getParameter("password");
-        String role = request.getParameter("role");
+        String role = normalizeRole(request.getParameter("role"));
 
         if (!ValidationUtil.isValidEmail(email)
                 || !ValidationUtil.isRequired(password)
@@ -48,8 +48,8 @@ public class AccountLoginServlet extends HttpServlet {
             String query = "SELECT user_id, full_name, password, role, status "
                     + "FROM users WHERE email = ? AND role = ?";
             PreparedStatement stmt = conn.prepareStatement(query);
-            stmt.setString(1, email.trim());
-            stmt.setString(2, role.trim());
+            stmt.setString(1, email);
+            stmt.setString(2, role);
             ResultSet rs = stmt.executeQuery();
 
             if (!rs.next() || !PasswordUtil.verifyPassword(password, rs.getString("password"))) {
@@ -65,12 +65,14 @@ public class AccountLoginServlet extends HttpServlet {
                 return;
             }
 
-            HttpSession session = request.getSession();
+            HttpSession session = createFreshSession(request);
             int userId = rs.getInt("user_id");
             String fullName = rs.getString("full_name");
             session.setAttribute("userId", userId);
             session.setAttribute("fullName", fullName);
+            session.setAttribute("email", email);
             session.setAttribute("role", role);
+            session.setMaxInactiveInterval(1800);
 
             if ("admin".equals(role)) {
                 session.setAttribute("adminId", userId);
@@ -98,6 +100,22 @@ public class AccountLoginServlet extends HttpServlet {
 
     private boolean isValidRole(String role) {
         return "student".equals(role) || "landlord".equals(role) || "admin".equals(role);
+    }
+
+    private HttpSession createFreshSession(HttpServletRequest request) {
+        HttpSession existingSession = request.getSession(false);
+        if (existingSession != null) {
+            existingSession.invalidate();
+        }
+        return request.getSession(true);
+    }
+
+    private String normalizeEmail(String email) {
+        return email == null ? null : email.trim().toLowerCase(java.util.Locale.ROOT);
+    }
+
+    private String normalizeRole(String role) {
+        return role == null ? null : role.trim().toLowerCase(java.util.Locale.ROOT);
     }
 
     private String destinationFor(String role) {

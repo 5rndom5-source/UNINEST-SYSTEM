@@ -52,27 +52,29 @@
 
         <p>Search affordable places near Cape Town campuses.</p>
 
-        <div class="search-box">
+        <form class="search-box" id="homeSearchForm" action="search.html" method="get">
           <i class="fa-solid fa-magnifying-glass"></i>
 
           <input
+            id="homeSearchInput"
+            name="search"
             type="text"
-            placeholder="Search by location, street or university......"
+            placeholder="Search by location, street or accommodation type"
           />
 
-          <button type="button" onclick="window.location.href='search.html'">Search</button>
-        </div>
+          <button type="submit">Search</button>
+        </form>
 
-        <div class="category-buttons">
-          <button><i class="fa-solid fa-bars"></i> All</button>
+        <div class="category-buttons" aria-label="Accommodation types">
+          <button type="button" data-home-type=""><i class="fa-solid fa-bars"></i> All</button>
 
-          <button><i class="fa-solid fa-building"></i> Apartments</button>
+          <button type="button" data-home-type="apartment"><i class="fa-solid fa-building"></i> Apartments</button>
 
-          <button><i class="fa-solid fa-bed"></i> Rooms</button>
+          <button type="button" data-home-type="single_room"><i class="fa-solid fa-bed"></i> Rooms</button>
 
-          <button><i class="fa-solid fa-users"></i> Shared Rooms</button>
+          <button type="button" data-home-type="shared_room"><i class="fa-solid fa-users"></i> Shared Rooms</button>
 
-          <button><i class="fa-solid fa-school"></i> Student Residence</button>
+          <button type="button" data-home-type="residence"><i class="fa-solid fa-school"></i> Student Residence</button>
         </div>
       </div>
 
@@ -90,84 +92,8 @@
         <a href="search.html">View All Listings &rarr;</a>
       </div>
 
-      <div class="featured-cards">
-        <div class="card">
-          <div class="card-image">
-            <img src="listing-rondebosch.png" alt="Rondebosch student apartment" />
-          </div>
-
-          <div class="card-content">
-            <h3>Modern Apartments near campus</h3>
-
-            <p class="location">
-              <i class="fa-solid fa-location-dot"></i>
-              Rondebosch
-            </p>
-
-            <p class="price">R4,500 / month</p>
-
-            <div class="tags">
-              <span><i class="fa-solid fa-bed"></i> 2 Beds</span>
-              <span>Furnished</span>
-              <span><i class="fa-solid fa-wifi"></i> Wifi</span>
-            </div>
-
-            <button type="button" onclick="window.location.href='search.html'">View Details</button>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-image">
-            <img src="listing-cbd-room.png" alt="Cape Town CBD student room" />
-          </div>
-
-          <div class="card-content">
-            <h3>Cozy Room in Shared House</h3>
-
-            <p class="location">
-              <i class="fa-solid fa-location-dot"></i>
-              Cape Town CBD
-            </p>
-
-            <p class="price">R2,800 / month</p>
-
-            <div class="tags">
-              <span><i class="fa-solid fa-bed"></i> 1 Bed</span>
-              <span><i class="fa-solid fa-users"></i> Shared</span>
-              <span><i class="fa-solid fa-wifi"></i> Wifi</span>
-            </div>
-
-            <button type="button" onclick="window.location.href='search.html'">View Details</button>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-image">
-            <img
-              src="listing-bellville-residence.png"
-              alt="Bellville student residence"
-            />
-          </div>
-
-          <div class="card-content">
-            <h3>Student Residence</h3>
-
-            <p class="location">
-              <i class="fa-solid fa-location-dot"></i>
-              Bellville
-            </p>
-
-            <p class="price">R3,200 / month</p>
-
-            <div class="tags">
-              <span>24/7 Security</span>
-              <span><i class="fa-solid fa-wifi"></i> Wifi</span>
-              <span>Parking</span>
-            </div>
-
-            <button type="button" onclick="window.location.href='search.html'">View Details</button>
-          </div>
-        </div>
+      <div class="featured-cards" aria-live="polite">
+        <p class="listings-state">Loading approved accommodation...</p>
       </div>
     </section>
 
@@ -276,7 +202,7 @@
 
       <p class="copyright">@2026 UniNest. All Rights Reserved.</p>
     </footer>
-    <script src="public-listings.js"></script>
+    <script src="public-listings.js?v=20260821-dynamic"></script>
     <script src="../system-status.js"></script>
 </body>
 </html>

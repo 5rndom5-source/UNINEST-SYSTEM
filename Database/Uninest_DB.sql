@@ -3,7 +3,7 @@
 -- Based on the UniNest ERD with an added settings table
 -- ============================================
 
-CREATE DATABASE IF NOT EXISTS uninest_DB
+CREATE DATABASE IF NOT EXISTS uninest_db
     CHARACTER SET utf8mb4
     COLLATE utf8mb4_unicode_ci;
 
@@ -415,6 +415,7 @@ CREATE TABLE reviews (
     CONSTRAINT fk_reviews_room
         FOREIGN KEY (room_id) REFERENCES rooms(room_id)
         ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT uq_reviews_user_room_type UNIQUE (from_user_id, room_id, review_type),
     INDEX idx_reviews_from_user (from_user_id),
     INDEX idx_reviews_to_user (to_user_id),
     INDEX idx_reviews_room (room_id)

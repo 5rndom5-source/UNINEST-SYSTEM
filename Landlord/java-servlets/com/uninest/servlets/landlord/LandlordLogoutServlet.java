@@ -19,7 +19,10 @@ public class LandlordLogoutServlet extends HttpServlet {
             session.invalidate();
         }
 
-        response.sendRedirect("Landlord/login.html");
+        response.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+        response.sendRedirect(request.getContextPath()
+                + "/Landlord/login.html?success="
+                + java.net.URLEncoder.encode("You have signed out.", "UTF-8"));
     }
 
     @Override

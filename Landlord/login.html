@@ -12,28 +12,35 @@
         <div class="login-brand">
           <img src="../createAccount/uninest-logo.png" alt="UniNest logo" />
           <h1>UniNest Landlord Portal</h1>
-          <p>Access listing submissions, student enquiries, and landlord account details from one secure area.</p>
+          <p>Manage listings, booking requests, reviews, and your account.</p>
         </div>
 
         <div class="login-form-panel">
           <h1>Sign In</h1>
-          <form id="landlordLoginForm" action="../LandlordLoginServlet" method="post">
-            <label>
+          <div id="landlordLoginMessage" class="login-alert" role="alert" hidden></div>
+          <form id="landlordLoginForm" action="../LandlordLoginServlet" method="post" autocomplete="on">
+            <label for="landlord-email">
               Email Address
               <input
                 type="email"
-                name="landlordEmail"
+                id="landlord-email"
+                name="email"
                 placeholder="landlord@example.com"
+                autocomplete="username"
+                autocapitalize="none"
+                spellcheck="false"
                 required
               />
             </label>
 
-            <label style="margin-top: 18px;">
+            <label for="landlord-password" style="margin-top: 18px;">
               Password
               <input
                 type="password"
-                name="landlordPassword"
+                id="landlord-password"
+                name="password"
                 placeholder="Enter password"
+                autocomplete="current-password"
                 required
               />
             </label>
@@ -46,6 +53,19 @@
       </section>
     </main>
 
+    <script>
+      const loginParams = new URLSearchParams(window.location.search);
+      const loginError = loginParams.get('error');
+      const loginSuccess = loginParams.get('success');
+      const loginMessage = document.getElementById('landlordLoginMessage');
+      if (loginError || loginSuccess) {
+        loginMessage.textContent = loginSuccess || (loginError === 'service'
+          ? 'The service is temporarily unavailable. Please try again.'
+          : 'The email or password is incorrect.');
+        loginMessage.classList.toggle('success', Boolean(loginSuccess));
+        loginMessage.hidden = false;
+      }
+    </script>
     <script src="script.js"></script>
     <script src="../system-status.js"></script>
 </body>

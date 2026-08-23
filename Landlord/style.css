@@ -669,6 +669,23 @@ button.btn {
   margin-bottom: 22px;
 }
 
+.login-alert {
+  margin: 0 0 18px;
+  padding: 12px 14px;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  background: #fef2f2;
+  color: #991b1b;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.login-alert.success {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+  color: #166534;
+}
+
 body.landlord-classic {
   background: #b8c5bb;
   padding: 34px 18px;
@@ -1761,4 +1778,9 @@ body.landlord-classic {
   .classic-section {
     padding: 20px;
   }
+}
+.review-score{
+  color:#f2a900;
+  letter-spacing:0;
+  white-space:nowrap;
 }

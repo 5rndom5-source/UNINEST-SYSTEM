@@ -75,7 +75,7 @@ public class AccountRegisterServlet extends HttpServlet {
         stmt.setString(2, email);
         stmt.setString(3, PasswordUtil.hashPassword(password));
         stmt.setString(4, role);
-        stmt.setString(5, "student".equals(role) ? "active" : "pending_verification");
+        stmt.setString(5, "landlord".equals(role) ? "pending_verification" : "active");
         stmt.executeUpdate();
 
         java.sql.ResultSet keys = stmt.getGeneratedKeys();
@@ -102,17 +102,11 @@ public class AccountRegisterServlet extends HttpServlet {
             stmt.setString(3, "PENDING-" + userId);
             stmt.executeUpdate();
             stmt.close();
-        } else if ("admin".equals(role)) {
-            PreparedStatement stmt = conn.prepareStatement(
-                    "INSERT INTO admins (user_id, admin_position, access_level) VALUES (?, 'Pending approval', 'moderator')");
-            stmt.setInt(1, userId);
-            stmt.executeUpdate();
-            stmt.close();
         }
     }
 
     private boolean isValidRole(String role) {
-        return "student".equals(role) || "landlord".equals(role) || "admin".equals(role);
+        return "student".equals(role) || "landlord".equals(role);
     }
 
     private String firstNonEmpty(String first, String second) {

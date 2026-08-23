@@ -36,6 +36,12 @@ work/
 Thumbs.db
 desktop.ini
 ~$*
+Admin_Testing_Document_files/
+
+# Local coursework and generated handover documents
+/Correction Guide.docx
+/UniNest_Team_Correction_Guide.docx
+/Database/build-team-correction-guide.ps1
 
 # Local archives and embedded database runtime files
 tools/*.zip

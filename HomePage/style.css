@@ -721,6 +721,58 @@ SEARCH PAGE
   justify-content:center;
 }
 
+.listings-state{
+  grid-column:1 / -1;
+  margin:18px 0;
+  padding:18px;
+  border:1px solid #d8dee8;
+  border-radius:6px;
+  background:#f7f9fc;
+  color:#344054;
+  text-align:center;
+}
+
+.listings-state.error{
+  border-color:#e5a5a5;
+  color:#9f1d1d;
+  background:#fff7f7;
+}
+
+.filter-clear{
+  border:0;
+  background:transparent;
+  color:#176b5b;
+  font:inherit;
+  cursor:pointer;
+  text-decoration:underline;
+}
+
+.listing-description{
+  color:#586474;
+  line-height:1.5;
+  margin:10px 0;
+}
+
+.listing-rating{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin:8px 0;
+  color:#566171;
+  font-size:14px;
+}
+
+.rating-stars{
+  display:inline-flex;
+  gap:2px;
+  color:#c6ccd5;
+  letter-spacing:0;
+}
+
+.rating-stars .filled{
+  color:#f2a900;
+}
+
 .pagination button{
   cursor:pointer;
   transition:0.3s;

@@ -23,7 +23,7 @@
           <a href="reviews.html" class="active">Reviews</a>
           <a href="contact-landlord.html">Contact</a>
           <a href="profile.html">Profile</a>
-          <a href="logout.html">Logout</a>
+          <a href="../LogoutServlet?portal=landlord">Logout</a>
         </nav>
       </aside>
 
@@ -46,7 +46,7 @@
               <div class="profile-dropdown">
                 <a href="profile.html">View Profile</a>
                 <a href="contact-landlord.html">Contact Page</a>
-                <a href="logout.html">Logout</a>
+                <a href="../LogoutServlet?portal=landlord">Logout</a>
               </div>
             </div>
           </div>
@@ -56,12 +56,12 @@
           <div class="page-header">
             <div>
               <h1 class="page-title">Reviews</h1>
-              <p class="page-subtitle">Review records will only display once student feedback is saved by the platform.</p>
+              <p class="page-subtitle">Ratings and comments submitted for your approved accommodation.</p>
             </div>
-            <div class="status-note">No review records</div>
+            <div class="status-note" id="reviewCount">Loading reviews</div>
           </div>
 
-          <section class="empty-state">
+          <section class="empty-state" id="reviewEmptyState" hidden>
             <div>
               <div class="empty-icon">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -69,7 +69,7 @@
                 </svg>
               </div>
               <h2>No reviews available</h2>
-              <p>Feedback and landlord responses are hidden until actual student review data is connected.</p>
+              <p>Your approved accommodation has not received a student review yet.</p>
             </div>
           </section>
 
@@ -81,13 +81,14 @@
                   <tr>
                     <th>Property</th>
                     <th>Student</th>
+                    <th>Rating</th>
                     <th>Feedback</th>
-                    <th>Response</th>
+                    <th>Submitted</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody id="landlordReviewRows">
                   <tr>
-                    <td class="table-empty" colspan="4">No review records are available.</td>
+                    <td class="table-empty" colspan="5">Loading review records...</td>
                   </tr>
                 </tbody>
               </table>
@@ -96,7 +97,8 @@
         </main>
       </div>
     </div>
-    <script src="../portal-identity.js?v=20260813-profile"></script>
+    <script src="../portal-identity.js?v=20260822-auth"></script>
+    <script src="reviews.js?v=20260821-live"></script>
     <script src="../system-status.js"></script>
 </body>
 </html>

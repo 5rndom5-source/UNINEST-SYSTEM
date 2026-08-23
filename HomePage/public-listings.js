@@ -2,183 +2,236 @@
   const serverOrigin = "http://localhost:8080";
   const contextPath = "/uninest";
   const searchPageSize = 6;
-  const fallbackImages = [
-    "listing-rondebosch.png",
-    "listing-cbd-room.png",
-    "listing-bellville-residence.png"
-  ];
-
   let searchPage = 1;
 
   const apiBase = () => {
-    if (window.location.protocol === "file:") {
-      return serverOrigin + contextPath;
-    }
+    if (window.location.protocol === "file:") return serverOrigin + contextPath;
     return window.location.pathname.indexOf(contextPath + "/") === 0 ? contextPath : "";
   };
 
-  const normalizeImage = (image, index) => {
-    const fallback = fallbackImages[index % fallbackImages.length];
-    if (!image) return fallback;
-    if (image.indexOf("http://") === 0 || image.indexOf("https://") === 0) return image;
-    if (image.charAt(0) === "/" && window.location.protocol === "file:") {
-      return serverOrigin + image;
-    }
+  const escapeText = (value) => String(value || "").replace(/[&<>"']/g, (item) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[item]));
+
+  const normalizeImage = (image) => {
+    if (!image) return "../createAccount/uninest-logo.png";
+    if (/^https?:\/\//.test(image)) return image;
+    if (image.charAt(0) === "/" && window.location.protocol === "file:") return serverOrigin + image;
     return image;
   };
 
-  const escapeText = (value) =>
-    String(value || "").replace(/[&<>"']/g, (item) => ({
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      '"': "&quot;",
-      "'": "&#39;"
-    }[item]));
-
   const tagsMarkup = (tags) => {
-    const safeTags = Array.isArray(tags) && tags.length ? tags.slice(0, 4) : ["Available"];
-    return safeTags.map((tag) => `<span>${escapeText(tag)}</span>`).join("");
+    const values = Array.isArray(tags) && tags.length ? tags.slice(0, 4) : ["Available"];
+    return values.map((tag) => `<span>${escapeText(tag)}</span>`).join("");
   };
 
-  const homeCard = (listing, index) => `
-    <div class="card">
-      <div class="card-image">
-        <img src="${escapeText(normalizeImage(listing.image, index))}" alt="${escapeText(listing.title)}" />
-      </div>
+  const ratingMarkup = (listing) => {
+    const average = Number(listing.ratingAverage || 0);
+    const count = Number(listing.ratingCount || 0);
+    const stars = Array.from({ length: 5 }, (_, index) =>
+      `<span class="${index < Math.round(average) ? "filled" : ""}">&#9733;</span>`).join("");
+    return `<div class="listing-rating" aria-label="${average.toFixed(1)} out of 5 from ${count} reviews">
+      <span class="rating-stars">${stars}</span>
+      <span>${count ? `${average.toFixed(1)} (${count})` : "No reviews yet"}</span>
+    </div>`;
+  };
+
+  const homeCard = (listing) => `
+    <article class="card">
+      <div class="card-image"><img src="${escapeText(normalizeImage(listing.image))}" alt="${escapeText(listing.title)}" /></div>
       <div class="card-content">
         <h3>${escapeText(listing.title)}</h3>
         <p class="location"><i class="fa-solid fa-location-dot"></i> ${escapeText(listing.area)}</p>
         <p class="price">${escapeText(listing.price)}</p>
+        ${ratingMarkup(listing)}
         <div class="tags">${tagsMarkup(listing.tags)}</div>
-        <button type="button" onclick="window.location.href='search.html'">View Details</button>
+        <button type="button" data-view-listing="${escapeText(listing.id)}">View Details</button>
       </div>
-    </div>
-  `;
+    </article>`;
 
-  const searchCard = (listing, index) => `
-    <div class="listing-card">
-      <div class="listing-image">
-        <img src="${escapeText(normalizeImage(listing.image, index))}" alt="${escapeText(listing.title)}" />
-        <i class="fa-regular fa-heart"></i>
-      </div>
+  const searchCard = (listing) => `
+    <article class="listing-card">
+      <div class="listing-image"><img src="${escapeText(normalizeImage(listing.image))}" alt="${escapeText(listing.title)}" /></div>
       <div class="listing-content">
         <h2>${escapeText(listing.title)}</h2>
         <p class="listing-price">${escapeText(listing.price)}</p>
         <p class="listing-location"><i class="fa-solid fa-location-dot"></i> ${escapeText(listing.area)}</p>
+        ${ratingMarkup(listing)}
         <div class="listing-tags">${tagsMarkup(listing.tags)}</div>
-        <button type="button" onclick="window.location.href='../UserDashboard/listings.html'">View Details</button>
+        <p class="listing-description">${escapeText(listing.description)}</p>
+        <button type="button" data-view-listing="${escapeText(listing.id)}">View Details</button>
       </div>
-    </div>
-  `;
+    </article>`;
 
-  const fetchListings = async (page, size) => {
-    const response = await fetch(`${apiBase()}/PublicListingsServlet?page=${page}&size=${size}`, {
+  const activeFilters = () => {
+    const params = new URLSearchParams();
+    const search = document.getElementById("publicSearchInput")?.value.trim();
+    const location = document.getElementById("locationFilter")?.value;
+    const minPrice = document.getElementById("minPriceFilter")?.value;
+    const maxPrice = document.getElementById("maxPriceFilter")?.value;
+    const type = document.querySelector('input[name="type"]:checked')?.value;
+    const sort = document.getElementById("resultsSort")?.value || document.getElementById("publicSort")?.value;
+    if (search) params.set("search", search);
+    if (location) params.set("location", location);
+    if (minPrice) params.set("minPrice", minPrice);
+    if (maxPrice) params.set("maxPrice", maxPrice);
+    if (type) params.set("type", type);
+    if (sort) params.set("sort", sort);
+    document.querySelectorAll('input[name="facility"]:checked').forEach((item) => params.append("facility", item.value));
+    return params;
+  };
+
+  const fetchListings = async (page, size, filters = new URLSearchParams()) => {
+    const params = new URLSearchParams(filters);
+    params.set("page", String(page));
+    params.set("size", String(size));
+    const response = await fetch(`${apiBase()}/PublicListingsServlet?${params.toString()}`, {
       headers: { Accept: "application/json" }
     });
-    if (!response.ok) return null;
-    return response.json();
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "Listings could not be loaded");
+    return data;
   };
 
   const renderHome = async () => {
     const container = document.querySelector(".featured-cards");
-    if (!container) return;
-
-    const data = await fetchListings(1, 3);
-    const listings = data && Array.isArray(data.listings) ? data.listings : [];
-    if (!listings.length) return;
-    container.innerHTML = listings.map(homeCard).join("");
+    if (!container || document.getElementById("publicListingsState")) return;
+    try {
+      const data = await fetchListings(1, 3);
+      const listings = Array.isArray(data.listings) ? data.listings : [];
+      container.innerHTML = listings.length
+        ? listings.map(homeCard).join("")
+        : '<p class="listings-state">No approved accommodation is available yet.</p>';
+    } catch (error) {
+      container.innerHTML = `<p class="listings-state error">${escapeText(error.message)}</p>`;
+    }
   };
 
   const ensureSearchPagination = () => {
     let controls = document.getElementById("searchPagination");
     if (controls) return controls;
-
-    const results = document.querySelector(".results");
     controls = document.createElement("div");
     controls.id = "searchPagination";
     controls.className = "pagination";
     controls.setAttribute("aria-label", "Listing pages");
-    results.appendChild(controls);
+    document.querySelector(".results")?.appendChild(controls);
     return controls;
   };
 
-  const pageItems = (current, total) => {
-    if (total <= 7) {
-      return Array.from({ length: total }, (_, index) => index + 1);
-    }
-
-    const items = [1];
-    if (current > 3) items.push("...");
-    for (let page = Math.max(2, current - 1); page <= Math.min(total - 1, current + 1); page++) {
-      items.push(page);
-    }
-    if (current < total - 2) items.push("...");
-    items.push(total);
-    return items;
-  };
-
-  const renderPagination = (metadata) => {
+  const renderPagination = (data) => {
     const controls = ensureSearchPagination();
-    const totalPages = Number(metadata.totalPages || 0);
-    if (totalPages <= 1) {
-      controls.innerHTML = "";
+    const total = Number(data.totalPages || 0);
+    const current = Number(data.page || 1);
+    if (total <= 1) {
       controls.hidden = true;
+      controls.innerHTML = "";
       return;
     }
-
     controls.hidden = false;
-    const current = Number(metadata.page || 1);
-    const buttons = [
-      `<button type="button" data-page="${Math.max(1, current - 1)}" ${current === 1 ? "disabled" : ""}>Previous</button>`,
-      ...pageItems(current, totalPages).map((item) => {
-        if (item === "...") return '<span class="page-ellipsis">...</span>';
-        return `<button type="button" data-page="${item}" class="${item === current ? "active" : ""}">${item}</button>`;
-      }),
-      `<button type="button" data-page="${Math.min(totalPages, current + 1)}" ${current === totalPages ? "disabled" : ""}>Next</button>`
-    ];
-    controls.innerHTML = buttons.join("");
+    const pages = Array.from({ length: total }, (_, index) => index + 1);
+    controls.innerHTML = [
+      `<button type="button" data-page="${current - 1}" ${current === 1 ? "disabled" : ""}>Previous</button>`,
+      ...pages.map((page) => `<button type="button" data-page="${page}" class="${page === current ? "active" : ""}">${page}</button>`),
+      `<button type="button" data-page="${current + 1}" ${current === total ? "disabled" : ""}>Next</button>`
+    ].join("");
   };
 
-  const renderSearch = async (page) => {
-    const container = document.querySelector(".results");
-    if (!container) return;
-
-    const data = await fetchListings(page, searchPageSize);
-    const listings = data && Array.isArray(data.listings) ? data.listings : [];
-    if (!listings.length && Number(data?.total || 0) === 0) {
-      return;
-    }
-
-    searchPage = Number(data.page || page);
-    container.querySelectorAll(":scope > .listing-card").forEach((card) => card.remove());
-    listings.forEach((listing, index) => {
-      container.insertAdjacentHTML("beforeend", searchCard(listing, index));
+  const populateLocations = (locations) => {
+    const select = document.getElementById("locationFilter");
+    if (!select || select.dataset.loaded === "true") return;
+    (locations || []).forEach((location) => {
+      const option = document.createElement("option");
+      option.value = location;
+      option.textContent = location;
+      select.appendChild(option);
     });
-    renderPagination(data);
+    select.dataset.loaded = "true";
   };
 
-  const bindSearchPagination = () => {
+  const renderSearch = async (page = 1) => {
     const results = document.querySelector(".results");
-    if (!results) return;
-
-    results.addEventListener("click", (event) => {
-      const button = event.target.closest("#searchPagination button[data-page]");
-      if (!button || button.disabled) return;
-      const nextPage = Number(button.dataset.page || searchPage);
-      renderSearch(nextPage);
-      document.querySelector(".results-top")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
-  };
-
-  const loadListings = async () => {
+    const state = document.getElementById("publicListingsState");
+    if (!results || !state) return;
+    state.hidden = false;
+    state.textContent = "Loading approved accommodation...";
+    state.classList.remove("error");
+    results.querySelectorAll(":scope > .listing-card").forEach((card) => card.remove());
     try {
-      bindSearchPagination();
-      await Promise.all([renderHome(), renderSearch(searchPage)]);
+      const data = await fetchListings(page, searchPageSize, activeFilters());
+      populateLocations(data.locations);
+      searchPage = Number(data.page || page);
+      const listings = Array.isArray(data.listings) ? data.listings : [];
+      state.textContent = listings.length ? `${data.total} accommodation option${data.total === 1 ? "" : "s"} found` : "No accommodation matches these filters.";
+      listings.forEach((listing) => results.insertAdjacentHTML("beforeend", searchCard(listing)));
+      renderPagination(data);
     } catch (error) {
-    console.warn("Public listings could not be loaded.", error);
+      state.textContent = error.message;
+      state.classList.add("error");
     }
   };
 
-  document.addEventListener("DOMContentLoaded", loadListings);
+  const applyQueryToControls = () => {
+    const query = new URLSearchParams(window.location.search);
+    const input = document.getElementById("publicSearchInput");
+    if (input) input.value = query.get("search") || "";
+    const type = query.get("type");
+    if (type) document.querySelector(`input[name="type"][value="${CSS.escape(type)}"]`)?.click();
+  };
+
+  const resetFilters = () => {
+    ["publicSearchInput", "minPriceFilter", "maxPriceFilter"].forEach((id) => {
+      const item = document.getElementById(id);
+      if (item) item.value = "";
+    });
+    const location = document.getElementById("locationFilter");
+    if (location) location.value = "";
+    document.querySelectorAll('input[name="type"], input[name="facility"]').forEach((item) => { item.checked = false; });
+    const sort = document.getElementById("resultsSort");
+    const topSort = document.getElementById("publicSort");
+    if (sort) sort.value = "recent";
+    if (topSort) topSort.value = "recent";
+    history.replaceState(null, "", "search.html");
+    renderSearch(1);
+  };
+
+  const bindActions = () => {
+    document.getElementById("homeSearchForm")?.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const value = document.getElementById("homeSearchInput")?.value.trim() || "";
+      window.location.href = `search.html${value ? `?search=${encodeURIComponent(value)}` : ""}`;
+    });
+    document.querySelectorAll("[data-home-type]").forEach((button) => button.addEventListener("click", () => {
+      const type = button.dataset.homeType;
+      window.location.href = `search.html${type ? `?type=${encodeURIComponent(type)}` : ""}`;
+    }));
+    document.getElementById("publicSearchButton")?.addEventListener("click", () => renderSearch(1));
+    document.getElementById("applyFilters")?.addEventListener("click", () => renderSearch(1));
+    document.getElementById("resetFilters")?.addEventListener("click", resetFilters);
+    document.getElementById("clearFilters")?.addEventListener("click", resetFilters);
+    document.getElementById("resultsSort")?.addEventListener("change", (event) => {
+      const top = document.getElementById("publicSort");
+      if (top) top.value = event.target.value;
+      renderSearch(1);
+    });
+    document.getElementById("publicSort")?.addEventListener("change", (event) => {
+      const resultsSort = document.getElementById("resultsSort");
+      if (resultsSort) resultsSort.value = event.target.value;
+      renderSearch(1);
+    });
+    document.getElementById("publicSearchInput")?.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") renderSearch(1);
+    });
+    document.addEventListener("click", (event) => {
+      const page = event.target.closest("#searchPagination button[data-page]");
+      if (page && !page.disabled) renderSearch(Number(page.dataset.page || searchPage));
+      const listing = event.target.closest("[data-view-listing]");
+      if (listing) window.location.href = `../UserDashboard/listings.html?room=${encodeURIComponent(listing.dataset.viewListing)}`;
+    });
+  };
+
+  document.addEventListener("DOMContentLoaded", async () => {
+    applyQueryToControls();
+    bindActions();
+    await Promise.all([renderHome(), renderSearch(1)]);
+  });
 })();

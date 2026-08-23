@@ -22,8 +22,10 @@ public class LandlordLoginServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        String email = request.getParameter("landlordEmail");
-        String password = request.getParameter("landlordPassword");
+        String email = normalizeEmail(firstNonEmpty(
+                request.getParameter("email"), request.getParameter("landlordEmail")));
+        String password = firstNonEmpty(
+                request.getParameter("password"), request.getParameter("landlordPassword"));
 
         if (!ValidationUtil.isValidEmail(email) || !ValidationUtil.isRequired(password)) {
             response.sendRedirect(request.getContextPath() + "/Landlord/login.html?error=invalid");
@@ -32,13 +34,19 @@ public class LandlordLoginServlet extends HttpServlet {
 
         try {
             Connection conn = DatabaseConnection.getInstance().getConnection();
-            if (conn != null && authenticateFromDatabase(conn, request, email.trim(), password)) {
+            if (conn == null) {
+                response.sendRedirect(request.getContextPath() + "/Landlord/login.html?error=service");
+                return;
+            }
+            if (authenticateFromDatabase(conn, request, email, password)) {
                 response.sendRedirect(request.getContextPath() + "/Landlord/index.html");
                 return;
             }
         } catch (SQLException e) {
             System.err.println("Database error in LandlordLoginServlet: " + e.getMessage());
             e.printStackTrace();
+            response.sendRedirect(request.getContextPath() + "/Landlord/login.html?error=service");
+            return;
         }
 
         response.sendRedirect(request.getContextPath() + "/Landlord/login.html?error=invalid");
@@ -68,7 +76,7 @@ public class LandlordLoginServlet extends HttpServlet {
             return false;
         }
 
-        HttpSession session = request.getSession();
+        HttpSession session = createFreshSession(request);
         session.setAttribute("userId", rs.getInt("user_id"));
         session.setAttribute("fullName", rs.getString("full_name"));
         int landlordId = rs.getInt("landlord_id");
@@ -77,9 +85,27 @@ public class LandlordLoginServlet extends HttpServlet {
         }
         session.setAttribute("landlordName", rs.getString("full_name"));
         session.setAttribute("landlordEmail", email);
+        session.setAttribute("email", email);
         session.setAttribute("role", "landlord");
+        session.setMaxInactiveInterval(1800);
 
         stmt.close();
         return true;
+    }
+
+    private HttpSession createFreshSession(HttpServletRequest request) {
+        HttpSession existingSession = request.getSession(false);
+        if (existingSession != null) {
+            existingSession.invalidate();
+        }
+        return request.getSession(true);
+    }
+
+    private String firstNonEmpty(String first, String second) {
+        return first != null && !first.isEmpty() ? first : second;
+    }
+
+    private String normalizeEmail(String email) {
+        return email == null ? null : email.trim().toLowerCase(java.util.Locale.ROOT);
     }
 }

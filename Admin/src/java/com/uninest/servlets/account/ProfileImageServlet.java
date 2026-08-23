@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.servlet.http.Part;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -31,6 +32,7 @@ public class ProfileImageServlet extends HttpServlet {
         String type = Files.probeContentType(image);
         response.setContentType(type == null ? "image/jpeg" : type);
         response.setHeader("Cache-Control", "no-store");
+        response.setHeader("X-Content-Type-Options", "nosniff");
         response.setContentLengthLong(Files.size(image));
         Files.copy(image, response.getOutputStream());
     }
@@ -55,7 +57,9 @@ public class ProfileImageServlet extends HttpServlet {
             Files.deleteIfExists(directory.resolve(userId + "." + oldExtension));
         }
         Path destination = directory.resolve(userId + "." + extension);
-        Files.copy(photo.getInputStream(), destination, StandardCopyOption.REPLACE_EXISTING);
+        try (InputStream input = photo.getInputStream()) {
+            Files.copy(input, destination, StandardCopyOption.REPLACE_EXISTING);
+        }
         sendJson(response, HttpServletResponse.SC_OK, "Profile picture updated");
     }
 
@@ -84,6 +88,7 @@ public class ProfileImageServlet extends HttpServlet {
 
     private String extensionFor(String contentType) {
         if ("image/jpeg".equalsIgnoreCase(contentType)) return "jpg";
+        if ("image/jpg".equalsIgnoreCase(contentType)) return "jpg";
         if ("image/png".equalsIgnoreCase(contentType)) return "png";
         if ("image/webp".equalsIgnoreCase(contentType)) return "webp";
         return null;

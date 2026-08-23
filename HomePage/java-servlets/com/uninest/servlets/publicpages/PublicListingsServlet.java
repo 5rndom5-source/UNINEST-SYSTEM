@@ -39,10 +39,16 @@ public class PublicListingsServlet extends HttpServlet {
             int pageSize = clamp(parsePositiveInt(request.getParameter("size"), 6), 1, 24);
             int page = parsePositiveInt(request.getParameter("page"), 1);
             String search = valueOr(request.getParameter("search"), "");
+            String location = valueOr(request.getParameter("location"), "");
+            String type = normalizedType(request.getParameter("type"));
+            BigDecimal minPrice = parseMoney(request.getParameter("minPrice"));
+            BigDecimal maxPrice = parseMoney(request.getParameter("maxPrice"));
+            String sort = valueOr(request.getParameter("sort"), "recent");
+            String[] facilities = request.getParameterValues("facility");
 
             StringBuilder where = new StringBuilder("WHERE r.approval_status = 'approved' "
                     + "AND r.availability_status = 'available' ");
-            List<String> params = new ArrayList<String>();
+            List<Object> params = new ArrayList<Object>();
 
             if (!search.isEmpty()) {
                 where.append("AND (LOWER(r.room_number) LIKE ? "
@@ -54,6 +60,37 @@ public class PublicListingsServlet extends HttpServlet {
                 params.add(term);
                 params.add(term);
                 params.add(term);
+            }
+
+            if (!location.isEmpty()) {
+                where.append("AND LOWER(r.location) = ? ");
+                params.add(location.toLowerCase());
+            }
+            if (!type.isEmpty()) {
+                where.append("AND r.room_type = ? ");
+                params.add(type);
+            }
+            if (minPrice != null) {
+                where.append("AND r.price >= ? ");
+                params.add(minPrice);
+            }
+            if (maxPrice != null) {
+                where.append("AND r.price <= ? ");
+                params.add(maxPrice);
+            }
+            if (facilities != null) {
+                for (String facility : facilities) {
+                    String clean = valueOr(facility, "");
+                    if (clean.isEmpty()) continue;
+                    if ("furnished".equalsIgnoreCase(clean)) {
+                        where.append("AND r.furnishing IN ('semi_furnished', 'fully_furnished') ");
+                    } else {
+                        where.append("AND EXISTS (SELECT 1 FROM room_amenities raf "
+                                + "JOIN amenities af ON af.amenity_id = raf.amenity_id "
+                                + "WHERE raf.room_id = r.room_id AND LOWER(af.amenity_name) = ?) ");
+                        params.add(clean.toLowerCase());
+                    }
+                }
             }
 
             int total = countListings(conn, where.toString(), params);
@@ -68,6 +105,10 @@ public class PublicListingsServlet extends HttpServlet {
                     + "COALESCE((SELECT ri.image_url FROM room_images ri "
                     + "WHERE ri.room_id = r.room_id "
                     + "ORDER BY ri.is_primary DESC, ri.display_order ASC, ri.image_id ASC LIMIT 1), '') AS image_url, "
+                    + "COALESCE((SELECT AVG(rv.rating) FROM reviews rv "
+                    + "WHERE rv.room_id = r.room_id AND rv.review_type = 'room_review'), 0) AS rating_average, "
+                    + "(SELECT COUNT(*) FROM reviews rv "
+                    + "WHERE rv.room_id = r.room_id AND rv.review_type = 'room_review') AS rating_count, "
                     + "GROUP_CONCAT(a.amenity_name ORDER BY a.amenity_name SEPARATOR ', ') AS amenities "
                     + "FROM rooms r "
                     + "LEFT JOIN room_amenities ra ON ra.room_id = r.room_id "
@@ -75,7 +116,7 @@ public class PublicListingsServlet extends HttpServlet {
                     + where
                     + "GROUP BY r.room_id, r.room_number, r.room_type, r.location, r.price, "
                     + "r.capacity, r.description, r.furnishing, r.bedrooms, r.bathrooms "
-                    + "ORDER BY r.updated_at DESC, r.created_at DESC LIMIT ? OFFSET ?";
+                    + orderBy(sort) + " LIMIT ? OFFSET ?";
 
             PreparedStatement stmt = conn.prepareStatement(query);
             int paramIndex = bindParams(stmt, params, 1);
@@ -86,8 +127,9 @@ public class PublicListingsServlet extends HttpServlet {
             out.print("{\"page\":" + page
                     + ",\"pageSize\":" + pageSize
                     + ",\"total\":" + total
-                    + ",\"totalPages\":" + totalPages
-                    + ",\"listings\":[");
+                    + ",\"totalPages\":" + totalPages + ",");
+            writeFilterOptions(out, conn);
+            out.print(",\"listings\":[");
             boolean first = true;
             while (rs.next()) {
                 if (!first) {
@@ -108,7 +150,7 @@ public class PublicListingsServlet extends HttpServlet {
         }
     }
 
-    private int countListings(Connection conn, String where, List<String> params) throws SQLException {
+    private int countListings(Connection conn, String where, List<Object> params) throws SQLException {
         String query = "SELECT COUNT(*) FROM rooms r " + where;
         PreparedStatement stmt = conn.prepareStatement(query);
         bindParams(stmt, params, 1);
@@ -122,10 +164,14 @@ public class PublicListingsServlet extends HttpServlet {
         return total;
     }
 
-    private int bindParams(PreparedStatement stmt, List<String> params, int startAt) throws SQLException {
+    private int bindParams(PreparedStatement stmt, List<Object> params, int startAt) throws SQLException {
         int index = startAt;
-        for (int i = 0; i < params.size(); i++) {
-            stmt.setString(index++, params.get(i));
+        for (Object value : params) {
+            if (value instanceof BigDecimal) {
+                stmt.setBigDecimal(index++, (BigDecimal) value);
+            } else {
+                stmt.setString(index++, String.valueOf(value));
+            }
         }
         return index;
     }
@@ -149,6 +195,8 @@ public class PublicListingsServlet extends HttpServlet {
         field(out, "priceAmount", price == null ? "" : price.toPlainString(), false);
         field(out, "image", imageUrl, false);
         field(out, "description", valueOr(rs.getString("description"), ""), false);
+        field(out, "ratingAverage", String.format("%.1f", rs.getBigDecimal("rating_average")), false);
+        field(out, "ratingCount", String.valueOf(rs.getInt("rating_count")), false);
         out.print(",\"tags\":[");
         for (int i = 0; i < tags.size(); i++) {
             if (i > 0) {
@@ -157,6 +205,38 @@ public class PublicListingsServlet extends HttpServlet {
             out.print("\"" + json(tags.get(i)) + "\"");
         }
         out.print("]}");
+    }
+
+    private void writeFilterOptions(PrintWriter out, Connection conn) throws SQLException {
+        out.print("\"locations\":[");
+        try (PreparedStatement stmt = conn.prepareStatement(
+                "SELECT DISTINCT location FROM rooms WHERE approval_status = 'approved' "
+                        + "AND availability_status = 'available' AND location IS NOT NULL ORDER BY location");
+             ResultSet rs = stmt.executeQuery()) {
+            boolean first = true;
+            while (rs.next()) {
+                String location = valueOr(rs.getString(1), "");
+                if (location.isEmpty()) continue;
+                if (!first) out.print(",");
+                first = false;
+                out.print("\"" + json(location) + "\"");
+            }
+        }
+        out.print("],\"types\":[");
+        try (PreparedStatement stmt = conn.prepareStatement(
+                "SELECT DISTINCT room_type FROM rooms WHERE approval_status = 'approved' "
+                        + "AND availability_status = 'available' ORDER BY room_type");
+             ResultSet rs = stmt.executeQuery()) {
+            boolean first = true;
+            while (rs.next()) {
+                String type = valueOr(rs.getString(1), "");
+                if (type.isEmpty()) continue;
+                if (!first) out.print(",");
+                first = false;
+                out.print("\"" + json(type) + "\"");
+            }
+        }
+        out.print("]");
     }
 
     private List<String> buildTags(ResultSet rs) throws SQLException {
@@ -234,6 +314,38 @@ public class PublicListingsServlet extends HttpServlet {
             return "Price not set";
         }
         return "R" + String.format("%,.0f", price) + " / month";
+    }
+
+    private String normalizedType(String value) {
+        String clean = valueOr(value, "").toLowerCase().replace(' ', '_');
+        switch (clean) {
+            case "single_room":
+            case "shared_room":
+            case "studio":
+            case "apartment":
+            case "house":
+            case "residence":
+                return clean;
+            default:
+                return "";
+        }
+    }
+
+    private BigDecimal parseMoney(String value) {
+        if (value == null || value.trim().isEmpty()) return null;
+        try {
+            BigDecimal amount = new BigDecimal(value.trim());
+            return amount.signum() >= 0 ? amount : null;
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private String orderBy(String sort) {
+        if ("price_asc".equalsIgnoreCase(sort)) return "ORDER BY r.price ASC, r.updated_at DESC";
+        if ("price_desc".equalsIgnoreCase(sort)) return "ORDER BY r.price DESC, r.updated_at DESC";
+        if ("rating".equalsIgnoreCase(sort)) return "ORDER BY rating_average DESC, rating_count DESC, r.updated_at DESC";
+        return "ORDER BY r.updated_at DESC, r.created_at DESC";
     }
 
     private void field(PrintWriter out, String key, String value, boolean first) {

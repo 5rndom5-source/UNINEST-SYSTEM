@@ -49,20 +49,24 @@
         <i class="fa-solid fa-magnifying-glass"></i>
 
         <input
+          id="publicSearchInput"
           type="text"
-          placeholder="Search by street, location or university...."
+          placeholder="Search by location, street or accommodation type"
         />
       </div>
 
       <div class="move-date">
         <i class="fa-solid fa-calendar-days"></i>
 
-        <select>
-          <option>Move - In Date</option>
+        <select id="publicSort" aria-label="Sort listings">
+          <option value="recent">Most recent</option>
+          <option value="price_asc">Price: low to high</option>
+          <option value="price_desc">Price: high to low</option>
+          <option value="rating">Highest rated</option>
         </select>
       </div>
 
-      <button class="search-btn">
+      <button class="search-btn" id="publicSearchButton" type="button">
         <i class="fa-solid fa-search"></i> Search
       </button>
     </section>
@@ -73,14 +77,14 @@
         <div class="filter-header">
           <h2><i class="fa-solid fa-sliders"></i> Filters</h2>
 
-          <span>Clear All</span>
+          <button class="filter-clear" id="clearFilters" type="button">Clear All</button>
         </div>
 
         <div class="filter-group">
           <label>Location</label>
 
-          <select>
-            <option>Select area or city</option>
+          <select id="locationFilter">
+            <option value="">All areas</option>
           </select>
         </div>
 
@@ -88,39 +92,39 @@
           <label>Price Range (per month)</label>
 
           <div class="price-inputs">
-            <input type="text" placeholder="Min R0" />
+            <input id="minPriceFilter" type="number" min="0" step="100" placeholder="Min R0" />
             <span>-</span>
-            <input type="text" placeholder="Max R8,000" />
+            <input id="maxPriceFilter" type="number" min="0" step="100" placeholder="Max R8,000" />
           </div>
         </div>
 
         <div class="filter-group">
           <h3>Accommodation Type</h3>
 
-          <label><input type="checkbox" /> Apartment</label>
+          <label><input name="type" value="apartment" type="radio" /> Apartment</label>
 
-          <label><input type="checkbox" /> Single Rooms</label>
+          <label><input name="type" value="single_room" type="radio" /> Single Rooms</label>
 
-          <label><input type="checkbox" /> Shared Rooms</label>
+          <label><input name="type" value="shared_room" type="radio" /> Shared Rooms</label>
 
-          <label><input type="checkbox" /> Student Residence</label>
+          <label><input name="type" value="residence" type="radio" /> Student Residence</label>
         </div>
 
         <div class="filter-group">
           <h3>Facilities</h3>
 
-          <label><input type="checkbox" /> Wifi</label>
+          <label><input name="facility" value="Wifi" type="checkbox" /> Wifi</label>
 
-          <label><input type="checkbox" /> Parking</label>
+          <label><input name="facility" value="Parking" type="checkbox" /> Parking</label>
 
-          <label><input type="checkbox" /> Furnished</label>
+          <label><input name="facility" value="furnished" type="checkbox" /> Furnished</label>
 
-          <label><input type="checkbox" /> Security</label>
+          <label><input name="facility" value="Security" type="checkbox" /> Security</label>
         </div>
 
-        <button class="apply-btn">Apply Filters</button>
+        <button class="apply-btn" id="applyFilters" type="button">Apply Filters</button>
 
-        <button class="reset-btn">Reset Filters</button>
+        <button class="reset-btn" id="resetFilters" type="button">Reset Filters</button>
       </aside>
 
       <section class="results">
@@ -130,120 +134,16 @@
           <div class="sort-box">
             Sort by:
 
-            <select>
-              <option>Most Recent</option>
+            <select id="resultsSort">
+              <option value="recent">Most recent</option>
+              <option value="price_asc">Price: low to high</option>
+              <option value="price_desc">Price: high to low</option>
+              <option value="rating">Highest rated</option>
             </select>
           </div>
         </div>
 
-        <div class="listing-card">
-          <div class="listing-image">
-            <img src="listing-rondebosch.png" alt="Rondebosch student apartment" />
-
-            <i class="fa-regular fa-heart"></i>
-          </div>
-
-          <div class="listing-content">
-            <h2>Modern Apartments near campus</h2>
-
-            <p class="listing-price">R4,500 / month</p>
-
-            <p class="listing-location">
-              <i class="fa-solid fa-location-dot"></i>
-              Rondebosch
-            </p>
-
-            <div class="listing-tags">
-              <span>
-                <i class="fa-solid fa-bed"></i>
-                Furnished
-              </span>
-
-              <span>
-                <i class="fa-solid fa-wifi"></i>
-                Wifi
-              </span>
-            </div>
-
-            <button type="button" onclick="window.location.href='../UserDashboard/listings.html'">View Details</button>
-          </div>
-
-        </div>
-
-        <div class="listing-card">
-          <div class="listing-image">
-            <img src="listing-cbd-room.png" alt="Cape Town CBD student room" />
-
-            <i class="fa-regular fa-heart"></i>
-          </div>
-
-          <div class="listing-content">
-            <h2>Cozy Room in Shared House</h2>
-
-            <p class="listing-price">R2,800 / month</p>
-
-            <p class="listing-location">
-              <i class="fa-solid fa-location-dot"></i>
-              Cape Town CBD
-            </p>
-
-            <div class="listing-tags">
-              <span>
-                <i class="fa-solid fa-bed"></i>
-                1 Bed
-              </span>
-
-              <span>
-                <i class="fa-solid fa-users"></i>
-                Shared
-              </span>
-
-              <span>
-                <i class="fa-solid fa-wifi"></i>
-                Wifi
-              </span>
-            </div>
-
-            <button type="button" onclick="window.location.href='../UserDashboard/listings.html'">View Details</button>
-          </div>
-
-        </div>
-
-        <div class="listing-card">
-          <div class="listing-image">
-            <img
-              src="listing-bellville-residence.png"
-              alt="Bellville student residence"
-            />
-
-            <i class="fa-regular fa-heart"></i>
-          </div>
-
-          <div class="listing-content">
-            <h2>Student Residence</h2>
-
-            <p class="listing-price">R3,200 / month</p>
-
-            <p class="listing-location">
-              <i class="fa-solid fa-location-dot"></i>
-              Bellville
-            </p>
-
-            <div class="listing-tags">
-              <span>24/7 Security</span>
-
-              <span>
-                <i class="fa-solid fa-wifi"></i>
-                Wifi
-              </span>
-
-              <span>Parking</span>
-            </div>
-
-            <button type="button" onclick="window.location.href='../UserDashboard/listings.html'">View Details</button>
-          </div>
-
-        </div>
+        <p class="listings-state" id="publicListingsState" aria-live="polite">Loading approved accommodation...</p>
       </section>
     </section>
 
@@ -321,7 +221,7 @@
 
       <p class="copyright">@2026 UniNest. All Rights Reserved.</p>
     </footer>
-    <script src="public-listings.js"></script>
+    <script src="public-listings.js?v=20260821-dynamic"></script>
     <script src="../system-status.js"></script>
 </body>
 </html>
