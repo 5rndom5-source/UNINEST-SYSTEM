@@ -90,11 +90,11 @@
                   </label>
                   <label>
                     Phone Number
-                    <input type="tel" name="phone" required autocomplete="tel" />
+                    <input type="tel" name="phone" autocomplete="tel" placeholder="e.g. 082 123 4567" />
                   </label>
                   <label>
                     Main Area
-                    <select name="mainArea">
+                    <select name="mainArea" required>
                       <option>Cape Town CBD</option>
                       <option>Rondebosch</option>
                       <option>Observatory</option>
@@ -119,6 +119,17 @@
       </div>
     </div>
 
+    <script>
+      const profileParams = new URLSearchParams(window.location.search);
+      const profileSuccess = profileParams.get("success");
+      const profileError = profileParams.get("error");
+      if (profileSuccess || profileError) {
+        const profileBanner = document.getElementById("profileSuccess");
+        profileBanner.textContent = profileSuccess || profileError;
+        profileBanner.classList.add("show");
+        profileBanner.classList.toggle("error", Boolean(profileError));
+      }
+    </script>
     <script src="script.js"></script>
     <script src="../portal-identity.js?v=20260822-auth"></script>
     <script src="../system-status.js"></script>

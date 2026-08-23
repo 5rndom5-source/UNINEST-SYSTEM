@@ -27,7 +27,8 @@ public class StudentProfileServlet extends HttpServlet {
         response.setContentType("application/json");
 
         HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("userId") == null) {
+        if (session == null || session.getAttribute("userId") == null
+                || !"student".equalsIgnoreCase(String.valueOf(session.getAttribute("role")))) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.getWriter().print("{\"error\":\"Login required\"}");
             return;
@@ -80,7 +81,8 @@ public class StudentProfileServlet extends HttpServlet {
             throws ServletException, IOException {
 
         HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("userId") == null) {
+        if (session == null || session.getAttribute("userId") == null
+                || !"student".equalsIgnoreCase(String.valueOf(session.getAttribute("role")))) {
             sendUnauthenticated(request, response);
             return;
         }
@@ -93,8 +95,10 @@ public class StudentProfileServlet extends HttpServlet {
         String yearLevel = trim(request.getParameter("yearLevel"));
         String emergencyContact = trim(request.getParameter("emergencyContact"));
 
-        if (!ValidationUtil.isRequired(fullName) || !ValidationUtil.isValidEmail(email)) {
-            sendResult(request, response, HttpServletResponse.SC_BAD_REQUEST, "error", "Name and email are required");
+        if (!ValidationUtil.isRequired(fullName)
+                || !ValidationUtil.isValidEmail(email)
+                || (!phone.isEmpty() && !ValidationUtil.isValidPhone(phone))) {
+            sendResult(request, response, HttpServletResponse.SC_BAD_REQUEST, "error", "Enter a valid name, email, and phone number");
             return;
         }
 
@@ -130,6 +134,7 @@ public class StudentProfileServlet extends HttpServlet {
 
             session.setAttribute("studentName", fullName);
             session.setAttribute("fullName", fullName);
+            session.setAttribute("email", email);
             sendResult(request, response, HttpServletResponse.SC_OK, "success", "Profile saved");
         } catch (SQLException e) {
             System.err.println("Database error in StudentProfileServlet: " + e.getMessage());

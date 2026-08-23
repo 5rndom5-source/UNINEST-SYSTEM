@@ -20,57 +20,71 @@ public class LandlordProfileServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        String fullName = request.getParameter("fullName");
-        String email = request.getParameter("email");
-        String phone = request.getParameter("phone");
-        String mainArea = request.getParameter("mainArea");
-        String bio = request.getParameter("bio");
-
-        if (!ValidationUtil.isRequired(fullName)
-                || !ValidationUtil.isValidEmail(email)
-                || !ValidationUtil.isRequired(phone)
-                || !ValidationUtil.isRequired(mainArea)) {
-            response.sendRedirect("Landlord/profile.html?error=missing");
-            return;
-        }
-
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("userId") == null
-                || !"landlord".equals(session.getAttribute("role"))) {
+                || !"landlord".equalsIgnoreCase(String.valueOf(session.getAttribute("role")))) {
             response.sendRedirect(request.getContextPath() + "/Landlord/login.html");
             return;
         }
-        session.setAttribute("landlordName", fullName.trim());
-        session.setAttribute("landlordEmail", email.trim());
-        session.setAttribute("landlordPhone", phone.trim());
-        session.setAttribute("landlordArea", mainArea.trim());
-        session.setAttribute("landlordBio", bio);
+
+        String fullName = trim(request.getParameter("fullName"));
+        String email = trim(request.getParameter("email"));
+        String phone = trim(request.getParameter("phone"));
+        String mainArea = trim(request.getParameter("mainArea"));
+        String bio = trim(request.getParameter("bio"));
+
+        if (!ValidationUtil.isRequired(fullName)
+                || !ValidationUtil.isValidEmail(email)
+                || (!phone.isEmpty() && !ValidationUtil.isValidPhone(phone))
+                || !ValidationUtil.isRequired(mainArea)) {
+            redirect(response, "error", "Enter a valid name, email, phone number, and main area");
+            return;
+        }
 
         try {
             Connection conn = DatabaseConnection.getInstance().getConnection();
             if (conn == null) {
-                response.sendRedirect("Landlord/profile.html?error=db");
+                redirect(response, "error", "Service is temporarily unavailable. Please try again later.");
                 return;
             }
 
-            PreparedStatement stmt = conn.prepareStatement(
-                    "UPDATE users SET full_name = ?, email = ?, phone = ? WHERE user_id = ?");
-            stmt.setString(1, fullName.trim());
-            stmt.setString(2, email.trim());
-            stmt.setString(3, phone.trim());
-            stmt.setInt(4, (Integer) session.getAttribute("userId"));
-            stmt.executeUpdate();
-            stmt.close();
+            int updated;
+            try (PreparedStatement stmt = conn.prepareStatement(
+                    "UPDATE users SET full_name = ?, email = ?, phone = ? WHERE user_id = ?")) {
+                stmt.setString(1, fullName);
+                stmt.setString(2, email);
+                stmt.setString(3, phone);
+                stmt.setInt(4, (Integer) session.getAttribute("userId"));
+                updated = stmt.executeUpdate();
+            }
 
-            session.setAttribute("landlordName", fullName.trim());
-            session.setAttribute("landlordEmail", email.trim());
-            session.setAttribute("email", email.trim());
+            if (updated == 0) {
+                redirect(response, "error", "No matching landlord profile was found");
+                return;
+            }
 
-            response.sendRedirect("Landlord/profile.html?saved=true");
+            session.setAttribute("landlordName", fullName);
+            session.setAttribute("fullName", fullName);
+            session.setAttribute("landlordEmail", email);
+            session.setAttribute("email", email);
+            session.setAttribute("landlordPhone", phone);
+            session.setAttribute("landlordArea", mainArea);
+            session.setAttribute("landlordBio", bio);
+
+            redirect(response, "success", "Profile updated");
         } catch (SQLException e) {
             System.err.println("Database error in LandlordProfileServlet: " + e.getMessage());
             e.printStackTrace();
-            response.sendRedirect("Landlord/profile.html?error=save");
+            redirect(response, "error", "Could not update profile");
         }
+    }
+
+    private String trim(String value) {
+        return value == null ? "" : value.trim();
+    }
+
+    private void redirect(HttpServletResponse response, String key, String message) throws IOException {
+        response.sendRedirect("Landlord/profile.html?" + key + "="
+                + java.net.URLEncoder.encode(message, "UTF-8"));
     }
 }
