@@ -40,40 +40,67 @@ public class AddPropertyServlet extends HttpServlet {
         if (!ValidationUtil.isRequired(title)
                 || !ValidationUtil.isRequired(description)
                 || !ValidationUtil.isRequired(location)
+                || location.trim().length() > 255
                 || !ValidationUtil.isValidPrice(price)) {
-            response.sendRedirect(request.getContextPath() + "/Landlord/listings.html?error=missing");
+            if ("2".equals(request.getParameter("editorVersion"))) response.sendError(400, "Check required fields.");
+            else response.sendRedirect(request.getContextPath() + "/Landlord/listings.html?error=missing");
             return;
         }
 
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("landlordId") == null
                 || !"landlord".equalsIgnoreCase(String.valueOf(session.getAttribute("role")))) {
-            response.sendRedirect(request.getContextPath() + "/Landlord/login.html?error=session");
+            if ("2".equals(request.getParameter("editorVersion"))) response.sendError(401);
+            else response.sendRedirect(request.getContextPath() + "/Landlord/login.html?error=session");
             return;
         }
 
         try {
             Connection conn = DatabaseConnection.getInstance().getConnection();
             if (conn == null) {
-                response.sendRedirect(request.getContextPath() + "/Landlord/listings.html?error=db");
+                response.sendError(503);
                 return;
             }
 
+            conn.setAutoCommit(false);
+            if ("2".equals(request.getParameter("editorVersion")) && conn.getNetworkTimeout()>0 && conn.getNetworkTimeout()<30000)
+                conn.setNetworkTimeout(Runnable::run,30000);
+            java.util.List<Path> editorFiles = new java.util.ArrayList<>();
+            try {
             int landlordId = (Integer) session.getAttribute("landlordId");
             if (roomId == null) {
                 roomId = insertRoom(conn, landlordId, title.trim(), description.trim(),
                         location.trim(), new BigDecimal(price), amenities);
             } else if (!updateOwnedRoom(conn, roomId, landlordId, title.trim(), description.trim(),
                     location.trim(), new BigDecimal(price), amenities)) {
-                response.sendRedirect(request.getContextPath() + "/Landlord/listings.html?error=unauthorized");
+                conn.rollback();
+                response.sendError(403);
                 return;
             }
 
             replaceAmenities(conn, roomId, amenities);
-            saveImages(request, conn, roomId);
+            if ("2".equals(request.getParameter("editorVersion"))) {
+                ListingEditor.save(request, conn, roomId, landlordId, editorFiles);
+            } else {
+                saveImages(request, conn, roomId);
+            }
+            conn.commit();
 
             session.setAttribute("listingStatus", "Pending Approval");
-            response.sendRedirect(request.getContextPath() + "/Landlord/listings.html?status=pending");
+            if ("2".equals(request.getParameter("editorVersion"))) {
+                response.setContentType("application/json;charset=UTF-8"); response.getWriter().print("{\"saved\":true}");
+            } else response.sendRedirect(request.getContextPath() + "/Landlord/listings.html?status=pending");
+            } catch (SQLException | IOException | ServletException | RuntimeException e) {
+                conn.rollback();
+                for (Path path : editorFiles) Files.deleteIfExists(path);
+                if ("2".equals(request.getParameter("editorVersion"))) {
+                    response.setContentType("application/json;charset=UTF-8");
+                    response.setStatus(e instanceof IllegalArgumentException ? 400 : 503);
+                    response.getWriter().print("{\"message\":" + ListingEditor.json(e instanceof IllegalArgumentException ? e.getMessage() : "Listing could not be saved. Please retry.") + "}");
+                    return;
+                }
+                throw e;
+            } finally { conn.setAutoCommit(true); }
         } catch (SQLException e) {
             System.err.println("Database error in Landlord AddPropertyServlet: " + e.getMessage());
             e.printStackTrace();
@@ -184,36 +211,50 @@ public class AddPropertyServlet extends HttpServlet {
 
     private void saveImages(HttpServletRequest request, Connection conn, int roomId)
             throws IOException, ServletException, SQLException {
-        Path uploadDir = Path.of(System.getProperty("user.home"), ".uninest", "property-images");
+        Path uploadDir = com.uninest.utils.ImageStorage.directory("property-images");
         Files.createDirectories(uploadDir);
 
         int displayOrder = 0;
+        try (PreparedStatement count = conn.prepareStatement("SELECT COALESCE(MAX(display_order),-1)+1 FROM room_images WHERE room_id=?")) {
+            count.setInt(1, roomId);
+            try (ResultSet result = count.executeQuery()) { if (result.next()) displayOrder = result.getInt(1); }
+        }
+        java.util.List<Path> written = new java.util.ArrayList<>();
+        int count = 0;
+        try {
         for (Part part : request.getParts()) {
-            if (!"photos".equals(part.getName()) || part.getSize() == 0) {
+            if (!("photos".equals(part.getName()) || part.getName().startsWith("photos_")) || part.getSize() == 0) {
                 continue;
             }
-
-            String submittedName = new File(part.getSubmittedFileName()).getName();
-            String safeName = submittedName.replaceAll("[^A-Za-z0-9._-]", "_");
-            String fileName = System.currentTimeMillis() + "_" + safeName;
+            if (++count > 20) throw new IOException("Upload at most 20 images at a time");
+            String category = "photos".equals(part.getName()) ? "building" : part.getName().substring(7);
+            if (!java.util.Arrays.asList("building","single_room","double_room","kitchen","bathroom","shower","tub","toilet","other").contains(category))
+                throw new IOException("Invalid image category");
+            String fileName = java.util.UUID.randomUUID().toString() + ".png";
             Path destination = uploadDir.resolve(fileName).normalize();
             if (!destination.getParent().equals(uploadDir)) {
                 throw new IOException("Invalid upload path");
             }
-            Files.copy(part.getInputStream(), destination, StandardCopyOption.REPLACE_EXISTING);
-            insertImage(conn, roomId, "/PropertyImageServlet/" + fileName, displayOrder == 0, displayOrder);
+            com.uninest.utils.ImageStorage.write(com.uninest.utils.ImageStorage.decode(part), destination);
+            written.add(destination);
+            insertImage(conn, roomId, "/PropertyImageServlet/" + fileName, displayOrder == 0, displayOrder, category);
             displayOrder++;
+        }
+        } catch (IOException | ServletException | SQLException | RuntimeException e) {
+            for (Path path : written) Files.deleteIfExists(path);
+            throw e;
         }
     }
 
     private void insertImage(Connection conn, int roomId, String imageUrl,
-                             boolean primary, int displayOrder) throws SQLException {
+                             boolean primary, int displayOrder, String category) throws SQLException {
         PreparedStatement stmt = conn.prepareStatement(
-                "INSERT INTO room_images (room_id, image_url, is_primary, display_order) VALUES (?, ?, ?, ?)");
+                "INSERT INTO room_images (room_id, image_url, is_primary, display_order, category) VALUES (?, ?, ?, ?, ?)");
         stmt.setInt(1, roomId);
         stmt.setString(2, imageUrl);
         stmt.setBoolean(3, primary);
         stmt.setInt(4, displayOrder);
+        stmt.setString(5, category);
         stmt.executeUpdate();
         stmt.close();
     }

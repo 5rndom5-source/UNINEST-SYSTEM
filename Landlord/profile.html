@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="en">
   <head>
+  <script src="../csrf.js"></script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Profile - UniNest Landlord Portal</title>
@@ -70,7 +71,7 @@
               <p data-user-phone></p>
               <form data-profile-image-form enctype="multipart/form-data" style="margin-top: 16px;">
                 <label class="btn btn-soft" for="landlordProfilePhoto">Choose Profile Picture</label>
-                <input id="landlordProfilePhoto" name="photo" type="file" accept="image/jpeg,image/png,image/webp" required hidden />
+                <input id="landlordProfilePhoto" name="photo" type="file" accept="image/jpeg,image/png" required hidden />
                 <button class="submit-btn" type="submit" style="margin-top: 8px;">Upload Picture</button>
                 <p data-profile-image-message class="meta" aria-live="polite"></p>
               </form>

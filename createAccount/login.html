@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script src="../csrf.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>UniNest - Login</title>
@@ -47,6 +48,7 @@
           <label class="roles-title" for="login-role">Account Type</label>
           <div class="form-group">
             <select id="login-role" name="role" required>
+              <option value="" selected disabled>Choose your role</option>
               <option value="student">Student</option>
               <option value="landlord">Landlord</option>
               <option value="admin">Admin</option>
@@ -72,7 +74,7 @@
   const errorMessage = params.get('error');
   const successMessage = params.get('success');
   const roleSelect = document.getElementById('login-role');
-  const requestedRole = params.get('role') || localStorage.getItem('uninest.loginRole');
+  const requestedRole = params.has('signedOut') ? null : params.get('role');
 
   loginForm.action = window.location.protocol === 'file:'
     ? 'http://localhost:8080/uninest/AccountLoginServlet'
@@ -82,9 +84,12 @@
     roleSelect.value = requestedRole;
   }
 
-  loginForm.addEventListener('submit', () => {
-    localStorage.setItem('uninest.loginRole', roleSelect.value);
-  });
+  // A previous account must never silently select the next person's role.
+  try { localStorage.removeItem('uninest.loginRole'); } catch (error) { }
+  if (params.has('signedOut')) {
+    loginForm.reset();
+    roleSelect.value = '';
+  }
 
   if (errorMessage || successMessage) {
     messageBox.textContent = errorMessage || successMessage;
@@ -94,5 +99,6 @@
 </script>
 
   <script src="../system-status.js"></script>
+  <p style="text-align:center"><a href="../ResetPasswordServlet">Forgot your password?</a></p>
 </body>
 </html>

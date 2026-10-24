@@ -405,8 +405,8 @@ aside[style] a:hover {
     margin-left: auto !important;
 }
 
-.dashboard-wrapper > .header img,
-.page-wrapper > .header img {
+.dashboard-wrapper > .header img:not([data-profile-image]),
+.page-wrapper > .header img:not([data-profile-image]) {
     display: none !important;
 }
 

@@ -20,9 +20,6 @@ if (-not (Test-Path -LiteralPath $env:CATALINA_HOME)) {
 & $mvn `
     "-Dmaven.repo.local=$localRepo" `
     "-Dmaven.resolver.transport=wagon" `
-    "-Dmaven.wagon.http.ssl.insecure=true" `
-    "-Dmaven.wagon.http.ssl.allowall=true" `
-    "-Dmaven.wagon.http.ssl.ignore.validity.dates=true" `
     -f (Join-Path $root "pom.xml") clean package
 if ($LASTEXITCODE -ne 0) {
     throw "Maven build failed with exit code $LASTEXITCODE"

@@ -1,4 +1,7 @@
 (function () {
+  const galleryScript = document.createElement('script');
+  galleryScript.src = new URL('../property-gallery.js', document.currentScript.src).href;
+  document.head.appendChild(galleryScript);
   const serverOrigin = "http://localhost:8080";
   const contextPath = "/uninest";
   const searchPageSize = 6;
@@ -46,6 +49,7 @@
         ${ratingMarkup(listing)}
         <div class="tags">${tagsMarkup(listing.tags)}</div>
         <button type="button" data-view-listing="${escapeText(listing.id)}">View Details</button>
+        <button type="button" data-gallery="${escapeText(listing.id)}">View Photos</button>
       </div>
     </article>`;
 
@@ -60,6 +64,7 @@
         <div class="listing-tags">${tagsMarkup(listing.tags)}</div>
         <p class="listing-description">${escapeText(listing.description)}</p>
         <button type="button" data-view-listing="${escapeText(listing.id)}">View Details</button>
+        <button type="button" data-gallery="${escapeText(listing.id)}">View Photos</button>
       </div>
     </article>`;
 

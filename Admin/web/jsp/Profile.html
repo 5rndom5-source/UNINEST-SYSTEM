@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script src="../../../csrf.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Profile - UniNest Admin Portal</title>
@@ -144,7 +145,7 @@
         </button>
         <div class="admin-profile-dropdown">
             <a href="Profile.html">Profile</a>
-            <a href="../../../HomePage/contact.html">Contact Us</a>
+            <a href="Messages.html" data-support-link>Support Inbox</a>
             <a href="../../../LogoutServlet?portal=admin">Logout</a>
         </div>
     </div>
@@ -161,7 +162,7 @@
             <a href="Payments.html" class="nav-item"><span></span> Payments</a>
             <a href="Maintenance.html" class="nav-item"><span></span> Maintenance</a>
             <a href="Profile.html" class="nav-item active"><span></span> Profile</a>
-            <a href="../../../HomePage/contact.html" class="nav-item"><span></span> Contact Us</a>
+            <a href="Messages.html" data-support-link class="nav-item"><span></span> Support Inbox</a>
             <a href="../../../LogoutServlet?portal=admin" class="nav-item"><span></span> Logout</a>
         </aside>
 
@@ -176,9 +177,9 @@
                     <div class="avatar" data-user-initials>UN</div>
                     <h2 class="profile-name" data-user-name>UniNest Administrator</h2>
                     <p class="profile-meta"><span data-user-role>Admin</span><br><span data-user-email></span></p>
-                    <form data-profile-image-form enctype="multipart/form-data" style="margin: 16px 0; text-align: center;">
+                    <form data-profile-image-form method="post" action="../../../ProfileImageServlet" enctype="multipart/form-data" style="margin: 16px 0; text-align: center;">
                         <label class="btn btn-outline" for="adminProfilePhoto">Choose Profile Picture</label>
-                        <input id="adminProfilePhoto" name="photo" type="file" accept="image/jpeg,image/png,image/webp" required hidden>
+                        <input id="adminProfilePhoto" name="photo" type="file" accept="image/jpeg,image/png" required style="display:block;max-width:100%;margin:12px 0;">
                         <button class="btn btn-primary" type="submit" style="margin-top: 8px;">Upload Picture</button>
                         <p data-profile-image-message class="profile-meta" aria-live="polite"></p>
                     </form>

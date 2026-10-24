@@ -1,0 +1,49 @@
+.classic-section.listing-editor { padding:0; border:0; background:transparent; box-shadow:none; max-width:640px; margin:0 auto 48px; }
+#propertyForm { display:flex; flex-direction:column; gap:32px; width:100%; max-width:640px; margin:auto; }
+#propertyForm .form-section { background:#fff; border:1px solid #d4dbd8; border-radius:8px; padding:24px; display:flex; flex-direction:column; gap:16px; min-width:0; }
+#propertyForm h2 { font-size:20px; margin:0 0 8px; letter-spacing:0; }
+#propertyForm label { display:flex; flex-direction:column; gap:6px; font-weight:600; min-width:0; font-size:14px; }
+#propertyForm input:not([type=checkbox]):not([type=hidden]):not([type=file]), #propertyForm select { box-sizing:border-box; height:44px; min-height:44px; width:100%; padding:10px 12px; border:1px solid #aebbb5; border-radius:4px; background:#fff; color:#182c24; font:inherit; }
+#propertyForm textarea { width:100%; min-height:112px; box-sizing:border-box; padding:12px; border:1px solid #aebbb5; border-radius:4px; font:inherit; resize:vertical; }
+#propertyForm .field-pair { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+#propertyForm .input-unit { position:relative; display:block; }
+#propertyForm .input-unit > span { position:absolute; left:12px; top:12px; pointer-events:none; font-weight:400; }
+#propertyForm .input-unit input { padding-left:32px !important; }
+#propertyForm .input-unit.suffix > span { left:auto; right:12px; }
+#propertyForm .input-unit.suffix input { padding-left:12px !important; padding-right:40px !important; }
+#propertyForm .amenity-chips, .room-add { display:flex; flex-wrap:wrap; gap:8px; }
+#propertyForm .amenity-chips label { position:relative; cursor:pointer; }
+#propertyForm .amenity-chips input { position:absolute; opacity:0; width:1px; height:1px; }
+#propertyForm .amenity-chips span, .room-add button { padding:8px 12px; border:1px solid #aebbb5; border-radius:20px; background:#fff; color:#243d32; font:inherit; }
+#propertyForm .amenity-chips input:checked + span { background:#e0f0e6; border-color:#247246; color:#164c2d; }
+#propertyForm :focus-visible { outline:3px solid #276da9; outline-offset:3px; }
+#propertyForm .field-error, .photo-error { color:#b42318; font-size:12px; font-weight:400; margin:0; overflow-wrap:anywhere; }
+.photo-warning { color:#825000; font-size:13px; margin:8px 0; }
+#propertyForm .form-actions { display:flex; flex-direction:column; gap:12px; }
+#propertyForm .form-actions button { min-height:44px; width:100%; }
+#propertyForm .cancel-listing { background:transparent; border:0; text-decoration:underline; color:#334b40; }
+.photo-room { border:1px solid #d4dbd8; border-radius:6px; padding:12px; margin-top:20px; min-width:0; }
+.photo-room header { display:flex; align-items:center; gap:8px; margin-bottom:12px; }
+.photo-room h3 { flex:1; margin:0; font-size:16px; overflow-wrap:anywhere; }
+.photo-tool { min-width:32px; min-height:32px; background:white; color:#243d32; border:1px solid #c1ccc6; border-radius:4px; cursor:pointer; }
+.photo-drop { border:1px dashed #8caaa0; padding:16px; text-align:center; background:#f2f7f4; border-radius:4px; }
+.photo-drop.drag-over { background:#dcefe2; }
+.photo-drop button { min-height:44px; padding:8px 16px; background:white; border:1px solid #8caaa0; border-radius:4px; }
+.photo-thumbs { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin-top:16px; }
+.photo-item { min-width:0; }
+.photo-square { position:relative; aspect-ratio:1; background:#e5e8e6; border-radius:4px; overflow:hidden; }
+.photo-square img { width:100%; height:100%; object-fit:cover; }
+.photo-square .remove { position:absolute; right:4px; top:4px; }
+.photo-square .cover { position:absolute; left:4px; top:4px; }
+.photo-square .cover[aria-pressed=true] { color:#7a5100; background:#ffe9a8; }
+.photo-item progress { width:100%; height:6px; display:block; }
+#propertyForm .photo-item label { font-size:11px; margin-top:8px; gap:4px; }
+#propertyForm .photo-item input, #propertyForm .photo-item select { font-size:12px !important; padding:4px !important; }
+.photo-order { display:grid; grid-template-columns:1fr 1fr; gap:4px; margin-top:8px; }
+.photo-order button { min-width:0; width:100%; }
+.photo-order button:first-child { grid-column:1 / -1; }
+.camera-button { margin-left:8px; }
+@media(pointer:fine) { .camera-button { display:none; } }
+.photo-count { margin:0; color:#42594e; font-size:14px; }
+#listingStatus { white-space:normal; overflow-wrap:anywhere; }
+@media(max-width:599px) { #propertyForm .field-pair { grid-template-columns:1fr; } #propertyForm .form-section { padding:16px; } .photo-thumbs { grid-template-columns:repeat(3,minmax(0,1fr)); } .classic-section.listing-editor { width:100%; } }

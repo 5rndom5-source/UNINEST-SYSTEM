@@ -273,6 +273,15 @@ const makeListingCard = (listing, context = "browse", index = 0) => {
 
   const actions = document.createElement("div");
   actions.className = "card-actions";
+  const gallery = document.createElement("button");
+  gallery.type = "button"; gallery.className = "listing-action secondary";
+  gallery.dataset.gallery = id; gallery.textContent = "View Photos";
+  actions.append(gallery);
+  const map = document.createElement("a");
+  map.className = "listing-action secondary"; map.textContent = "Google Maps";
+  map.href = endpoint("/ListingMapServlet") + "?roomId=" + encodeURIComponent(id);
+  map.target = "_blank"; map.rel = "noopener noreferrer";
+  actions.append(map);
 
   const favoriteButton = document.createElement("button");
   favoriteButton.className = "listing-action secondary";

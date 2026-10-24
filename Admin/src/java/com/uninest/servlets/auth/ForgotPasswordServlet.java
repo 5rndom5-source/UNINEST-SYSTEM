@@ -21,31 +21,44 @@ import java.sql.SQLException;
  */
 @WebServlet("/ForgotPasswordServlet")
 public class ForgotPasswordServlet extends HttpServlet {
+    private final java.util.Map<String, long[]> attempts = new java.util.HashMap<>();
+    private synchronized boolean allowed(String address) {
+        long now=System.currentTimeMillis();
+        attempts.entrySet().removeIf(entry -> now-entry.getValue()[0]>60000);
+        if(!attempts.containsKey(address) && attempts.size()>=10000) return false;
+        long[] bucket=attempts.computeIfAbsent(address,key -> new long[]{now,0});
+        return ++bucket[1]<=5;
+    }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
         String email = request.getParameter("email");
+        if(!allowed(request.getRemoteAddr())) {
+            response.setHeader("Retry-After","60");
+            response.sendError(429,"Please wait a minute before trying again");
+            return;
+        }
         if (!ValidationUtil.isValidEmail(email)) {
-            redirect(response, "Login.html", "message", "If the email exists, reset instructions will be prepared.");
+            redirect(response, request.getContextPath()+"/ResetPasswordServlet", "message", "Enter a valid email address.");
             return;
         }
 
         try {
             Connection conn = DatabaseConnection.getInstance().getConnection();
+            if (conn == null) throw new IllegalStateException("Database unavailable");
             if (conn != null) {
-                Integer userId = findUserId(conn, email.trim());
-                if (userId != null) {
-                    createNotification(conn, userId);
-                }
+                com.uninest.utils.RecoveryService.request(conn, email.trim());
             }
-        } catch (SQLException e) {
+        } catch (Exception e) {
             System.err.println("Database error in ForgotPasswordServlet: " + e.getMessage());
             e.printStackTrace();
+            redirect(response, request.getContextPath() + "/ResetPasswordServlet", "message", "Password recovery is temporarily unavailable. Please try again later.");
+            return;
         }
 
-        redirect(response, "Login.html", "message", "If the email exists, reset instructions will be prepared.");
+        redirect(response, request.getContextPath() + "/ResetPasswordServlet", "message", "If this account is eligible, a reset link will arrive shortly. Check your spam folder.");
     }
 
     private Integer findUserId(Connection conn, String email) throws SQLException {

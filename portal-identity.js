@@ -1,10 +1,14 @@
 (function () {
   "use strict";
+  var identityScript = document.currentScript;
+  var applicationRoot = identityScript ? new URL(".", identityScript.src).pathname.replace(/\/$/, "") : "";
+  var galleryScript = document.createElement("script");
+  galleryScript.src = applicationRoot + "/property-gallery.js";
+  document.head.appendChild(galleryScript);
 
   function contextPath() {
     if (window.location.protocol === "file:") return "http://localhost:8080/uninest";
-    var match = window.location.pathname.match(/^\/[^/]+/);
-    return match ? match[0] : "";
+    return applicationRoot;
   }
 
   function initials(name) {
@@ -42,7 +46,6 @@
     document.querySelectorAll(avatarSelector).forEach(function (host) {
       var image = document.createElement("img");
       image.alt = "Profile picture";
-      image.src = url;
       image.dataset.profileImage = "true";
       image.style.width = "100%";
       image.style.height = "100%";
@@ -60,6 +63,7 @@
           host.classList.remove("has-profile-image");
         }
       });
+      image.src = url;
     });
   }
 
@@ -78,20 +82,41 @@
       if (message) message.textContent = "Profile pictures must be 5 MB or smaller";
       return;
     }
+    if (!['image/jpeg', 'image/png'].includes(file.type)) {
+      if (message) message.textContent = 'Choose a JPG or PNG picture.';
+      return;
+    }
 
     form.dataset.uploading = "true";
     if (submit) submit.disabled = true;
     if (message) message.textContent = "Uploading picture...";
     try {
+      // Resize phone photos before upload; the server still validates the decoded image.
+      var bitmap = await createImageBitmap(file);
+      var body = new FormData();
+      try {
+        var scale = Math.min(1, 1024 / Math.max(bitmap.width, bitmap.height));
+        var canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+        canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+        canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+        var photo = await new Promise(function (resolve, reject) {
+          canvas.toBlob(function (blob) { if (blob) resolve(blob); else reject(new Error('Could not process this picture. Choose another JPG or PNG.')); }, 'image/png');
+        });
+        body.append('photo', photo, 'profile.png');
+      } finally { bitmap.close(); }
+      if (!window.uninestCsrf) throw new Error('Security verification is unavailable. Reload the page before uploading.');
+      var token = await window.uninestCsrf.token();
       var response = await fetch(contextPath() + "/ProfileImageServlet", {
         method: "POST",
         credentials: "same-origin",
-        body: new FormData(form),
-        headers: { Accept: "application/json" }
+        body: body,
+        headers: { Accept: "application/json", 'X-CSRF-Token': token }
       });
       var result = await response.json().catch(function () {
         return {};
       });
+      if (response.status === 401) throw new Error('Your session expired. Sign in again before uploading.');
       if (!response.ok) throw new Error(result.message || "Profile picture could not be updated");
       if (message) message.textContent = result.message || "Profile picture updated";
       applyProfileImage();
@@ -111,16 +136,26 @@
         event.preventDefault();
         uploadProfileImage(form);
       });
-      var input = form.querySelector('input[type="file"][name="photo"]');
-      if (input) {
-        input.addEventListener("change", function () {
-          if (input.files && input.files.length) uploadProfileImage(form);
-        });
-      }
     });
   }
 
-  function applyIdentity(user) {
+  function applyIdentity(user, refreshFields) {
+    bindSupportLinks(user);
+    if (user.role === 'admin' && !document.querySelector('[data-admin-access]')) {
+      var adminNav = document.querySelector('.sidebar-nav, .side-nav, .sidebar nav, .sidebar');
+      if (adminNav) {
+        var accessLink = document.createElement('a');
+        accessLink.className = 'nav-item';
+        accessLink.dataset.adminAccess = 'true';
+        accessLink.href = contextPath() + '/AdminAccessServlet';
+        accessLink.textContent = 'Admin access requests';
+        adminNav.appendChild(accessLink);
+      }
+    }
+    if ((user.role === "student" || user.role === "landlord") && user.demoPayments && !document.querySelector('[data-demo-payments]')) {
+      var nav = document.querySelector('.side-nav');
+      if (nav) { var link = document.createElement('a'); link.className='nav-item'; link.dataset.demoPayments='true'; link.href=contextPath()+'/PaymentSimulationServlet'; link.textContent='Demo payments'; nav.appendChild(link); }
+    }
     var displayName = user.fullName || "UniNest User";
     var displayRole = user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : "User";
     setAvatarFallback(initials(displayName));
@@ -128,9 +163,11 @@
     setText("#profileCardEmail, [data-user-email]", user.email || "");
     setText("#profileCardPhone, [data-user-phone]", user.phone || "");
     setText("[data-user-role]", displayRole);
-    setValue('input[name="fullName"]', displayName);
-    setValue('input[name="email"]', user.email);
-    setValue('input[name="phone"]', user.phone);
+    if (refreshFields !== false) {
+      setValue('input[name="fullName"]', displayName);
+      setValue('input[name="email"]', user.email);
+      setValue('input[name="phone"]', user.phone);
+    }
     window.uninestCurrentUser = user;
     applyProfileImage();
     document.dispatchEvent(new CustomEvent("uninest:identity-ready", { detail: user }));
@@ -159,16 +196,65 @@
   }
 
   function redirectToLogin() {
-    window.location.replace(contextPath() + portal().login);
+    window.location.replace(contextPath() + "/createAccount/login.html?error=Please+sign+in+to+continue");
   }
 
   function bindLogoutLinks() {
-    var logoutUrl = contextPath() + "/LogoutServlet?portal=" + encodeURIComponent(portal().role);
+    var logoutUrl = contextPath() + "/LogoutServlet";
     document.querySelectorAll("a").forEach(function (link) {
       if (link.textContent.trim().toLowerCase() === "logout") {
         link.href = logoutUrl;
       }
     });
+  }
+
+  function bindSupportLinks(user) {
+    var paths = {
+      student: "/UserDashboard/messages.html",
+      landlord: "/Landlord/contact-landlord.html",
+      admin: "/Admin/web/jsp/Messages.html"
+    };
+    var supportPath = paths[user.role];
+    if (!supportPath) return;
+    var root = contextPath();
+    var destination = root + supportPath;
+    var folder = destination.slice(0, destination.lastIndexOf("/") + 1);
+    var storageKey = "uninest.supportReturn." + user.userId + "." + user.role;
+    var onSupportPage = window.location.pathname === destination;
+    document.querySelectorAll("a[href]").forEach(function (link) {
+      var url = new URL(link.href, window.location.href);
+      if (url.origin !== window.location.origin) return;
+      if (url.pathname !== destination && !link.hasAttribute("data-support-link")) return;
+      link.href = destination;
+      if (link.dataset.supportBound) return;
+      link.dataset.supportBound = "true";
+      link.addEventListener("click", function () {
+        if (onSupportPage) return;
+        try {
+          sessionStorage.setItem(storageKey, window.location.pathname + window.location.search + window.location.hash);
+        } catch (error) { /* Navigation remains usable with browser storage disabled. */ }
+      });
+    });
+    if (!onSupportPage || document.getElementById("supportReturnLink")) return;
+    var fallback = root + (user.role === "admin" ? "/Admin/web/jsp/Dashboard.html" : "/" + (user.role === "student" ? "UserDashboard" : "Landlord") + "/index.html");
+    var target = fallback;
+    try {
+      var stored = new URL(sessionStorage.getItem(storageKey) || fallback, window.location.origin);
+      // Return only to an HTML page in this user's portal, never logout or an external URL.
+      if (stored.origin === window.location.origin && stored.pathname.startsWith(folder)
+          && stored.pathname.endsWith(".html") && stored.pathname !== destination
+          && !/\/(login|logout|register|forgotpassword)\.html$/i.test(stored.pathname)) {
+        target = stored.pathname + stored.search + stored.hash;
+      }
+    } catch (error) { }
+    var main = document.querySelector("main, .main-content");
+    if (!main) return;
+    var back = document.createElement("a");
+    back.id = "supportReturnLink";
+    back.href = target;
+    back.textContent = "Back to previous page";
+    back.style.cssText = "display:inline-block;margin:0 0 16px;text-decoration:underline;";
+    main.prepend(back);
   }
 
   function notificationButton() {
@@ -384,4 +470,20 @@
   } else {
     loadIdentity();
   }
+  window.addEventListener("pageshow", function (event) {
+    if (event.persisted) window.location.reload();
+  });
+  document.addEventListener("visibilitychange", async function () {
+    if (document.visibilityState !== "visible") return;
+    try {
+      var response = await fetch(contextPath() + "/CurrentUserServlet", { credentials: "same-origin", cache: "no-store" });
+      if (response.status === 401) { redirectToLogin(); return; }
+      if (response.ok) {
+        var user = await response.json();
+        if (user.role !== portal().role) { window.location.reload(); return; }
+        // Refresh renamed accounts by ID without replacing another tab's unsaved form edits.
+        applyIdentity(user, false);
+      }
+    } catch (error) { /* A network outage does not mean the session has ended. */ }
+  });
 })();

@@ -51,16 +51,6 @@ public class ApproveBookingServlet extends HttpServlet {
                 return;
             }
 
-            Integer studentUserId = findStudentUserId(conn, Integer.parseInt(bookingId));
-            if (studentUserId != null) {
-                createNotification(
-                        conn,
-                        studentUserId,
-                        "Booking Confirmed",
-                        "Your UniNest booking request has been approved.",
-                        "booking_confirmed",
-                        "BookingDetails.html?bookingId=" + bookingId);
-            }
 
             redirect(request, response, "success", "Booking approved");
         } catch (SQLException e) {
@@ -71,13 +61,7 @@ public class ApproveBookingServlet extends HttpServlet {
     }
 
     private int updateBookingStatus(Connection conn, int bookingId, String status) throws SQLException {
-        String query = "UPDATE bookings SET booking_status = ? WHERE booking_id = ?";
-        PreparedStatement stmt = conn.prepareStatement(query);
-        stmt.setString(1, status);
-        stmt.setInt(2, bookingId);
-        int updated = stmt.executeUpdate();
-        stmt.close();
-        return updated;
+        return com.uninest.utils.BookingTransitions.update(conn,bookingId,null,status,null);
     }
 
     private Integer findStudentUserId(Connection conn, int bookingId) throws SQLException {

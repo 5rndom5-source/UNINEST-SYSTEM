@@ -58,16 +58,23 @@ public class AccountLoginServlet extends HttpServlet {
                 return;
             }
 
-            if ("suspended".equalsIgnoreCase(rs.getString("status"))
+            if (("admin".equals(role) && !"active".equalsIgnoreCase(rs.getString("status")))
+                    || "suspended".equalsIgnoreCase(rs.getString("status"))
                     || "inactive".equalsIgnoreCase(rs.getString("status"))) {
                 stmt.close();
-                redirect(request, response, "createAccount/login.html", "error", "This account is not active");
+                redirect(request, response, "createAccount/login.html", "error", "Invalid email or password");
                 return;
             }
 
-            HttpSession session = createFreshSession(request);
             int userId = rs.getInt("user_id");
             String fullName = rs.getString("full_name");
+            Integer landlordId = "landlord".equals(role) ? findLandlordId(conn, userId, fullName) : null;
+            if ("landlord".equals(role) && landlordId == null) {
+                stmt.close();
+                redirect(request, response, "createAccount/login.html", "error", "Landlord profile is not ready");
+                return;
+            }
+            HttpSession session = createFreshSession(request);
             session.setAttribute("userId", userId);
             session.setAttribute("fullName", fullName);
             session.setAttribute("email", email);
@@ -77,12 +84,6 @@ public class AccountLoginServlet extends HttpServlet {
             if ("admin".equals(role)) {
                 session.setAttribute("adminId", userId);
             } else if ("landlord".equals(role)) {
-                Integer landlordId = findLandlordId(conn, userId, fullName);
-                if (landlordId == null) {
-                    stmt.close();
-                    redirect(request, response, "createAccount/login.html", "error", "Landlord profile is not ready");
-                    return;
-                }
                 session.setAttribute("landlordId", landlordId);
                 session.setAttribute("landlordName", fullName);
             } else {
@@ -161,6 +162,8 @@ public class AccountLoginServlet extends HttpServlet {
                 + "?"
                 + key
                 + "="
-                + java.net.URLEncoder.encode(message, "UTF-8"));
+                + java.net.URLEncoder.encode(message, "UTF-8")
+                + (isValidRole(normalizeRole(request.getParameter("role")))
+                    ? "&role=" + normalizeRole(request.getParameter("role")) : ""));
     }
 }

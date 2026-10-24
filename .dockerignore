@@ -1,0 +1,13 @@
+.git
+.m2*
+.video-tools
+test-runtime
+target
+tools
+Database
+Testing Documents
+*.mkv
+*.mp4
+.env*
+University
+UniNest

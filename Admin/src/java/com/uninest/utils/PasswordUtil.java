@@ -7,9 +7,7 @@ import java.util.Base64;
 
 /**
  * PasswordUtil - Secure password hashing and verification
- * Uses SHA-256 with salt for enhanced security
- * 
- * IMPORTANT: For production, use bcrypt or Argon2
+ * New passwords use PBKDF2-HMAC-SHA256; legacy salted SHA-256 hashes remain readable.
  */
 public class PasswordUtil {
     
@@ -32,15 +30,9 @@ public class PasswordUtil {
     public static String hashPassword(String password) {
         try {
             byte[] salt = generateSalt();
-            byte[] hash = hashPasswordWithSalt(password, salt);
-            
-            // Combine salt + hash and encode as Base64
-            byte[] saltAndHash = new byte[salt.length + hash.length];
-            System.arraycopy(salt, 0, saltAndHash, 0, salt.length);
-            System.arraycopy(hash, 0, saltAndHash, salt.length, hash.length);
-            
-            return Base64.getEncoder().encodeToString(saltAndHash);
-        } catch (NoSuchAlgorithmException e) {
+            byte[] hash = derive(password, salt, 600000);
+            return "pbkdf2$600000$" + Base64.getEncoder().encodeToString(salt) + "$" + Base64.getEncoder().encodeToString(hash);
+        } catch (java.security.GeneralSecurityException e) {
             throw new RuntimeException("Error hashing password", e);
         }
     }
@@ -50,6 +42,14 @@ public class PasswordUtil {
      */
     public static boolean verifyPassword(String password, String hash) {
         try {
+            if (hash.startsWith("pbkdf2$")) {
+                String[] parts = hash.split("\\$");
+                if (parts.length != 4) return false;
+                int iterations = Integer.parseInt(parts[1]);
+                if (iterations < 600000 || iterations > 1000000) return false;
+                return MessageDigest.isEqual(Base64.getDecoder().decode(parts[3]),
+                        derive(password, Base64.getDecoder().decode(parts[2]), iterations));
+            }
             byte[] saltAndHash = Base64.getDecoder().decode(hash);
             
             // Extract salt
@@ -71,6 +71,12 @@ public class PasswordUtil {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    private static byte[] derive(String password, byte[] salt, int iterations) throws java.security.GeneralSecurityException {
+        javax.crypto.spec.PBEKeySpec spec = new javax.crypto.spec.PBEKeySpec(password.toCharArray(), salt, iterations, 256);
+        try { return javax.crypto.SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256").generateSecret(spec).getEncoded(); }
+        finally { spec.clearPassword(); }
     }
     
     /**

@@ -87,6 +87,11 @@
                                         <include>index.html</include>
                                         <include>style.css</include>
                                         <include>portal-identity.js</include>
+                                        <include>csrf.js</include>
+                                        <include>property-gallery.js</include>
+                                        <include>property-gallery.css</include>
+                                        <include>maps.js</include>
+                                        <include>maps.css</include>
                                         <include>system-status.js</include>
                                     </includes>
                                 </resource>

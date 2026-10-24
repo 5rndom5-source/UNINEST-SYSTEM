@@ -1,0 +1,45 @@
+const {chromium}=require('playwright');
+const assert=require('assert/strict');
+const path=require('path');
+const base='http://localhost:8093/uninest';
+(async()=>{
+ const browser=await chromium.launch({channel:'msedge',headless:true});
+ try {
+  const context=await browser.newContext();
+  const token=(await (await context.request.get(base+'/CsrfTokenServlet')).json()).token;
+  await context.request.post(base+'/AccountLoginServlet',{form:{email:'landlord@example.invalid',password:'Testing!2026',role:'landlord'},headers:{'X-CSRF-Token':token}});
+  const page=await context.newPage();await page.goto(base+'/Landlord/listings.html');
+  const title='Photo integration '+Date.now();
+  await page.locator('#propertyTitle').fill(title);await page.locator('#propertyDescription').fill('Integration test listing');await page.locator('#propertyLocation').fill('12 Main Road');await page.locator('#propertyPrice').fill('5000');
+  await page.locator('[name=suburb]').fill('Rondebosch');await page.locator('[name=city]').fill('Cape Town');await page.locator('[name=deposit]').fill('2500');await page.locator('[name=contactEmail]').fill('landlord@example.invalid');
+  await page.getByRole('button',{name:'Add Bedroom',exact:true}).click();await page.getByRole('button',{name:'Add Kitchen',exact:true}).click();
+  const image=path.resolve(__dirname,'../HomePage/listing-rondebosch.png');
+  await page.locator('.photo-room input[type=file]').first().setInputFiles(Array(6).fill(image));
+  await page.waitForFunction(()=>document.querySelector('.photo-count').textContent.startsWith('6 photos'),{},{timeout:120000});
+  await page.locator('.photo-item input[type=text]').first().fill('Saved caption');
+  await page.getByRole('button',{name:'Set as listing cover'}).first().click();
+  await page.locator('.photo-item select').last().selectOption({label:'Kitchen 1'});
+  await Promise.all([page.waitForNavigation(),page.getByRole('button',{name:'Save listing',exact:true}).click()]);
+  const card=page.locator('.classic-property-card').filter({hasText:title});await card.waitFor();const id=await card.getAttribute('data-id');
+  const first=(await (await context.request.get(base+'/PropertyGalleryServlet?roomId='+id)).json()).listing;
+  assert.equal(first.details.deposit,'2500.00');assert.equal(first.details.suburb,'Rondebosch');assert.equal(first.rooms.flatMap(r=>r.photos).length,6);assert.equal(first.rooms.flatMap(r=>r.photos).filter(p=>p.isCover).length,1);assert.equal(first.rooms[0].photos[0].caption,'Saved caption');assert.equal(first.rooms[1].photos.length,1);
+  const removed=first.rooms[0].photos[1].url;
+  const mapResponse=await context.request.get(base+'/ListingMapServlet?roomId='+id,{maxRedirects:0});
+  assert.equal(mapResponse.status(),302);assert.equal(new URL(mapResponse.headers().location).searchParams.get('query'),'12 Main Road, Rondebosch, Cape Town');
+  const anonymous=await browser.newContext();assert.equal((await anonymous.request.get('http://localhost:8093'+removed)).status(),404,'pending image hidden from anonymous');
+  assert.equal((await context.request.get('http://localhost:8093'+removed)).status(),200,'owner image available');
+  await card.getByRole('button',{name:'Edit',exact:true}).click();await page.waitForFunction(()=>document.getElementById('listingStatus').textContent==='Editing listing');
+  assert.equal(await page.locator('.photo-item').count(),6);
+  await page.getByRole('button',{name:'Remove photo',exact:true}).nth(1).click();
+  await page.getByRole('button',{name:'Move photo later'}).first().click();
+  await Promise.all([page.waitForNavigation(),page.getByRole('button',{name:'Save listing',exact:true}).click()]);
+  const saved=(await (await context.request.get(base+'/PropertyGalleryServlet?roomId='+id)).json()).listing;
+  assert.equal(saved.rooms.flatMap(r=>r.photos).length,5);assert.equal(saved.rooms[0].photos[1].caption,'Saved caption');assert.equal((await context.request.get('http://localhost:8093'+removed)).status(),404,'removed image not served');
+  const newCard=page.locator('.classic-property-card').filter({hasText:title});await newCard.getByRole('button',{name:'View Photos',exact:true}).click();
+  await page.getByRole('button',{name:'View all 5 photos',exact:true}).waitFor();
+  await page.waitForFunction(()=>Array.from(document.querySelectorAll('.hero-grid img')).every(img=>img.complete&&img.naturalWidth>0));
+  await page.screenshot({path:'test-runtime/listing-live-desktop.png'});
+  await page.getByRole('button',{name:'View all 5 photos',exact:true}).click();await page.setViewportSize({width:390,height:844});await page.screenshot({path:'test-runtime/listing-live-mobile.png'});
+  console.log('PASS: real uploads, create/edit persistence, metadata, photo removal, cover, pending-image privacy and image rendering in isolated MySQL/Tomcat');
+ }finally{await browser.close();}
+})().catch(e=>{console.error(e);process.exitCode=1;});

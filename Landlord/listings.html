@@ -1,10 +1,12 @@
 <!doctype html>
 <html lang="en">
   <head>
+  <script src="../csrf.js"></script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Landlord Property Listings - UniNest</title>
     <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="listing-form.css" />
   </head>
   <body class="landlord-classic">
     <div class="classic-shell">
@@ -51,7 +53,7 @@
       <main class="classic-content">
         <h1 class="classic-title">Landlord Property Listings</h1>
 
-        <section class="classic-section">
+        <section class="classic-section listing-editor">
           <h2>Add New Property</h2>
           <form
             id="propertyForm"
@@ -61,6 +63,9 @@
             enctype="multipart/form-data"
           >
             <input type="hidden" id="propertyRoomId" name="roomId" value="" />
+            <input type="hidden" name="editorVersion" value="2" />
+            <section class="form-section" aria-labelledby="basicsHeading">
+            <h2 id="basicsHeading">1) Property basics</h2>
             <label class="wide-field">
               Title:
               <input type="text" id="propertyTitle" name="propertyTitle" required />
@@ -77,28 +82,53 @@
               ></textarea>
             </label>
 
-            <div class="form-pair">
+            </section>
+            <section class="form-section" aria-labelledby="locationHeading">
+              <h2 id="locationHeading">2) Location</h2>
               <label>
-                Location:
-                <select id="propertyLocation" name="location" required>
-                  <option value="">Select location</option>
-                  <option>Cape Town CBD</option>
-                  <option>Rondebosch</option>
-                  <option>Observatory</option>
-                  <option>Bellville</option>
-                  <option>Claremont</option>
-                  <option>Stellenbosch</option>
-                </select>
+                Property address (public):
+                <input type="text" id="propertyLocation" name="location" maxlength="255" autocomplete="street-address" placeholder="Street number, street, suburb, city, postal code, country" required />
               </label>
 
+              <div class="field-pair">
+                <label>Suburb<input name="suburb" maxlength="100" autocomplete="address-level3" /></label>
+                <label>City<input name="city" maxlength="100" autocomplete="address-level2" /></label>
+              </div>
+              <label>Distance to campus<span class="input-unit suffix"><input name="campusDistance" type="number" min="0" max="99999.99" step="0.01" /><span>km</span></span></label>
+              <div id="listingAddressMap"></div>
+            </section>
+            <section class="form-section" aria-labelledby="pricingHeading">
+              <h2 id="pricingHeading">3) Pricing</h2>
+              <div class="field-pair">
               <label>
-                Price:
-                <span class="classic-price-field">
+                Monthly rent
+                <span class="input-unit">
                   <span>R</span>
                   <input type="number" id="propertyPrice" name="price" min="0" step="50" required />
                 </span>
               </label>
-            </div>
+              <label>Deposit<span class="input-unit"><span>R</span><input name="deposit" type="number" min="0" max="99999999.99" step="0.01" value="0" required /></span></label>
+              </div>
+            </section>
+            <section class="form-section" aria-labelledby="roomsHeading">
+              <h2 id="roomsHeading">4) Rooms &amp; amenities</h2>
+              <div class="field-pair">
+                <label>Rooms<input name="bedrooms" type="number" min="0" max="999" value="1" required /></label>
+                <label>Bathrooms<input name="bathrooms" type="number" min="0" max="999" value="1" required /></label>
+              </div>
+              <div class="amenity-chips" role="group" aria-label="Amenities">
+                <label><input type="checkbox" name="amenities" value="WiFi" checked /><span>WiFi</span></label>
+                <label><input type="checkbox" name="amenities" value="Parking" checked /><span>Parking</span></label>
+                <label><input type="checkbox" name="amenities" value="Furnished" checked /><span>Furnished</span></label>
+                <label><input type="checkbox" name="amenities" value="Security" /><span>Security</span></label>
+                <label><input type="checkbox" name="amenities" value="Laundry" /><span>Laundry</span></label>
+                <label><input type="checkbox" name="amenities" value="Study Desk" /><span>Study desk</span></label>
+                <label><input type="checkbox" name="amenities" value="Kitchen" /><span>Kitchen</span></label>
+                <label><input type="checkbox" name="amenities" value="Water Included" /><span>Water included</span></label>
+              </div>
+            </section>
+            <section class="form-section" aria-labelledby="photosHeading">
+            <h2 id="photosHeading">5) Photos</h2>
 
             <div>
               <span class="field-caption">Upload Photos:</span>
@@ -117,15 +147,17 @@
               <input id="propertyPhotos" name="photos" type="file" accept="image/*" multiple hidden />
             </div>
 
-            <div class="classic-checks">
-              <label><input type="checkbox" name="amenities" value="WiFi" checked /> WiFi</label>
-              <label><input type="checkbox" name="amenities" value="Parking" checked /> Parking</label>
-              <label><input type="checkbox" name="amenities" value="Furnished" checked /> Furnished</label>
-            </div>
+            </section>
+            <section class="form-section" aria-labelledby="contactHeading">
+              <h2 id="contactHeading">6) Contact</h2>
+              <label>Contact name<input name="contactName" maxlength="100" autocomplete="name" /></label>
+              <label>Contact email<input name="contactEmail" type="email" maxlength="254" autocomplete="email" /></label>
+              <label>Contact phone<input name="contactPhone" type="tel" maxlength="40" autocomplete="tel" /></label>
+            </section>
 
-            <div class="classic-buttons">
-              <button type="submit" class="submit-btn" id="propertySubmitButton">Submit Listing</button>
-              <button type="reset" class="btn">Cancel</button>
+            <div class="form-actions">
+              <button type="submit" class="submit-btn" id="propertySubmitButton">Save listing</button>
+              <button type="reset" class="cancel-listing">Cancel</button>
             </div>
 
             <div class="classic-pending" id="listingStatus">Pending Approval</div>
@@ -145,6 +177,8 @@
     </div>
 
     <script src="script.js"></script>
+    <script src="gallery-upload.js"></script>
+    <script src="../maps.js"></script>
     <script src="../portal-identity.js?v=20260822-auth"></script>
     <script src="../system-status.js"></script>
 </body>

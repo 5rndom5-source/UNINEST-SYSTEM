@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script src="../../../csrf.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Logout - UniNest Admin Portal</title>
@@ -125,14 +126,14 @@
     <div class="logout-container">
         <img src="../uninest-logo.png" alt="UniNest" width="64" height="64" style="object-fit: contain; margin-bottom: 14px;">
         <div class="logout-icon" aria-hidden="true"></div>
-        <h1 class="logout-title">Signed out</h1>
+        <h1 class="logout-title">Sign out</h1>
         <p class="logout-message">
-            Your UniNest Admin session has ended.
+            End your session to sign in with another role.
         </p>
 
         <div class="logout-actions">
-            <a href="Login.html" class="btn btn-primary">
-                Sign in again
+            <a href="../../../LogoutServlet" class="btn btn-primary">
+                Sign out and choose a role
             </a>
         </div>
 
@@ -146,35 +147,9 @@
     <script>
         // Clear the Java session when this page is served through NetBeans/Tomcat.
         if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
-            fetch('../../../LogoutServlet?portal=admin', {
-                method: 'POST',
-                credentials: 'same-origin',
-                keepalive: true
-            }).catch(function() {
-                // Keep the page available if the session has already ended.
-            });
+            window.location.replace('../../../LogoutServlet');
         }
 
-        // Auto-redirect to login page after 10 seconds
-        let countdown = 10;
-        const countdownElement = document.createElement('p');
-        countdownElement.style.cssText = 'font-size: 14px; color: var(--gray); margin: 20px 0 0 0;';
-        countdownElement.textContent = `Auto-redirecting to login page in ${countdown} seconds...`;
-
-        document.querySelector('.logout-actions').appendChild(countdownElement);
-
-        const countdownInterval = setInterval(() => {
-            countdown--;
-            countdownElement.textContent = `Auto-redirecting to login page in ${countdown} seconds...`;
-
-            if (countdown <= 0) {
-                clearInterval(countdownInterval);
-                window.location.href = 'Login.html';
-            }
-        }, 1000);
-
-        // Clear only session-scoped page data; browser-saved login details are preserved.
-        sessionStorage.clear();
     </script>
   <script src="../../../system-status.js"></script>
 </body>

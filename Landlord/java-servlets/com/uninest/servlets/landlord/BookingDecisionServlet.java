@@ -43,18 +43,8 @@ public class BookingDecisionServlet extends HttpServlet {
                 return;
             }
 
-            String query = "UPDATE bookings b JOIN rooms r ON b.room_id = r.room_id "
-                    + "SET b.booking_status = ?, b.cancellation_reason = ? "
-                    + "WHERE b.booking_id = ? AND r.landlord_id = ?";
-            PreparedStatement stmt = conn.prepareStatement(query);
-            stmt.setString(1, status);
-            stmt.setString(2, "cancelled".equals(status) ? "Declined by landlord" : null);
-            stmt.setInt(3, Integer.parseInt(requestId));
-            stmt.setInt(4, (Integer) session.getAttribute("landlordId"));
-            int updated = stmt.executeUpdate();
-            stmt.close();
-
-            if (updated > 0) notifyStudent(conn, Integer.parseInt(requestId), status);
+            int updated = com.uninest.utils.BookingTransitions.update(conn,Integer.parseInt(requestId),
+                    (Integer)session.getAttribute("landlordId"),status,"Declined by landlord");
 
             response.sendRedirect("Landlord/booking-requests.html?"
                     + (updated > 0 ? "decision=" + decision : "error=notfound"));

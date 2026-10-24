@@ -56,9 +56,11 @@ public class PaymentsServlet extends HttpServlet {
                 return;
             }
 
+            conn.setAutoCommit(false);
+            try {
             String query = "UPDATE payments SET payment_status = ?, receipt_number = ?, "
                     + "payment_date = CASE WHEN ? = 'completed' THEN NOW() ELSE payment_date END "
-                    + "WHERE payment_id = ?";
+                    + "WHERE payment_id = ? AND payment_status <> 'completed' AND (receipt_number IS NULL OR receipt_number NOT LIKE 'DEMO-V2-%')";
             PreparedStatement stmt = conn.prepareStatement(query);
             stmt.setString(1, status);
             stmt.setString(2, emptyToNull(receiptNumber));
@@ -72,8 +74,11 @@ public class PaymentsServlet extends HttpServlet {
                 notifyParties(conn, Integer.parseInt(paymentId), status);
             }
 
+            conn.commit();
             redirect(request, response, updated > 0 ? "success" : "error",
-                    updated > 0 ? "Payment updated" : "No matching payment was found");
+                    updated > 0 ? "Payment updated" : "Payment was not found or is already completed");
+            } catch (SQLException e) { conn.rollback(); throw e; }
+            finally { conn.setAutoCommit(true); }
         } catch (SQLException e) {
             System.err.println("Database error in PaymentsServlet: " + e.getMessage());
             e.printStackTrace();

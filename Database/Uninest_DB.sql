@@ -10,8 +10,14 @@ CREATE DATABASE IF NOT EXISTS uninest_db
 USE uninest_db;
 
 SET FOREIGN_KEY_CHECKS = 0;
+DROP TABLE IF EXISTS listing_photo_details;
+DROP TABLE IF EXISTS listing_photo_rooms;
+DROP TABLE IF EXISTS listing_photo_uploads;
+DROP TABLE IF EXISTS listing_details;
 
 DROP TABLE IF EXISTS transaction_history;
+DROP TABLE IF EXISTS demo_payment_plans;
+DROP TABLE IF EXISTS password_reset_tokens;
 DROP TABLE IF EXISTS payments;
 DROP TABLE IF EXISTS messages;
 DROP TABLE IF EXISTS notifications;
@@ -43,6 +49,7 @@ CREATE TABLE users (
     full_name VARCHAR(120) NOT NULL,
     email VARCHAR(120) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
+    password_changed_at DATETIME(3) NULL,
     phone VARCHAR(20),
     role ENUM('student', 'landlord', 'admin') NOT NULL,
     status ENUM('active', 'inactive', 'suspended', 'pending_verification') NOT NULL DEFAULT 'active',
@@ -202,6 +209,7 @@ CREATE TABLE rooms (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE room_images (
+    category VARCHAR(32) NOT NULL DEFAULT 'building',
     image_id INT PRIMARY KEY AUTO_INCREMENT,
     room_id INT NOT NULL,
     image_url VARCHAR(255) NOT NULL,
@@ -479,5 +487,61 @@ INSERT INTO amenities (amenity_name, description) VALUES
 ('Water Included', 'Water included in rent');
 
 -- ============================================
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
+    token_hash CHAR(64) PRIMARY KEY,
+    user_id INT NOT NULL,
+    expires_at TIMESTAMP NOT NULL,
+    used_at TIMESTAMP NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_reset_user (user_id),
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+-- Additive demo-only workflow. No live payment credentials or bursary documents.
+CREATE TABLE IF NOT EXISTS demo_payment_plans (
+    booking_id INT PRIMARY KEY,
+    deposit DECIMAL(10,2) NOT NULL,
+    rent DECIMAL(10,2) NOT NULL,
+    funding_source VARCHAR(16) NULL,
+    provider_name VARCHAR(100) NULL,
+    funding_status VARCHAR(16) NOT NULL DEFAULT 'pending',
+    covered_deposit DECIMAL(10,2) NOT NULL DEFAULT 0,
+    covered_rent DECIMAL(10,2) NOT NULL DEFAULT 0,
+    verification_reference VARCHAR(100) NULL,
+    terms_accepted BOOLEAN NOT NULL DEFAULT FALSE,
+    terms_version INT NOT NULL DEFAULT 0,
+    student_status VARCHAR(16) NOT NULL DEFAULT 'pending',
+    sponsor_status VARCHAR(16) NOT NULL DEFAULT 'pending',
+    external_reference VARCHAR(100) NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (booking_id) REFERENCES bookings(booking_id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+-- Additive migration. Existing listings and image URLs are preserved.
+CREATE TABLE IF NOT EXISTS listing_details (
+ room_id INT PRIMARY KEY,
+ suburb VARCHAR(100) NOT NULL DEFAULT '', city VARCHAR(100) NOT NULL DEFAULT '',
+ deposit DECIMAL(10,2) NOT NULL DEFAULT 0, bedrooms INT NOT NULL DEFAULT 1,
+ bathrooms INT NOT NULL DEFAULT 1, campus_distance DECIMAL(7,2) NULL,
+ contact_name VARCHAR(100) NOT NULL DEFAULT '', contact_email VARCHAR(254) NOT NULL DEFAULT '',
+ contact_phone VARCHAR(40) NOT NULL DEFAULT '',
+ FOREIGN KEY (room_id) REFERENCES rooms(room_id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE IF NOT EXISTS listing_photo_rooms (
+ group_id VARCHAR(36) PRIMARY KEY, room_id INT NOT NULL,
+ room_type VARCHAR(30) NOT NULL, label VARCHAR(80) NOT NULL, display_order INT NOT NULL,
+ FOREIGN KEY (room_id) REFERENCES rooms(room_id) ON DELETE CASCADE,
+ INDEX (room_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE IF NOT EXISTS listing_photo_details (
+ image_id INT PRIMARY KEY, group_id VARCHAR(36) NOT NULL, caption VARCHAR(80) NOT NULL DEFAULT '',
+ FOREIGN KEY (image_id) REFERENCES room_images(image_id) ON DELETE CASCADE,
+ FOREIGN KEY (group_id) REFERENCES listing_photo_rooms(group_id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE IF NOT EXISTS listing_photo_uploads (
+ token VARCHAR(36) PRIMARY KEY, landlord_id INT NOT NULL, image_data MEDIUMBLOB NOT NULL,
+ created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ FOREIGN KEY (landlord_id) REFERENCES landlords(landlord_id) ON DELETE CASCADE,
+ INDEX (created_at), INDEX (landlord_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 -- END OF SCHEMA
 -- ============================================

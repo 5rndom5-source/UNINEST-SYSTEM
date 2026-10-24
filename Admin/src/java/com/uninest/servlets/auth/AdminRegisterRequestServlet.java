@@ -14,8 +14,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 /**
- * AdminRegisterRequestServlet - Stores an admin access request as notifications
- * for existing active admins.
+ * Creates a pending admin account and notifies existing active admins.
  * Path: /AdminRegisterRequestServlet
  */
 @WebServlet("/AdminRegisterRequestServlet")
@@ -28,11 +27,19 @@ public class AdminRegisterRequestServlet extends HttpServlet {
         String fullName = request.getParameter("fullName");
         String email = request.getParameter("email");
         String reason = request.getParameter("reason");
+        String password = request.getParameter("password");
+        String confirmation = request.getParameter("confirmPassword");
 
         if (!ValidationUtil.isRequired(fullName)
                 || !ValidationUtil.isValidEmail(email)
-                || !ValidationUtil.isRequired(reason)) {
+                || !ValidationUtil.isRequired(reason)
+                || fullName.trim().length() > 100 || email.trim().length() > 100 || reason.trim().length() > 1000) {
             redirect(response, "error", "Name, email, and reason are required");
+            return;
+        }
+        if (password == null || !password.equals(confirmation)
+                || !com.uninest.utils.PasswordUtil.isStrongPassword(password)) {
+            redirect(response, "error", "Passwords must match and include 8+ characters, uppercase, lowercase, a number and a symbol");
             return;
         }
 
@@ -43,32 +50,18 @@ public class AdminRegisterRequestServlet extends HttpServlet {
                 return;
             }
 
-            String message = fullName.trim()
-                    + " requested admin access using "
-                    + email.trim()
-                    + ". Reason: "
-                    + ValidationUtil.sanitizeXSS(reason.trim());
+            com.uninest.utils.AdminRegistration.createPending(conn, fullName.trim(), email.trim(), password, reason.trim());
 
-            String query = "INSERT INTO notifications "
-                    + "(user_id, title, message, notification_type, action_url) "
-                    + "SELECT user_id, 'Admin access request', ?, 'system_alert', 'Register.html' "
-                    + "FROM users WHERE role = 'admin' AND status = 'active'";
-
-            PreparedStatement stmt = conn.prepareStatement(query);
-            stmt.setString(1, message);
-            stmt.executeUpdate();
-            stmt.close();
-
-            redirect(response, "success", "Admin access request submitted");
+            redirect(response, "success", "Admin account created pending approval. You cannot sign in until an authorised administrator approves access.");
         } catch (SQLException e) {
             System.err.println("Database error in AdminRegisterRequestServlet: " + e.getMessage());
             e.printStackTrace();
-            redirect(response, "error", "Could not submit access request");
+            redirect(response, "error", "Could not complete registration. The email may already exist; contact the system owner if you already submitted a request.");
         }
     }
 
     private void redirect(HttpServletResponse response, String key, String message) throws IOException {
-        response.sendRedirect("Register.html?"
+        response.sendRedirect("Admin/web/jsp/Register.html?"
                 + key
                 + "="
                 + java.net.URLEncoder.encode(message, "UTF-8"));

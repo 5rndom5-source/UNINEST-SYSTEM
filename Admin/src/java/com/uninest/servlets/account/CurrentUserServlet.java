@@ -79,6 +79,7 @@ public class CurrentUserServlet extends HttpServlet {
                            String name, String email, String phone, String role) {
         writer.print("{\"authenticated\":" + authenticated
                 + ",\"userId\":" + userId
+                + ",\"demoPayments\":" + "true".equalsIgnoreCase(System.getenv("UNINEST_DEMO_PAYMENTS"))
                 + ",\"fullName\":\"" + escape(name) + "\""
                 + ",\"email\":\"" + escape(email) + "\""
                 + ",\"phone\":\"" + escape(phone) + "\""

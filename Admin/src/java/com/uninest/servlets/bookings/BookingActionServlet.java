@@ -52,20 +52,10 @@ public class BookingActionServlet extends HttpServlet {
                 return;
             }
 
-            String query = "UPDATE bookings SET booking_status = ?, cancellation_reason = ? WHERE booking_id = ?";
-            PreparedStatement stmt = conn.prepareStatement(query);
-            stmt.setString(1, status);
-            stmt.setString(2, "cancelled".equals(status) ? reason : null);
-            stmt.setInt(3, Integer.parseInt(bookingId));
-            int updated = stmt.executeUpdate();
-            stmt.close();
-
-            if (updated > 0) {
-                notifyStudent(conn, Integer.parseInt(bookingId), status, reason);
-            }
+            int updated = com.uninest.utils.BookingTransitions.update(conn,Integer.parseInt(bookingId),null,status,reason);
 
             redirect(request, response, updated > 0 ? "success" : "error",
-                    updated > 0 ? "Booking updated" : "No matching booking was found");
+                    updated > 0 ? "Booking updated" : "Booking transition is not allowed or room capacity is unavailable");
         } catch (SQLException e) {
             System.err.println("Database error in BookingActionServlet: " + e.getMessage());
             e.printStackTrace();

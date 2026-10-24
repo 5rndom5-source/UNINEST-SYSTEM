@@ -64,13 +64,7 @@ public class LoginServlet extends HttpServlet {
                         String storedPassword = rs.getString("password");
                         String userStatus = rs.getString("status");
 
-                        if ("suspended".equalsIgnoreCase(userStatus)
-                                || "inactive".equalsIgnoreCase(userStatus)) {
-                            redirectWithError(response, "This admin account is not active");
-                            return;
-                        }
-
-                        if (!PasswordUtil.verifyPassword(password, storedPassword)) {
+                        if (!PasswordUtil.verifyPassword(password, storedPassword) || !"active".equalsIgnoreCase(userStatus)) {
                             redirectWithError(response, "Invalid email or password");
                             return;
                         }

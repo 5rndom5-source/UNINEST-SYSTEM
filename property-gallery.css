@@ -1,0 +1,52 @@
+.property-tour, .photo-fullscreen { box-sizing:border-box; padding:0; border:0; width:100vw; max-width:none; height:100dvh; max-height:none; margin:0; background:#fff; color:#20352c; overflow:auto; font-family:Arial,sans-serif; }
+.property-tour [hidden], .photo-fullscreen [hidden] { display:none !important; }
+.property-tour button,.photo-fullscreen button { cursor:pointer; font:inherit; border:1px solid #bcc8c1; border-radius:4px; background:#fff; color:inherit; min-height:44px; }
+.property-tour :focus-visible,.photo-fullscreen :focus-visible { outline:3px solid #2680b4; outline-offset:3px; }
+.tour-header { position:sticky; top:0; z-index:3; min-height:64px; padding:8px 24px; box-sizing:border-box; background:#fff; border-bottom:1px solid #dbe2de; display:flex; align-items:center; gap:16px; }
+.tour-header h2 { flex:1; margin:0; font-size:20px; overflow-wrap:anywhere; letter-spacing:0; }
+.tour-header button { min-width:44px; font-size:22px; flex-shrink:0; }
+.tour-content { max-width:1120px; margin:0 auto; padding:24px; }
+.photo-hero { position:relative; }
+.hero-grid { display:grid; grid-template-columns:2fr 1fr 1fr; grid-template-rows:1fr 1fr; gap:8px; aspect-ratio:2.2; }
+.hero-grid button { overflow:hidden; padding:0; border:0; background:#e5e8e6; min-width:0; min-height:0; }
+.hero-grid button:first-child { grid-row:span 2; }
+.hero-grid img { width:100%; height:100%; object-fit:cover; display:block; }
+.photo-hero .view-all { position:absolute; right:16px; bottom:16px; padding:10px 16px; box-shadow:0 1px 6px #0003; }
+.gallery-details { padding:24px 0; line-height:1.6; overflow-wrap:anywhere; }
+.gallery-details h3 { font-size:18px; }
+.tour-chips { position:sticky; top:var(--tour-header-height,64px); z-index:2; display:flex; gap:8px; overflow-x:auto; padding:12px 0; background:white; border-bottom:1px solid #dbe2de; }
+.tour-chips button { display:flex; align-items:center; gap:8px; flex-shrink:0; padding:6px 10px; }
+.tour-chips img { width:40px; height:40px; object-fit:cover; background:#e5e8e6; }
+.tour-chips [aria-current=true] { border-color:#267549; background:#e7f3ec; }
+.tour-room { padding:24px 0; scroll-margin-top:calc(var(--tour-header-height,64px) + 92px); }
+.tour-room h3 { font-size:22px; margin:0 0 16px; }
+.tour-photo-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; }
+.tour-photo-grid figure { margin:0; min-width:0; }
+.tour-photo-grid button { width:100%; aspect-ratio:1; padding:0; display:block; overflow:hidden; background:#e5e8e6; border:0; }
+.tour-photo-grid img { display:block; width:100%; height:100%; object-fit:cover; }
+.tour-photo-grid figcaption { padding-top:8px; font-size:14px; overflow-wrap:anywhere; }
+.photo-fullscreen { background:#141817; color:#fff; overflow:hidden; }
+.photo-fullscreen[open] { display:grid; grid-template-rows:auto minmax(0,1fr) auto auto; }
+.photo-fullscreen header { display:flex; align-items:center; gap:16px; padding:12px 24px; }
+.photo-fullscreen h2 { flex:1; font-size:18px; margin:0; overflow-wrap:anywhere; }
+.photo-fullscreen button { background:#28312d; color:white; border-color:#66736c; min-width:44px; }
+.photo-fullscreen header button { font-size:24px; }
+.photo-stage { position:relative; min-height:0; background:#242a27; touch-action:pan-y; }
+.photo-stage > img { width:100%; height:100%; object-fit:contain; }
+.photo-stage button { position:absolute; top:calc(50% - 22px); font-size:24px; }
+.photo-previous { left:16px; }.photo-next { right:16px; }
+.photo-fullscreen button:disabled { opacity:.35; cursor:default; }
+.viewer-caption { margin:0; padding:12px 24px; text-align:center; min-height:20px; overflow-wrap:anywhere; }
+.photo-strip { display:flex; gap:8px; overflow-x:auto; padding:8px 24px 16px; }
+.photo-strip button { width:72px; height:72px; flex-shrink:0; padding:3px; }
+.photo-strip img { width:100%; height:100%; object-fit:cover; }
+.photo-strip [aria-current=true] { border:3px solid #80d6a0; }
+.gallery-error { color:#b42318; }
+.gallery-loading { background:#e5e8e6; min-height:240px; padding:24px; }
+@media(max-width:599px) {
+ .tour-header { padding:8px 12px; gap:8px; }.tour-header h2 { font-size:17px; }
+ .tour-content { padding:16px; }.hero-grid { display:flex; aspect-ratio:1; overflow-x:auto; scroll-snap-type:x mandatory; }
+ .hero-grid button { flex:0 0 100%; scroll-snap-align:start; }.photo-hero .view-all { right:8px; bottom:16px; }
+ .tour-photo-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }.tour-room h3 { font-size:20px; }
+ .photo-fullscreen header { padding:12px; }.photo-strip { padding:8px 12px 16px; }.photo-strip button { width:56px; height:56px; }
+}

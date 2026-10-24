@@ -23,7 +23,7 @@ public class DatabaseConnection {
     private static final String DB_DRIVER = "com.mysql.cj.jdbc.Driver";
 
     private static DatabaseConnection instance;
-    private Connection connection;
+    private final ThreadLocal<Connection> connections = new ThreadLocal<>();
 
     private static String environment(String name, String fallback) {
         String value = System.getenv(name);
@@ -46,27 +46,32 @@ public class DatabaseConnection {
     }
 
     public synchronized Connection getConnection() {
+        Connection connection = connections.get();
         try {
-            if (connection == null || connection.isClosed()) {
+            if (connection == null || connection.isClosed() || !connection.isValid(2)) {
+                if (connection != null) connection.close();
                 connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
-                System.out.println("Database connection established");
+                connections.set(connection);
             }
         } catch (SQLException e) {
             System.err.println("Database connection failed: " + e.getMessage());
+            connections.remove();
+            return null;
         }
         return connection;
     }
 
     public synchronized void closeConnection() {
+        Connection connection = connections.get();
         try {
             if (connection != null && !connection.isClosed()) {
                 connection.close();
-                connection = null;
                 System.out.println("Database connection closed");
             }
         } catch (SQLException e) {
             System.err.println("Error closing database connection: " + e.getMessage());
         }
+        connections.remove();
     }
 
     public synchronized boolean isAvailable() {

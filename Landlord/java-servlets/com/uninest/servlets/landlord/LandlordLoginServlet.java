@@ -76,13 +76,15 @@ public class LandlordLoginServlet extends HttpServlet {
             return false;
         }
 
+        int landlordId = rs.getInt("landlord_id");
+        if (rs.wasNull()) {
+            stmt.close();
+            return false;
+        }
         HttpSession session = createFreshSession(request);
         session.setAttribute("userId", rs.getInt("user_id"));
         session.setAttribute("fullName", rs.getString("full_name"));
-        int landlordId = rs.getInt("landlord_id");
-        if (!rs.wasNull()) {
-            session.setAttribute("landlordId", landlordId);
-        }
+        session.setAttribute("landlordId", landlordId);
         session.setAttribute("landlordName", rs.getString("full_name"));
         session.setAttribute("landlordEmail", email);
         session.setAttribute("email", email);

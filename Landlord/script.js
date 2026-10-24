@@ -98,6 +98,17 @@ const makeListingCard = (listing) => {
 
   const actions = document.createElement("div");
   actions.className = "classic-card-actions";
+  const gallery = document.createElement("button");
+  gallery.type = "button"; gallery.className = "btn";
+  gallery.dataset.gallery = listing.id; gallery.textContent = "View Photos";
+  actions.append(gallery);
+  const map = document.createElement("a");
+  map.className = "btn"; map.textContent = "Google Maps";
+  map.href = card.dataset.source === "database"
+    ? servletUrl("/ListingMapServlet") + "?roomId=" + encodeURIComponent(listing.id)
+    : "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(listing.location);
+  map.target = "_blank"; map.rel = "noopener noreferrer";
+  actions.append(map);
 
   if (card.dataset.source === "database") {
     const note = document.createElement("span");
@@ -243,7 +254,7 @@ const handleListingForm = () => {
   form.addEventListener("reset", () => {
     form.removeAttribute("data-editing-id");
     document.getElementById("propertyRoomId").value = "";
-    document.getElementById("propertySubmitButton").textContent = "Submit Listing";
+    document.getElementById("propertySubmitButton").textContent = "Save listing";
     if (uploadName) uploadName.textContent = "No image selected";
     if (uploadPreview) uploadPreview.classList.add("hidden");
     if (status) status.textContent = "Pending Approval";
@@ -330,7 +341,8 @@ const handleListingForm = () => {
       document.getElementById("propertyPrice").value = listing.price;
       form.setAttribute("data-editing-id", listing.id);
       document.getElementById("propertyRoomId").value = database ? listing.id : "";
-      document.getElementById("propertySubmitButton").textContent = "Save Changes";
+      document.getElementById("propertySubmitButton").textContent = "Save listing";
+      form.dispatchEvent(new CustomEvent("listing:edit", { detail: listing }));
       if (status) status.textContent = "Editing Listing - Pending Approval";
       form.scrollIntoView({ behavior: "smooth", block: "start" });
     }

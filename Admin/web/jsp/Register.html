@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script src="../../../csrf.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Access Request - UniNest</title>
@@ -67,7 +68,7 @@
     <main class="access-card">
         <img src="../uninest-logo.png" alt="UniNest" width="64" height="64" style="object-fit: contain; margin-bottom: 14px;">
         <h1 class="brand-title">Admin Access Request</h1>
-        <p>Request access to the UniNest administration portal.</p>
+        <p>Create your team account from any device. An existing administrator must approve it under Admin access requests before you can sign in.</p>
 
         <form method="post" action="../../../AdminRegisterRequestServlet">
             <div class="form-row">
@@ -86,6 +87,16 @@
                 <textarea class="form-control" name="reason" required placeholder="Briefly explain why this admin account is needed."></textarea>
             </div>
 
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="adminPassword">Password</label>
+                    <input id="adminPassword" class="form-control" type="password" name="password" minlength="8" required autocomplete="new-password">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="adminConfirmPassword">Confirm password</label>
+                    <input id="adminConfirmPassword" class="form-control" type="password" name="confirmPassword" minlength="8" required autocomplete="new-password">
+                </div>
+            </div>
             <div class="actions">
                 <a href="Login.html" style="color: var(--secondary-dark); font-weight: 800; text-decoration: none;">Back to login</a>
                 <button type="submit" class="btn btn-primary">Submit request</button>
@@ -96,8 +107,14 @@
     </main>
 
     <script>
-        if (new URLSearchParams(window.location.search).has('success')) {
-            document.getElementById('requestMessage').style.display = 'block';
+        const params = new URLSearchParams(window.location.search);
+        const message = params.get('error') || params.get('success');
+        if (message) {
+            const box = document.getElementById('requestMessage');
+            box.textContent = message;
+            box.setAttribute('role', 'alert');
+            box.style.display = 'block';
+            if (params.has('error')) box.style.color = '#b42318';
         }
     </script>
   <script src="../../../system-status.js"></script>
