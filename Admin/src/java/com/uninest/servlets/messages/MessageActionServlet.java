@@ -2,6 +2,7 @@ package com.uninest.servlets.messages;
 
 import com.uninest.utils.DatabaseConnection;
 import com.uninest.utils.MessageAttachmentSupport;
+import com.uninest.utils.MessagePermissions;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -56,6 +57,10 @@ public class MessageActionServlet extends HttpServlet {
             }
 
             if ("read".equals(action)) {
+                if (!MessagePermissions.canMarkRead(userId, role, record.recipientId, record.recipientRole)) {
+                    send(response, HttpServletResponse.SC_FORBIDDEN, "Only the recipient can mark this message as read");
+                    return;
+                }
                 markRead(conn, messageId);
                 send(response, HttpServletResponse.SC_OK, "Message marked as read");
                 return;

@@ -2,6 +2,12 @@
   "use strict";
   if (window.uninestCsrf) return;
   var base = new URL(".", document.currentScript.src);
+  var experienceStyle = document.createElement('link');
+  experienceStyle.rel = 'stylesheet'; experienceStyle.href = new URL('experience.css', base);
+  document.head.appendChild(experienceStyle);
+  var experienceScript = document.createElement('script');
+  experienceScript.src = new URL('experience.js', base);
+  document.head.appendChild(experienceScript);
   var rawFetch = window.fetch.bind(window);
   var pending = null;
   var allowedForms = new WeakSet();

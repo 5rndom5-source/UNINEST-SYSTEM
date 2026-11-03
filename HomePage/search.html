@@ -15,7 +15,7 @@
     />
   </head>
 
-  <body>
+  <body class="listing-search-page">
     <header class="navbar">
       <div class="logo">
         <img
@@ -45,18 +45,21 @@
       </div>
     </header>
 
-    <section class="top-search">
+    <section class="top-search" aria-label="Accommodation search">
       <div class="search-input">
+        <label for="publicSearchInput">Search accommodation</label>
         <i class="fa-solid fa-magnifying-glass"></i>
 
         <input
           id="publicSearchInput"
           type="text"
           placeholder="Search by location, street or accommodation type"
+          aria-label="Search by location, street or accommodation type"
         />
       </div>
 
       <div class="move-date">
+        <label for="publicSort">Sort by</label>
         <i class="fa-solid fa-calendar-days"></i>
 
         <select id="publicSort" aria-label="Sort listings">
@@ -75,14 +78,15 @@
     <section class="search-container">
       <!-- FILTERS -->
       <aside class="sidebar">
+        <details class="search-filter-panel" open>
+        <summary>Filters</summary>
         <div class="filter-header">
-          <h2><i class="fa-solid fa-sliders"></i> Filters</h2>
 
           <button class="filter-clear" id="clearFilters" type="button">Clear All</button>
         </div>
 
         <div class="filter-group">
-          <label>Location</label>
+          <label for="locationFilter">Location</label>
 
           <select id="locationFilter">
             <option value="">All areas</option>
@@ -93,9 +97,11 @@
           <label>Price Range (per month)</label>
 
           <div class="price-inputs">
-            <input id="minPriceFilter" type="number" min="0" step="100" placeholder="Min R0" />
-            <span>-</span>
-            <input id="maxPriceFilter" type="number" min="0" step="100" placeholder="Max R8,000" />
+            <div><label for="minPriceFilter">Minimum rent</label>
+            <input id="minPriceFilter" aria-label="Minimum monthly rent in rand" type="number" min="0" step="100" placeholder="Min R0" />
+            </div><div><label for="maxPriceFilter">Maximum rent</label>
+            <input id="maxPriceFilter" aria-label="Maximum monthly rent in rand" type="number" min="0" step="100" placeholder="Max R8,000" />
+            </div>
           </div>
         </div>
 
@@ -126,16 +132,17 @@
         <button class="apply-btn" id="applyFilters" type="button">Apply Filters</button>
 
         <button class="reset-btn" id="resetFilters" type="button">Reset Filters</button>
+        </details>
       </aside>
 
       <section class="results">
         <div class="results-top">
-          <h2>Search Results</h2>
+          <h1>Find accommodation</h1>
 
           <div class="sort-box">
             Sort by:
 
-            <select id="resultsSort">
+            <select id="resultsSort" aria-label="Sort results">
               <option value="recent">Most recent</option>
               <option value="price_asc">Price: low to high</option>
               <option value="price_desc">Price: high to low</option>
@@ -196,25 +203,10 @@
         </div>
 
         <div class="footer-section">
-          <h3>Subscribe to Updates</h3>
-
-          <div class="subscribe-box">
-            <input type="email" placeholder="Enter your email" />
-
-            <button>
-              <i class="fa-solid fa-paper-plane"></i>
-            </button>
-          </div>
-
-          <p>
-            <i class="fa-solid fa-check"></i>
-            Get new listings and updates
-          </p>
-
-          <p>
-            <i class="fa-solid fa-check"></i>
-            No spam, unsubscribe anytime
-          </p>
+          <h3>Your accommodation search</h3>
+          <a href="../createAccount/index.html">Create an account</a>
+          <a href="../UserDashboard/saved.html">View saved listings</a>
+          <a href="contact.html">Contact UniNest</a>
         </div>
       </div>
 

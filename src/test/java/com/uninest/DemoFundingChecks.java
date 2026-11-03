@@ -79,6 +79,26 @@ public final class DemoFundingChecks {
         check("1".equals(scalar(c,"SELECT COUNT(*) FROM transaction_history WHERE reference_number='DEMO-V2-4-PROVIDER'")),"simultaneous provider receipts create one credit");
         check("1500.00".equals(scalar(c,"SELECT amount FROM payments WHERE receipt_number='DEMO-V2-4-PROVIDER'")),"bursary covers both charges");
         check(c.getAutoCommit(),"transaction state restored");
+        check("1".equals(scalar(c,"SELECT COUNT(*) FROM tenancy_records WHERE booking_id=1")),"confirmation and payment share one tenancy");
+        check(com.uninest.utils.BookingTransitions.cancelByStudent(c,1,999,"Not mine")==0,"another student cannot cancel paid booking");
+        check(com.uninest.utils.BookingTransitions.cancelByStudent(c,1,1,"Demo cancellation")==1,"owner cancels booking");
+        check("terminated".equals(scalar(c,"SELECT tenancy_status FROM tenancy_records WHERE booking_id=1")),"cancelled booking terminates tenancy");
+        check("1500.00".equals(scalar(c,"SELECT amount FROM payments WHERE receipt_number='DEMO-V2-1-STUDENT' AND payment_status='completed'")),"cancellation preserves receipt without inventing refund");
+        rejected(()->command(c,1,"student",1,"pay","outcome","completed"),"cancelled booking rejects further payment");
+        check(com.uninest.utils.BookingTransitions.cancelByStudent(c,1,1,"Again")==0,"duplicate cancellation rejected");
+        try(Statement q=c.createStatement()) { q.executeUpdate("CREATE TRIGGER fail_booking_notice BEFORE INSERT ON notifications FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Injected notification failure'"); }
+        boolean rolledBack=false;
+        try {com.uninest.utils.BookingTransitions.update(c,3,1,"completed",null);}
+        catch(SQLException expected){rolledBack=true;}
+        finally {try(Statement q=c.createStatement()){q.executeUpdate("DROP TRIGGER fail_booking_notice");}}
+        check(rolledBack && "confirmed".equals(scalar(c,"SELECT booking_status FROM bookings WHERE booking_id=3")),"real SQL failure rolls back booking transition");
+        check("active".equals(scalar(c,"SELECT tenancy_status FROM tenancy_records WHERE booking_id=3")),"failed completion leaves tenancy active");
+        check(com.uninest.utils.BookingTransitions.update(c,3,1,"completed",null)==1,"landlord completes booking");
+        check("completed".equals(scalar(c,"SELECT tenancy_status FROM tenancy_records WHERE booking_id=3")),"completion closes tenancy");
+        rejected(()->command(c,2,"landlord",3,"external","reference","LATE"),"completed booking rejects provider receipt");
+        try(Statement q=c.createStatement()){q.executeUpdate("UPDATE rooms SET availability_status='inactive' WHERE room_id=1");}
+        check(com.uninest.utils.BookingTransitions.update(c,2,1,"confirmed",null)==0,"withdrawn listing cannot be confirmed");
+        try(Statement q=c.createStatement()){q.executeUpdate("UPDATE rooms SET availability_status='available' WHERE room_id=1");}
         System.out.println("PASS: "+checks+" demo funding checks");
     }
 }

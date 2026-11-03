@@ -46,6 +46,7 @@ desktop.ini
 Admin_Testing_Document_files/
 
 # Local coursework and generated handover documents
+/submission/
 /Correction Guide.docx
 /UniNest_Team_Correction_Guide.docx
 /Database/build-team-correction-guide.ps1

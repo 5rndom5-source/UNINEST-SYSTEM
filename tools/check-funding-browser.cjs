@@ -15,6 +15,27 @@ const base = 'http://localhost:8092/uninest';
     }
     const landlord = await login('landlord', 'landlord@example.invalid', 'Testing!2026');
     const student = await login('student', 'student@example.invalid', 'Changed!2026');
+    async function post(page, endpoint, form) {
+      const token = (await (await page.request.get(base + '/CsrfTokenServlet')).json()).token;
+      return page.request.post(base + endpoint, { form, headers: { 'X-CSRF-Token': token } });
+    }
+    // Real HTTP creation exercises the duplicate-request lock before landlord approval.
+    const first = { action: 'create', roomId: '70', checkIn: '2035-01-01', checkOut: '2035-02-01' };
+    const duplicateRequests = await Promise.all([
+      post(student, '/StudentBookingServlet', first), post(student, '/StudentBookingServlet', first)
+    ]);
+    assert.deepEqual(duplicateRequests.map(r => r.status()).sort(), [200, 409]);
+    assert.equal((await post(student, '/StudentBookingServlet', { ...first, roomId: '80', checkIn: '2035-02-01', checkOut: '2035-03-01' })).status(), 200);
+    const bookings = (await (await student.request.get(base + '/StudentBookingServlet')).json()).bookings;
+    const selfBooking = bookings.find(b => b.listingTitle === 'Journey self-funded').id;
+    const fundedBooking = bookings.find(b => b.listingTitle === 'Journey funded').id;
+    assert.equal(selfBooking, 7, 'fresh disposable fixture expected');
+    assert.equal(fundedBooking, 8, 'fresh disposable fixture expected');
+    for (const bookingId of ['7', '8']) {
+      const result = await post(landlord, '/BookingDecisionServlet', { bookingId, decision: 'approve' });
+      assert.ok(!result.url().includes('error='), result.url());
+    }
+    await landlord.reload();
     async function submit(page, booking, action, fields) {
       const form = page.locator(`form:has(input[name="bookingId"][value="${booking}"]):has(input[name="action"][value="${action}"])`);
       for (const [key, value] of Object.entries(fields)) {
@@ -53,6 +74,13 @@ const base = 'http://localhost:8092/uninest';
       assert.ok(await student.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
       await student.screenshot({ path: `test-runtime/funding-${width}.png`, fullPage: true });
     }
-    console.log('PASS: two-account self-funded decline/retry and NSFAS split-payment browser journeys; desktop/mobile layout');
+    assert.equal((await post(student, '/StudentBookingServlet', { action: 'cancel', bookingId: '7', reason: 'Demo cancellation' })).status(), 200);
+    await student.reload();
+    const cancelled = student.locator('section').filter({ hasText: 'Booking #7' });
+    assert.match(await cancelled.innerText(), /Booking cancelled/);
+    assert.match(await cancelled.innerText(), /DEMO-V2-7-STUDENT/);
+    assert.equal(await cancelled.locator('form').count(), 0);
+    assert.equal((await post(student, '/StudentBookingServlet', { ...first, action: 'unexpected' })).status(), 400);
+    console.log('PASS: concurrent booking creation, landlord approval, self-funded decline/retry, NSFAS split payment, cancellation with retained receipt, desktop/mobile layout');
   } finally { await browser.close(); }
 })().catch(error => { console.error(error);process.exitCode = 1; });

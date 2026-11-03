@@ -18,6 +18,7 @@ public class DatabaseStatusServlet extends HttpServlet {
             throws ServletException, IOException {
 
         boolean connected = DatabaseConnection.getInstance().isAvailable();
+        response.setStatus(connected ? 200 : 503);
 
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");

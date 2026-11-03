@@ -2,6 +2,7 @@ package com.uninest.servlets.landlord;
 
 import com.uninest.utils.DatabaseConnection;
 import com.uninest.utils.MessageAttachmentSupport;
+import com.uninest.utils.MessageDelivery;
 import com.uninest.utils.ValidationUtil;
 
 import javax.servlet.ServletException;
@@ -111,6 +112,7 @@ public class ContactLandlordServlet extends HttpServlet {
                 return;
             }
 
+            try (MessageDelivery delivery = new MessageDelivery(conn)) {
             String body = "Subject: " + ValidationUtil.sanitizeXSS(subject)
                     + "\n" + ValidationUtil.sanitizeXSS(message);
             int messageId;
@@ -130,7 +132,7 @@ public class ContactLandlordServlet extends HttpServlet {
             String storedAttachment = null;
             try {
                 Part attachment = multipart(request) ? request.getPart("attachment") : null;
-                storedAttachment = MessageAttachmentSupport.save(attachment, messageId);
+                storedAttachment = delivery.saveAttachment(attachment, messageId);
                 if (storedAttachment != null) updateAttachment(conn, messageId, storedAttachment);
             } catch (IOException | IllegalArgumentException e) {
                 deleteMessage(conn, messageId);
@@ -148,6 +150,8 @@ public class ContactLandlordServlet extends HttpServlet {
                 stmt.executeUpdate();
             }
 
+            delivery.commit();
+            }
             redirect(response, "success", "Message sent");
         } catch (SQLException e) {
             getServletContext().log("Unable to send landlord support message", e);

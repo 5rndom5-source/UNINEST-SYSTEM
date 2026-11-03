@@ -8,7 +8,7 @@ if(Get-NetTCPConnection -LocalPort 8092 -State Listen -ErrorAction SilentlyConti
 $uri=[Uri]($env:UNINEST_DB_URL -replace '^jdbc:','')
 $env:MYSQL_PWD=$env:UNINEST_DB_PASSWORD
 try {
-    "INSERT INTO bookings(booking_id,student_id,room_id,check_in,check_out,booking_status) VALUES(7,1,1,'2035-01-01','2035-02-01','confirmed'),(8,1,1,'2035-02-01','2035-03-01','confirmed');" | & 'C:\Program Files\MySQL\MySQL Server 8.0\bin\mysql.exe' "--host=$($uri.Host)" "--port=$($uri.Port)" "--user=$env:UNINEST_DB_USER" "--database=$DatabaseName"
+    "INSERT INTO rooms(room_id,landlord_id,room_number,room_type,location,price,capacity,availability_status,approval_status) VALUES(70,1,'Journey self-funded','single_room','Test',1000,1,'available','approved'),(80,1,'Journey funded','single_room','Test',1000,1,'available','approved');" | & 'C:\Program Files\MySQL\MySQL Server 8.0\bin\mysql.exe' "--host=$($uri.Host)" "--port=$($uri.Port)" "--user=$env:UNINEST_DB_USER" "--database=$DatabaseName"
     if($LASTEXITCODE -ne 0){throw 'Test fixtures failed'}
 } finally {Remove-Item Env:MYSQL_PWD}
 foreach($folder in @('conf','webapps','logs','temp','work')){New-Item -ItemType Directory -Force -Path (Join-Path $preview $folder)|Out-Null}

@@ -2,14 +2,15 @@
   const CHECK_INTERVAL_MS = 30000;
   const PORTAL_PATH_PATTERN = /\/(Admin|Landlord|UserDashboard|createAccount)\//;
   const STYLE_ID = "uninest-system-status-style";
+  const root = new URL('.', document.currentScript.src).pathname.replace(/\/$/, '');
+  let checking = false;
 
   const contextPath = () => {
     if (window.location.protocol === "file:") {
       return "http://localhost:8080/uninest";
     }
 
-    const firstSegment = window.location.pathname.match(/^\/[^/]+/);
-    return firstSegment ? firstSegment[0] : "";
+    return root;
   };
 
   const shouldShowStatus = () => {
@@ -133,13 +134,19 @@
   };
 
   const checkStatus = async () => {
+    if (document.hidden || checking) return;
+    checking = true;
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 10000);
     const chip = ensureChip();
     try {
       const response = await fetch(`${contextPath()}/DatabaseStatusServlet`, {
+        signal: controller.signal,
         cache: "no-store",
         headers: { Accept: "application/json" }
       });
       const data = await response.json();
+      if (!response.ok) throw new Error('Data services unavailable');
       const status = {
         connected: Boolean(data.connected),
         status: data.connected ? "online" : "offline",
@@ -157,11 +164,16 @@
       };
       updateDocumentState(status);
       setChipState(chip, status);
+    } finally {
+      clearTimeout(timeout);
+      checking = false;
     }
   };
 
   document.addEventListener("DOMContentLoaded", () => {
     checkStatus();
     window.setInterval(checkStatus, CHECK_INTERVAL_MS);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) checkStatus(); });
+    window.addEventListener('online', checkStatus);
   });
 })();

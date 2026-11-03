@@ -14,3 +14,11 @@ if ($LASTEXITCODE -ne 0) { throw 'Booking capacity checks failed' }
 if ($LASTEXITCODE -ne 0) { throw 'Login throttle checks failed' }
 & "$env:JAVA_HOME\bin\java.exe" -ea -cp $classpath com.uninest.CsrfChecks
 if ($LASTEXITCODE -ne 0) { throw 'CSRF checks failed' }
+& "$env:JAVA_HOME\bin\java.exe" -ea -cp $classpath com.uninest.MessageDeliveryChecks
+if ($LASTEXITCODE -ne 0) { throw 'Messaging checks failed' }
+$originalUploads = $env:UNINEST_UPLOAD_DIR
+try {
+    $env:UNINEST_UPLOAD_DIR = Join-Path $root 'test-runtime\attachment-checks'
+    & "$env:JAVA_HOME\bin\java.exe" -ea -cp $classpath com.uninest.AttachmentChecks
+    if ($LASTEXITCODE -ne 0) { throw 'Attachment checks failed' }
+} finally { $env:UNINEST_UPLOAD_DIR = $originalUploads }

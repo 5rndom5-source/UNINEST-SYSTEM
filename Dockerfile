@@ -7,7 +7,7 @@ COPY HomePage HomePage
 COPY UserDashboard UserDashboard
 COPY createAccount createAccount
 COPY META-INF META-INF
-COPY index.html style.css portal-identity.js csrf.js property-gallery.js property-gallery.css maps.js maps.css system-status.js ./
+COPY index.html style.css portal-identity.js csrf.js experience.js experience.css property-gallery.js property-gallery.css maps.js maps.css system-status.js ./
 RUN mvn -B -DskipTests package
 
 FROM tomcat:9-jdk11-temurin

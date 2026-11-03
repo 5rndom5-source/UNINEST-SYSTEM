@@ -6,6 +6,8 @@
   const contextPath = "/uninest";
   const searchPageSize = 6;
   let searchPage = 1;
+  let searchRequest = 0;
+  let searchController;
 
   const apiBase = () => {
     if (window.location.protocol === "file:") return serverOrigin + contextPath;
@@ -41,21 +43,20 @@
 
   const homeCard = (listing) => `
     <article class="card">
-      <div class="card-image"><img src="${escapeText(normalizeImage(listing.image))}" alt="${escapeText(listing.title)}" /></div>
+      <div class="card-image"><img loading="lazy" decoding="async" src="${escapeText(normalizeImage(listing.image))}" alt="${escapeText(listing.title)}" /></div>
       <div class="card-content">
         <h3>${escapeText(listing.title)}</h3>
         <p class="location"><i class="fa-solid fa-location-dot"></i> ${escapeText(listing.area)}</p>
         <p class="price">${escapeText(listing.price)}</p>
         ${ratingMarkup(listing)}
         <div class="tags">${tagsMarkup(listing.tags)}</div>
-        <button type="button" data-view-listing="${escapeText(listing.id)}">View Details</button>
-        <button type="button" data-gallery="${escapeText(listing.id)}">View Photos</button>
+        <button type="button" data-gallery="${escapeText(listing.id)}">View listing</button>
       </div>
     </article>`;
 
   const searchCard = (listing) => `
     <article class="listing-card">
-      <div class="listing-image"><img src="${escapeText(normalizeImage(listing.image))}" alt="${escapeText(listing.title)}" /></div>
+      <div class="listing-image"><img loading="lazy" decoding="async" src="${escapeText(normalizeImage(listing.image))}" alt="${escapeText(listing.title)}" /></div>
       <div class="listing-content">
         <h2>${escapeText(listing.title)}</h2>
         <p class="listing-price">${escapeText(listing.price)}</p>
@@ -63,8 +64,7 @@
         ${ratingMarkup(listing)}
         <div class="listing-tags">${tagsMarkup(listing.tags)}</div>
         <p class="listing-description">${escapeText(listing.description)}</p>
-        <button type="button" data-view-listing="${escapeText(listing.id)}">View Details</button>
-        <button type="button" data-gallery="${escapeText(listing.id)}">View Photos</button>
+        <button type="button" data-gallery="${escapeText(listing.id)}">View listing</button>
       </div>
     </article>`;
 
@@ -86,11 +86,12 @@
     return params;
   };
 
-  const fetchListings = async (page, size, filters = new URLSearchParams()) => {
+  const fetchListings = async (page, size, filters = new URLSearchParams(), signal) => {
     const params = new URLSearchParams(filters);
     params.set("page", String(page));
     params.set("size", String(size));
     const response = await fetch(`${apiBase()}/PublicListingsServlet?${params.toString()}`, {
+      signal,
       headers: { Accept: "application/json" }
     });
     const data = await response.json();
@@ -133,36 +134,57 @@
       return;
     }
     controls.hidden = false;
-    const pages = Array.from({ length: total }, (_, index) => index + 1);
+    const pages = [...new Set([1, current - 1, current, current + 1, total])].filter(page => page >= 1 && page <= total).sort((a,b) => a-b);
     controls.innerHTML = [
       `<button type="button" data-page="${current - 1}" ${current === 1 ? "disabled" : ""}>Previous</button>`,
-      ...pages.map((page) => `<button type="button" data-page="${page}" class="${page === current ? "active" : ""}">${page}</button>`),
+      ...pages.map((page, index) => `${index && page - pages[index-1] > 1 ? '<span aria-hidden="true">...</span>' : ''}<button type="button" data-page="${page}" ${page === current ? 'aria-current="page"' : ''} aria-label="Page ${page}" class="${page === current ? "active" : ""}">${page}</button>`),
       `<button type="button" data-page="${current + 1}" ${current === total ? "disabled" : ""}>Next</button>`
     ].join("");
+    controls.parentElement.appendChild(controls);
   };
 
   const populateLocations = (locations) => {
     const select = document.getElementById("locationFilter");
     if (!select || select.dataset.loaded === "true") return;
     (locations || []).forEach((location) => {
+      if (Array.from(select.options).some(option => option.value === location)) return;
       const option = document.createElement("option");
       option.value = location;
       option.textContent = location;
       select.appendChild(option);
     });
     select.dataset.loaded = "true";
+    const initial = new URLSearchParams(location.search).get('location');
+    if (initial && Array.from(select.options).some(option => option.value === initial)) select.value = initial;
   };
 
   const renderSearch = async (page = 1) => {
     const results = document.querySelector(".results");
     const state = document.getElementById("publicListingsState");
     if (!results || !state) return;
+    const requestId = ++searchRequest;
+    searchController?.abort();
+    searchController = new AbortController();
+    results.setAttribute('aria-busy', 'true');
+    document.getElementById('searchRetry')?.remove();
+    const pagination = document.getElementById('searchPagination');
+    if (pagination) pagination.hidden = true;
+    const filters = activeFilters();
+    const min = filters.get('minPrice'), max = filters.get('maxPrice');
+    if ((min && (!Number.isFinite(Number(min)) || Number(min) < 0)) || (max && (!Number.isFinite(Number(max)) || Number(max) < 0)) || (min && max && Number(min) > Number(max))) {
+      state.textContent = 'Enter a valid price range: minimum rent must not exceed maximum rent.';
+      state.classList.add('error'); results.setAttribute('aria-busy', 'false'); return;
+    }
+    const url = new URL(location.href); url.search = filters.toString();
+    if (page > 1) url.searchParams.set('page', page);
+    history.replaceState(null, '', url);
     state.hidden = false;
     state.textContent = "Loading approved accommodation...";
     state.classList.remove("error");
     results.querySelectorAll(":scope > .listing-card").forEach((card) => card.remove());
     try {
-      const data = await fetchListings(page, searchPageSize, activeFilters());
+      const data = await fetchListings(page, searchPageSize, filters, searchController.signal);
+      if (requestId !== searchRequest) return;
       populateLocations(data.locations);
       searchPage = Number(data.page || page);
       const listings = Array.isArray(data.listings) ? data.listings : [];
@@ -170,8 +192,13 @@
       listings.forEach((listing) => results.insertAdjacentHTML("beforeend", searchCard(listing)));
       renderPagination(data);
     } catch (error) {
-      state.textContent = error.message;
+      if (requestId !== searchRequest || error.name === 'AbortError') return;
+      state.textContent = 'Listings could not be loaded. Check your connection and try again.';
       state.classList.add("error");
+      const retry = document.createElement('button'); retry.id = 'searchRetry'; retry.className = 'search-retry'; retry.type = 'button'; retry.textContent = 'Try again';
+      retry.addEventListener('click', () => renderSearch(page)); state.after(retry);
+    } finally {
+      if (requestId === searchRequest) results.setAttribute('aria-busy', 'false');
     }
   };
 
@@ -179,6 +206,12 @@
     const query = new URLSearchParams(window.location.search);
     const input = document.getElementById("publicSearchInput");
     if (input) input.value = query.get("search") || "";
+    for (const [id, key] of [['minPriceFilter','minPrice'],['maxPriceFilter','maxPrice'],['publicSort','sort'],['resultsSort','sort']]) {
+      const field = document.getElementById(id); if (field && query.has(key)) field.value = query.get(key);
+    }
+    const area = query.get('location'); const select = document.getElementById('locationFilter');
+    if (area && select) { const option = new Option(area, area, true, true); select.appendChild(option); }
+    document.querySelectorAll('input[name="facility"]').forEach(item => { item.checked = query.getAll('facility').includes(item.value); });
     const type = query.get("type");
     if (type) document.querySelector(`input[name="type"][value="${CSS.escape(type)}"]`)?.click();
   };
@@ -237,6 +270,7 @@
   document.addEventListener("DOMContentLoaded", async () => {
     applyQueryToControls();
     bindActions();
-    await Promise.all([renderHome(), renderSearch(1)]);
+    const initialPage = Number(new URLSearchParams(location.search).get('page'));
+    await Promise.all([renderHome(), renderSearch(Number.isInteger(initialPage) && initialPage > 0 ? initialPage : 1)]);
   });
 })();

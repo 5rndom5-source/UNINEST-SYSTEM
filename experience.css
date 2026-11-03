@@ -1,0 +1,80 @@
+/* Shared interaction rules preserve each portal's existing layout and palette. */
+:root { --focus-ring: #087e8b; }
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 3px solid var(--focus-ring) !important;
+  outline-offset: 3px !important;
+}
+:where(button, a, input, select, textarea) { scroll-margin-block: 100px; }
+.uninest-skip-link {
+  position: fixed; top: 8px; left: 8px; z-index: 10000;
+  padding: 12px 18px; background: #fff; color: #153b45;
+  border: 2px solid var(--focus-ring); border-radius: 4px;
+  transform: translateY(-160%);
+}
+.uninest-skip-link:focus { transform: none; }
+[data-accessible-menu] .profile-dropdown,
+[data-accessible-menu] .admin-profile-dropdown { display: none !important; }
+[data-accessible-menu].uninest-menu-open .profile-dropdown,
+[data-accessible-menu].uninest-menu-open .admin-profile-dropdown {
+  display: block !important; visibility: visible !important; opacity: 1 !important;
+  pointer-events: auto !important; transform: none !important;
+}
+.profile-trigger, .admin-profile-trigger { min-height: 44px; }
+.profile-dropdown a, .admin-profile-dropdown a { display: block; min-height: 44px; }
+:where(.page-heading, .results-top, .form-actions) { gap: 16px; }
+:where(.page-heading, .results-top) > * { min-width: 0; }
+:where(.page-heading h1, .listing-content h2, .card-content h3) { overflow-wrap: anywhere; }
+.results[aria-busy=true] { cursor: progress; }
+.results .pagination { display: flex; flex-wrap: wrap; gap: 8px; }
+.results .pagination button { min-width: 44px; min-height: 44px; }
+.results .pagination [aria-current=page] { outline: 2px solid currentColor; outline-offset: 2px; }
+.results .listings-state.error { color: #9c2424; }
+.results-top h1 { font-size: 26px; line-height: 1.25; letter-spacing: 0; }
+.top-search .search-input, .top-search .move-date { min-width: 0; }
+.price-inputs input { min-width: 0; width: 100%; }
+.listing-search-page { background: #f4f6f7; }
+.listing-search-page .top-search { align-items: end; background: #fff; border-bottom: 1px solid #dbe2e6; }
+.listing-search-page .top-search .search-input,
+.listing-search-page .top-search .move-date { display: block; padding: 0; background: transparent; }
+.listing-search-page .top-search label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+.listing-search-page .top-search i { display: none; }
+.listing-search-page .top-search input,
+.listing-search-page .top-search select { margin: 0; border: 1px solid #b6c2ca; border-radius: 4px; height: 44px; padding: 0 12px; font-size: 16px; }
+.listing-search-page .search-btn { height: 44px; padding: 0 24px; background: #146b57; }
+.listing-search-page .search-container > .sidebar { background: transparent; padding: 0 20px 20px 0; border-radius: 0; }
+.search-filter-panel summary { font-size: 20px; font-weight: 700; min-height: 44px; cursor: pointer; padding-block: 10px; }
+.listing-search-page .filter-header { justify-content: flex-end; margin-bottom: 16px; }
+.listing-search-page .filter-group { margin-bottom: 24px; }
+.listing-search-page .filter-group label:has(input[type=checkbox]),
+.listing-search-page .filter-group label:has(input[type=radio]) { display: flex; align-items: center; gap: 10px; min-height: 44px; margin: 0; }
+.listing-search-page .filter-group input[type=checkbox],
+.listing-search-page .filter-group input[type=radio] { width: 18px; height: 18px; margin: 0; flex: 0 0 18px; accent-color: #146b57; }
+.listing-search-page .price-inputs { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 12px; }
+.listing-search-page .price-inputs label { font-size: 12px; margin-bottom: 8px; }
+.listing-search-page .price-inputs input,
+.listing-search-page #locationFilter,
+.listing-search-page #resultsSort { min-height: 44px; padding: 8px; border: 1px solid #b6c2ca; border-radius: 4px; background: #fff; font-size: 14px; }
+.listing-search-page .apply-btn { background: #146b57; }
+.listing-search-page .listing-card { border: 1px solid #dbe2e6; border-radius: 6px; box-shadow: none; }
+.listing-search-page .listing-price { color: #146b57; }
+.listing-search-page .listing-content button { background: #146b57; color: #fff; min-height: 44px; border: 0; border-radius: 4px; padding: 10px 18px; }
+.listing-search-page .listing-image { background: #e5eaed; }
+.listing-search-page .sort-box { display: flex; align-items: center; gap: 8px; }
+@media (max-width: 600px) {
+  .top-search { padding: 20px; gap: 12px; }
+  .top-search .search-input, .top-search .move-date { flex-basis: 100%; }
+  .results-top { flex-wrap: wrap; }
+  .search-container { padding: 20px; }
+  .listing-search-page .search-container > .sidebar { padding: 0; border-bottom: 1px solid #dbe2e6; }
+  .listing-search-page .search-filter-panel[open] { padding-bottom: 20px; }
+}
+.search-retry { min-height: 44px; padding: 10px 18px; margin-block: 12px; }
+@media (prefers-reduced-motion: no-preference) {
+  :where(button, .btn, .nav-item) { transition: background-color 140ms ease, color 140ms ease, box-shadow 140ms ease; }
+  .listing-card, .featured-cards .card { animation: uninest-arrive 180ms ease-out; }
+  [data-accessible-menu].uninest-menu-open :is(.profile-dropdown, .admin-profile-dropdown) { animation: uninest-arrive 120ms ease-out; }
+  @keyframes uninest-arrive { from { opacity: .65; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation: none !important; transition: none !important; }
+}

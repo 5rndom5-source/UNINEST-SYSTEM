@@ -2,6 +2,7 @@ package com.uninest.servlets.messages;
 
 import com.uninest.utils.DatabaseConnection;
 import com.uninest.utils.MessageAttachmentSupport;
+import com.uninest.utils.MessageDelivery;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
@@ -72,6 +73,7 @@ public class SendMessageServlet extends HttpServlet {
                 return;
             }
 
+            try (MessageDelivery delivery = new MessageDelivery(conn)) {
             String storedMessage = messageText.trim();
             if (subject != null && !subject.trim().isEmpty()) {
                 storedMessage = "Subject: " + subject.trim() + "\n" + storedMessage;
@@ -108,7 +110,7 @@ public class SendMessageServlet extends HttpServlet {
             Part attachment = multipart(request) ? request.getPart("attachment") : null;
             String storedAttachment = null;
             try {
-                storedAttachment = MessageAttachmentSupport.save(attachment, messageId);
+                storedAttachment = delivery.saveAttachment(attachment, messageId);
                 if (storedAttachment != null) {
                     updateAttachment(conn, messageId, storedAttachment);
                 }
@@ -129,6 +131,8 @@ public class SendMessageServlet extends HttpServlet {
                                      ? "UserDashboard/messages.html"
                                      : "Landlord/contact-landlord.html");
             
+            delivery.commit();
+            }
             response.sendRedirect(request.getContextPath() + "/Messages.html?success=Message sent");
             
         } catch (SQLException e) {

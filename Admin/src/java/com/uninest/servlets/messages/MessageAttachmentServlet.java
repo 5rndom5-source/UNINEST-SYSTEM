@@ -49,7 +49,7 @@ public class MessageAttachmentServlet extends HttpServlet {
             }
 
             Path file = MessageAttachmentSupport.resolve(record.storedName);
-            if (file == null || !Files.isRegularFile(file)) {
+            if (file == null || !Files.isRegularFile(file, java.nio.file.LinkOption.NOFOLLOW_LINKS)) {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND);
                 return;
             }
@@ -58,8 +58,8 @@ public class MessageAttachmentServlet extends HttpServlet {
             response.setContentType(contentType == null ? "application/octet-stream" : contentType);
             response.setHeader("Cache-Control", "private, no-store");
             response.setHeader("X-Content-Type-Options", "nosniff");
-            response.setHeader("Content-Disposition", "inline; filename=\""
-                    + MessageAttachmentSupport.displayName(record.storedName).replace("\"", "") + "\"");
+            response.setHeader("Content-Disposition", "attachment; filename=\""
+                    + MessageAttachmentSupport.displayName(record.storedName).replaceAll("[^A-Za-z0-9._-]", "_") + "\"");
             response.setContentLengthLong(Files.size(file));
             Files.copy(file, response.getOutputStream());
         } catch (SQLException e) {

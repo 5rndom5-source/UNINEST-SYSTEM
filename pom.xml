@@ -88,6 +88,8 @@
                                         <include>style.css</include>
                                         <include>portal-identity.js</include>
                                         <include>csrf.js</include>
+                                        <include>experience.js</include>
+                                        <include>experience.css</include>
                                         <include>property-gallery.js</include>
                                         <include>property-gallery.css</include>
                                         <include>maps.js</include>

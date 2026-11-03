@@ -1,6 +1,7 @@
 package com.uninest.servlets.student;
 
 import com.uninest.utils.DatabaseConnection;
+import com.uninest.utils.BookingTransitions;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -100,7 +101,8 @@ public class StudentBookingServlet extends HttpServlet {
             }
             if ("cancel".equals(action)) cancelBooking(conn, studentId, request, response);
             else if ("update".equals(action)) updateBooking(conn, studentId, request, response);
-            else createBooking(conn, studentId, request, response);
+            else if ("create".equals(action)) createBooking(conn, studentId, request, response);
+            else send(response, HttpServletResponse.SC_BAD_REQUEST, "error", "Unknown booking action");
         } catch (SQLException e) {
             getServletContext().log("Unable to update student booking", e);
             send(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "error", "Booking could not be saved");
@@ -115,11 +117,15 @@ public class StudentBookingServlet extends HttpServlet {
             send(response, HttpServletResponse.SC_BAD_REQUEST, "error", "Choose valid booking dates");
             return;
         }
+        conn.setAutoCommit(false);
+        try {
         if (!availableRoom(conn, roomId)) {
+            conn.rollback();
             send(response, HttpServletResponse.SC_CONFLICT, "error", "This listing is not available for booking");
             return;
         }
         if (hasActiveBooking(conn, studentId, roomId, null)) {
+            conn.rollback();
             send(response, HttpServletResponse.SC_CONFLICT, "error", "You already have an active booking for this listing");
             return;
         }
@@ -139,6 +145,9 @@ public class StudentBookingServlet extends HttpServlet {
             }
         }
         notifyBookingCreated(conn, bookingId);
+        conn.commit();
+        } catch (SQLException | RuntimeException e) { conn.rollback(); throw e; }
+        finally { conn.setAutoCommit(true); }
         send(response, HttpServletResponse.SC_OK, "success", "Booking request submitted");
     }
 
@@ -173,17 +182,14 @@ public class StudentBookingServlet extends HttpServlet {
             return;
         }
         String reason = valueOr(request.getParameter("reason"), "Cancelled by student");
-        String query = "UPDATE bookings SET booking_status = 'cancelled', cancellation_reason = ? "
-                + "WHERE booking_id = ? AND student_id = ? AND booking_status IN ('pending','confirmed')";
-        try (PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setString(1, reason);
-            stmt.setInt(2, bookingId);
-            stmt.setInt(3, studentId);
-            int updated = stmt.executeUpdate();
+        if (reason.length() > 255) {
+            send(response, HttpServletResponse.SC_BAD_REQUEST, "error", "Cancellation reason must be 255 characters or fewer");
+            return;
+        }
+            int updated = BookingTransitions.cancelByStudent(conn, bookingId, studentId, reason);
             send(response, updated == 1 ? HttpServletResponse.SC_OK : HttpServletResponse.SC_CONFLICT,
                     updated == 1 ? "success" : "error",
                     updated == 1 ? "Booking cancelled" : "This booking can no longer be cancelled");
-        }
     }
 
     private void notifyBookingCreated(Connection conn, int bookingId) throws SQLException {
@@ -216,7 +222,7 @@ public class StudentBookingServlet extends HttpServlet {
     private boolean availableRoom(Connection conn, int roomId) throws SQLException {
         try (PreparedStatement stmt = conn.prepareStatement(
                 "SELECT 1 FROM rooms WHERE room_id = ? AND approval_status = 'approved' "
-                        + "AND availability_status = 'available'")) {
+                        + "AND availability_status = 'available' FOR UPDATE")) {
             stmt.setInt(1, roomId);
             try (ResultSet rs = stmt.executeQuery()) {
                 return rs.next();
@@ -228,7 +234,7 @@ public class StudentBookingServlet extends HttpServlet {
             throws SQLException {
         String query = "SELECT 1 FROM bookings WHERE student_id = ? AND room_id = ? "
                 + "AND booking_status IN ('pending','confirmed')"
-                + (excluded == null ? "" : " AND booking_id <> ?") + " LIMIT 1";
+                + (excluded == null ? "" : " AND booking_id <> ?") + " LIMIT 1 FOR UPDATE";
         try (PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setInt(1, studentId);
             stmt.setInt(2, roomId);
