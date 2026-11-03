@@ -110,6 +110,12 @@
     });
   }
 
+  // Mirrors BookingTransitions on the server, which still enforces these rules.
+  var BOOKING_NEXT_STATES = {
+    pending: ["confirmed", "cancelled"],
+    confirmed: ["completed", "cancelled"]
+  };
+
   function renderBookings(data) {
     records = data.bookings || [];
     var body = document.querySelector("#bookingTable tbody");
@@ -128,8 +134,13 @@
       statusCell(row, booking.status);
       textCell(row, booking.reason);
       var action = document.createElement("td");
-      action.appendChild(actionForm("BookingActionServlet", "bookingId", booking.id,
-        ["confirmed", "cancelled", "completed", "pending"], "reason", "Cancellation reason", booking.status));
+      var next = BOOKING_NEXT_STATES[booking.status] || [];
+      if (next.length) {
+        action.appendChild(actionForm("BookingActionServlet", "bookingId", booking.id,
+          next, "reason", "Cancellation reason", next[0]));
+      } else {
+        action.textContent = "No further action";
+      }
       row.appendChild(action);
       body.appendChild(row);
     });

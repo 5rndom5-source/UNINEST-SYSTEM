@@ -155,11 +155,15 @@ const loadCounts = async () => {
     if (requests) requests.textContent = data.requestCount || 0;
     if (messages) messages.textContent = data.messageCount || 0;
   } catch {
-    if (saved) saved.textContent = "0";
-    if (requests) requests.textContent = "0";
-    if (messages) messages.textContent = "0";
+    [saved, requests, messages].filter(Boolean).forEach((host) => {
+      host.textContent = "-";
+      host.title = LOAD_ERROR;
+    });
   }
 };
+
+// Shown when a request fails, so a network or server error is never mistaken for "you have none".
+const LOAD_ERROR = "This could not be loaded. Check the service status and refresh the page.";
 
 const createEmpty = (message) => {
   const empty = document.createElement("div");
@@ -417,7 +421,7 @@ const loadFavorites = async () => {
     return data.listings || [];
   } catch {
     state.favoriteIds = new Set();
-    return [];
+    return null;
   }
 };
 
@@ -484,10 +488,15 @@ const loadSavedListings = async () => {
   if (!container) return;
   container.innerHTML = '<div class="empty-state">Loading saved places...</div>';
   const listings = await loadFavorites();
+  if (listings === null) {
+    container.innerHTML = "";
+    container.appendChild(createEmpty(LOAD_ERROR));
+    return;
+  }
   renderListingGrid(container, listings, "No saved places yet.", "saved");
 };
 
-const renderRequests = (requests) => {
+const renderRequests = (requests, emptyMessage = "No viewing requests have been sent yet.") => {
   const tbody = byId("requestRows");
   if (!tbody) return;
   tbody.innerHTML = "";
@@ -497,7 +506,7 @@ const renderRequests = (requests) => {
     const cell = document.createElement("td");
     cell.colSpan = 6;
     cell.className = "empty-state";
-    cell.textContent = "No viewing requests have been sent yet.";
+    cell.textContent = emptyMessage;
     row.appendChild(cell);
     tbody.appendChild(row);
     return;
@@ -542,7 +551,7 @@ const renderRequests = (requests) => {
   });
 };
 
-const renderBookings = (bookings) => {
+const renderBookings = (bookings, emptyMessage = "No booking requests have been submitted yet.") => {
   const tbody = byId("bookingRows");
   if (!tbody) return;
   tbody.replaceChildren();
@@ -551,7 +560,7 @@ const renderBookings = (bookings) => {
     const cell = document.createElement("td");
     cell.colSpan = 7;
     cell.className = "empty-state";
-    cell.textContent = "No booking requests have been submitted yet.";
+    cell.textContent = emptyMessage;
     row.appendChild(cell);
     tbody.appendChild(row);
     return;
@@ -609,7 +618,7 @@ const loadRequests = async () => {
     const data = await getJson(endpoint("/StudentRequestServlet"));
     renderRequests(data?.requests || []);
   } catch {
-    renderRequests([]);
+    renderRequests([], LOAD_ERROR);
   }
 };
 
@@ -618,17 +627,17 @@ const loadBookings = async () => {
     const data = await getJson(endpoint("/StudentBookingServlet"));
     renderBookings(data?.bookings || []);
   } catch {
-    renderBookings([]);
+    renderBookings([], LOAD_ERROR);
   }
 };
 
-const renderMessages = (messages) => {
+const renderMessages = (messages, emptyMessage = "No messages have been sent yet.") => {
   const list = byId("messageList");
   if (!list) return;
   list.innerHTML = "";
 
   if (!messages.length) {
-    list.appendChild(createEmpty("No messages have been sent yet."));
+    list.appendChild(createEmpty(emptyMessage));
     return;
   }
 
@@ -673,7 +682,7 @@ const loadMessages = async () => {
     renderMessages(data?.messages || []);
     if (window.uninestRefreshNotifications) window.uninestRefreshNotifications();
   } catch {
-    renderMessages([]);
+    renderMessages([], LOAD_ERROR);
   }
 };
 

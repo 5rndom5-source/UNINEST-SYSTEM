@@ -1474,6 +1474,12 @@ label,
     min-height: 240px !important;
 }
 
+/* Pages give .empty-panel display:grid, which would otherwise override the hidden attribute
+   and leave "No booking requests" showing above a table that has rows. */
+.empty-panel[hidden] {
+    display: none !important;
+}
+
 .empty-panel h2 {
     color: var(--dark) !important;
     font-size: 19px;

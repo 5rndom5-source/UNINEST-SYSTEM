@@ -56,19 +56,32 @@ public class MaintenanceServlet extends HttpServlet {
                 return;
             }
 
-            String query = "UPDATE maintenance_requests SET request_status = ?, "
-                    + "resolution_notes = ?, resolved_date = CASE WHEN ? = 'resolved' THEN NOW() ELSE resolved_date END "
-                    + "WHERE request_id = ?";
-            PreparedStatement stmt = conn.prepareStatement(query);
-            stmt.setString(1, status);
-            stmt.setString(2, notes);
-            stmt.setString(3, status);
-            stmt.setInt(4, Integer.parseInt(requestId));
-            int updated = stmt.executeUpdate();
-            stmt.close();
-
-            if (updated > 0) {
-                notifyStudent(conn, Integer.parseInt(requestId), status, notes);
+            // The update and the student's notification are saved together or not at all.
+            // A request that is no longer resolved loses its old resolved date.
+            int id = Integer.parseInt(requestId);
+            boolean autoCommit = conn.getAutoCommit();
+            int updated;
+            conn.setAutoCommit(false);
+            try {
+                String query = "UPDATE maintenance_requests SET request_status = ?, resolution_notes = ?, "
+                        + "resolved_date = CASE WHEN ? = 'resolved' THEN COALESCE(resolved_date, NOW()) ELSE NULL END "
+                        + "WHERE request_id = ?";
+                try (PreparedStatement stmt = conn.prepareStatement(query)) {
+                    stmt.setString(1, status);
+                    stmt.setString(2, notes);
+                    stmt.setString(3, status);
+                    stmt.setInt(4, id);
+                    updated = stmt.executeUpdate();
+                }
+                if (updated > 0) {
+                    notifyStudent(conn, id, status, notes);
+                }
+                conn.commit();
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(autoCommit);
             }
 
             redirect(request, response, updated > 0 ? "success" : "error",

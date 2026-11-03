@@ -65,24 +65,38 @@ public class VerifyPropertyServlet extends HttpServlet {
                 return;
             }
 
-            String query = "UPDATE rooms SET approval_status = ?, admin_note = ?, "
-                    + "reviewed_by = ?, reviewed_at = NOW() WHERE room_id = ?";
-
-            PreparedStatement stmt = conn.prepareStatement(query);
-            stmt.setString(1, approvalStatus);
-            stmt.setString(2, adminNote);
-            stmt.setInt(3, adminUserId);
-            stmt.setInt(4, Integer.parseInt(propertyId));
-
-            int updated = stmt.executeUpdate();
-            stmt.close();
+            // The decision and the landlord's notification are saved together or not at all.
+            int roomId = Integer.parseInt(propertyId);
+            boolean autoCommit = conn.getAutoCommit();
+            int updated;
+            conn.setAutoCommit(false);
+            try {
+                String query = "UPDATE rooms SET approval_status = ?, admin_note = ?, "
+                        + "reviewed_by = ?, reviewed_at = NOW() WHERE room_id = ?";
+                try (PreparedStatement stmt = conn.prepareStatement(query)) {
+                    stmt.setString(1, approvalStatus);
+                    stmt.setString(2, adminNote);
+                    stmt.setInt(3, adminUserId);
+                    stmt.setInt(4, roomId);
+                    updated = stmt.executeUpdate();
+                }
+                if (updated == 0) {
+                    conn.rollback();
+                } else {
+                    notifyLandlord(conn, roomId, approvalStatus, adminNote);
+                    conn.commit();
+                }
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(autoCommit);
+            }
 
             if (updated == 0) {
                 redirect(response, request, "error", "No matching property was found");
                 return;
             }
-
-            notifyLandlord(conn, Integer.parseInt(propertyId), approvalStatus, adminNote);
 
             String message = "approved".equals(approvalStatus)
                     ? "Listing approved and published"

@@ -322,6 +322,20 @@
         document.getElementById("messageAttachment").disabled = false;
       };
 
+      // The server only lets the recipient (or the shared admin inbox) mark a message read,
+      // so an admin's own outgoing reply is simply left as it is.
+      const markRead = async (message) => {
+        const response = await fetch(`${context}/MessageActionServlet`, {
+          method: "POST",
+          headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({ messageId: message.id, action: "read" })
+        }).catch(() => null);
+        if (!response || !response.ok) return;
+        message.read = true;
+        const label = detail.querySelector(".message-detail-actions .message-meta");
+        if (label) label.textContent = "Read";
+      };
+
       const renderList = () => {
         const query = search.value.trim().toLowerCase();
         const filtered = messages.filter((item) =>
@@ -348,6 +362,7 @@
             document.querySelectorAll(".conversation-item").forEach((item) => item.classList.remove("active"));
             button.classList.add("active");
             renderDetail(message);
+            if (!message.read) markRead(message);
           });
           list.appendChild(button);
         });
