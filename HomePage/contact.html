@@ -1,265 +1,70 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-  <script src="../csrf.js"></script>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Contact UniNest</title>
+<head>
+  <meta charset="UTF-8">
+  <title>Contact Landlord</title>
+  <link rel="stylesheet" href="css/styles.css"> 
+</head>
+<body>
+  <script src="js/script.js"></script>
+</body>
+</html>
 
-    <link rel="stylesheet" href="style.css" />
+  <header class="topbar">
+    <div class="logo">UniNest</div>
+    <nav class="nav-links">
+      <a href="listings.html">Listings</a>
+      <a href="contact.html">Contact</a>
+      <a href="#">Profile</a>
+      <a href="#">Logout</a>
+    </nav>
+    <div class="search-bar">
+      <input type="text" placeholder="Search properties...">
+      <button>Search</button>
+    </div>
+  </header>
 
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
-    />
-  </head>
+  <!-- Page Title -->
+  <h1 class="page-title">Contact Landlord</h1>
 
-  <body>
-    <header class="navbar">
-      <div class="logo">
-        <img
-          src="../createAccount/uninest-logo.png"
-          alt="UniNest Logo"
-          class="logo-img"
-        />
+  <div class="container">
 
-        <div class="logo-text">
-          <h2>UniNest</h2>
-          <p>Student Accommodation Marketplace</p>
+    <!-- Left side: Property details -->
+    <div class="property-box">
+      <h2>Cozy Studio Apartment</h2>
+      <p><strong>Location:</strong> Cape Town</p>
+      <p><strong>Price:</strong> R8,500/month</p>
+      <span class="available">Available</span>
+    </div>
+
+    <!-- Right side: Landlord info + form -->
+    <div class="form-box">
+      <h3>Landlord Information</h3>
+      <p><strong>Name:</strong> James Smith</p>
+      <p><strong>Phone:</strong> 082 154 6897</p>
+      <p><strong>Email:</strong> smithjames@gmail.com</p>
+
+      <form id="contactForm">
+        <label for="studentName">Student Name</label>
+        <input type="text" id="studentName" name="studentName" required>
+
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" required>
+
+        <label for="message">Message</label>
+        <textarea id="message" name="message" rows="4" required></textarea>
+
+        <div class="buttons">
+          <button type="submit" class="send">Send Message</button>
+          <button type="reset" class="cancel">Cancel</button>
         </div>
-      </div>
+      </form>
 
-      <nav>
-        <a href="home.html">Home</a>
-        <a href="search.html">Listings</a>
-        <a href="about.html">About</a>
-        <a href="contact.html" class="active">Contact</a>
-      </nav>
+      <!-- Success notification -->
+      <div id="successBar" class="success-bar">Message sent successfully!</div>
+    </div>
 
-      <div class="nav-right">
-        <i class="fa-regular fa-bell"></i>
+  </div>
 
-        <a href="../createAccount/login.html" class="login-btn">Login</a>
-        <a href="../createAccount/index.html" class="register-btn">Register</a>
-      </div>
-    </header>
-
-    <main>
-      <section class="contact-hero">
-        <div class="contact-copy">
-          <p class="section-kicker">We're here to help</p>
-          <h1>Get in touch with UniNest</h1>
-          <p>
-            Have a question, need support, or want to provide feedback? Send us
-            a message and our team will get back to you.
-          </p>
-
-          <div class="support-points">
-            <div class="support-point">
-              <i class="fa-solid fa-headset"></i>
-              <div>
-                <h3>Friendly Support</h3>
-                <p>Questions about listings, bookings, or accounts are welcome.</p>
-              </div>
-            </div>
-
-            <div class="support-point">
-              <i class="fa-solid fa-shield-halved"></i>
-              <div>
-                <h3>Trusted Help</h3>
-                <p>We keep communication clear, respectful, and student-focused.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <form class="contact-form" id="contactForm" action="../PublicContactServlet" method="post">
-          <h2>Send us a message</h2>
-          <p>Fill in the form and we will get back to you.</p>
-
-          <div class="form-row">
-            <label>
-              Full Name
-              <input type="text" name="name" placeholder="Enter your full name" required />
-            </label>
-
-            <label>
-              Email Address
-              <input type="email" name="email" placeholder="Enter your email" required />
-            </label>
-          </div>
-
-          <label>
-            Subject
-            <select name="subject" required>
-              <option value="">What is this regarding?</option>
-              <option value="listing">Listing question</option>
-              <option value="booking">Booking support</option>
-              <option value="landlord">Landlord account</option>
-              <option value="technical">Technical issue</option>
-            </select>
-          </label>
-
-          <label>
-            Message
-            <textarea
-              name="message"
-              rows="6"
-              placeholder="Type your message here..."
-              required
-            ></textarea>
-          </label>
-
-          <button type="submit" class="send-btn">
-            <i class="fa-solid fa-paper-plane"></i>
-            Send Message
-          </button>
-
-          <p class="form-success" id="formSuccess" aria-live="polite"></p>
-        </form>
-      </section>
-
-      <section class="contact-methods">
-        <h2>Other ways to reach us</h2>
-
-        <div class="method-grid">
-          <article class="method-card">
-            <i class="fa-solid fa-envelope"></i>
-            <h3>Email Us</h3>
-            <p>support@uninest.co.za</p>
-            <span>We usually reply within 24 hours.</span>
-          </article>
-
-          <article class="method-card">
-            <i class="fa-solid fa-phone"></i>
-            <h3>Call Us</h3>
-            <p>+27 72 123 4567</p>
-            <span>Monday to Friday, 8AM to 5PM.</span>
-          </article>
-
-          <article class="method-card">
-            <i class="fa-solid fa-location-dot"></i>
-            <h3>Visit Our Office</h3>
-            <p>Green Point Main Road</p>
-            <span>Cape Town, South Africa.</span>
-          </article>
-
-          <article class="method-card">
-            <i class="fa-solid fa-clock"></i>
-            <h3>Support Hours</h3>
-            <p>Mon - Fri: 8AM - 5PM</p>
-            <span>Saturday and Sunday: Closed.</span>
-          </article>
-        </div>
-      </section>
-
-      <section class="contact-info-band">
-        <div>
-          <h2>Before contacting us</h2>
-          <p>Please include the information that helps us assist you faster.</p>
-          <ul>
-            <li><i class="fa-solid fa-check"></i> Listing name or area</li>
-            <li><i class="fa-solid fa-check"></i> Your contact details</li>
-            <li><i class="fa-solid fa-check"></i> Booking or account information</li>
-          </ul>
-        </div>
-
-        <div class="faq-panel">
-          <h2>Frequently asked questions</h2>
-          <details>
-            <summary>How do I book a viewing?</summary>
-            <p>Open a listing and use the booking or contact landlord button.</p>
-          </details>
-          <details>
-            <summary>How do I contact a landlord?</summary>
-            <p>Use the listing contact details or send a message through UniNest.</p>
-          </details>
-          <details>
-            <summary>How do I report an issue with a listing?</summary>
-            <p>Send us the listing name, area, and a short explanation.</p>
-          </details>
-          <details>
-            <summary>Is UniNest only for Cape Town?</summary>
-            <p>The current homepage focuses on Cape Town student areas.</p>
-          </details>
-        </div>
-      </section>
-
-      <section class="contact-cta">
-        <div>
-          <h2>Need help choosing where to stay?</h2>
-          <p>Browse available student accommodation or send us a support message.</p>
-        </div>
-        <a href="search.html">Browse Listings</a>
-      </section>
-    </main>
-
-    <footer>
-      <div class="footer-container">
-        <div class="footer-section">
-          <div class="logo">
-            <img
-              src="../createAccount/uninest-logo.png"
-              alt="UniNest Logo"
-              class="logo-img"
-            />
-
-            <div class="logo-text">
-              <h2>UniNest</h2>
-              <p>Student Accommodation Marketplace</p>
-            </div>
-          </div>
-
-          <p>
-            Helping Students find safe, affordable and convenient accommodation.
-          </p>
-
-          <div class="social-icons">
-            <i class="fab fa-facebook"></i>
-            <i class="fab fa-instagram"></i>
-            <i class="fab fa-twitter"></i>
-            <i class="fab fa-linkedin"></i>
-          </div>
-        </div>
-
-        <div class="footer-section">
-          <h3>Quick Links</h3>
-
-          <a href="home.html">Home</a>
-          <a href="search.html">Listings</a>
-          <a href="about.html">About</a>
-          <a href="contact.html">Contact</a>
-        </div>
-
-        <div class="footer-section">
-          <h3>For Students</h3>
-
-          <a href="search.html">Browse Listings</a>
-          <a href="../UserDashboard/saved.html">Saved Listings</a>
-          <a href="about.html">How it works</a>
-          <a href="contact.html">Help Center</a>
-        </div>
-
-        <div class="footer-section">
-          <h3>Your accommodation search</h3>
-          <a href="../createAccount/index.html">Create an account</a>
-          <a href="../UserDashboard/saved.html">View saved listings</a>
-          <a href="contact.html">Contact UniNest</a>
-        </div>
-      </div>
-
-      <hr />
-
-      <p class="copyright">@2026 UniNest. All Rights Reserved.</p>
-    </footer>
-
-    <script>
-      const params = new URLSearchParams(window.location.search);
-      if (params.get("sent") === "true") {
-        document.getElementById("formSuccess").textContent =
-          "Thank you. Your message has been sent to UniNest support.";
-      }
-    </script>
-    <script src="../system-status.js"></script>
 </body>
 </html>

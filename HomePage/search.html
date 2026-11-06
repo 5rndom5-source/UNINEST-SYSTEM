@@ -1,220 +1,106 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-  <script src="../csrf.js"></script>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+  <meta charset="UTF-8">
+  <title>Landlord Property Listings</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <script src="js/script.js"></script>
+</head>
+<body>
 
-    <title>UniNest Listings</title>
+  <!-- Top Navigation Bar -->
+  <header class="topbar">
+    <div class="logo">UniNest</div>   
+    <nav class="nav-links">
+      <a href="listings.html">Listings</a>
+      <a href="contact.html">Contact Landlord</a>
+    </nav>
+    <div class="search-bar">
+      <input type="text" placeholder="Search properties...">
+      <button>Search</button>
+    </div>
+  </header>
 
-    <link rel="stylesheet" href="style.css" />
+  <!-- Page Title -->
+  <h1 class="page-title">Landlord Property Listings</h1>
 
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
-    />
-  </head>
+  <!-- Add New Listing Form -->
+  <section class="new-listing">
+    <h2>Add New Property</h2>
+    <form id="listingForm"  action="addListing" method= "post">
+      <label for="title">Title</label>
+      <input type="text" id="title" name="title" required>
 
-  <body class="listing-search-page">
-    <header class="navbar">
-      <div class="logo">
-        <img
-          src="../createAccount/uninest-logo.png"
-          alt="UniNest Logo"
-          class="logo-img"
-        />
+      <label for="description">Description</label>
+      <textarea id="description" name="description" rows="3" required></textarea>
 
-        <div class="logo-text">
-          <h2>UniNest</h2>
-          <p>Student Accommodation Marketplace</p>
-        </div>
+      <label for="location">Location</label>
+      <input type="text" id="location" name="location" required>
+
+      <label for="price">Price</label>
+      <input type="text" id="price" name="price" required>
+
+      <label for="photos">Upload Photos</label>
+      <input type="file" id="photos" name="photos" multiple>
+      
+      <button type="submit">Submit Listing</button>
+
+      <div class="amenities">
+        <label><input type="checkbox" name="wifi"> WiFi</label>
+        <label><input type="checkbox" name="parking"> Parking</label>
+        <label><input type="checkbox" name="furnished"> Furnished</label>
       </div>
 
-      <nav>
-        <a href="home.html">Home</a>
-        <a href="search.html" class="active">Listings</a>
-        <a href="about.html">About</a>
-        <a href="contact.html">Contact</a>
-      </nav>
-
-      <div class="nav-right">
-        <i class="fa-regular fa-bell"></i>
-
-        <a href="../createAccount/login.html" class="login-btn">Login</a>
-        <a href="../createAccount/index.html" class="register-btn">Register</a>
+      <div class="buttons">
+        <button type="submit" class="send">Submit Listing</button>
+        <button type="reset" class="cancel">Cancel</button>
+        <button type="button" class="pending">Pending Approval</button>
       </div>
-    </header>
+    </form>
+  </section>
 
-    <section class="top-search" aria-label="Accommodation search">
-      <div class="search-input">
-        <label for="publicSearchInput">Search accommodation</label>
-        <i class="fa-solid fa-magnifying-glass"></i>
+  <!-- Existing Listings -->
+  <section class="my-listings">
+    <h2>My Property Listings</h2>
 
-        <input
-          id="publicSearchInput"
-          type="text"
-          placeholder="Search by location, street or accommodation type"
-          aria-label="Search by location, street or accommodation type"
-        />
-      </div>
+    <div class="listing-card approved">
+      <h3>Cozy Studio Apartment</h3>
+      <p>Location: Cape Town</p>
+      <p>Price: R8,000/month</p>
+      <span class="status">Approved</span>
+      <button class="edit">Edit</button>
+      <button class="delete">Delete</button>
+    </div>
 
-      <div class="move-date">
-        <label for="publicSort">Sort by</label>
-        <i class="fa-solid fa-calendar-days"></i>
+    <div class="listing-card pending">
+      <h3>Modern Loft</h3>
+      <p>Location: SeaPoint</p>
+      <p>Price: R13,000/month</p>
+      <span class="status">Pending</span>
+      <button class="edit">Edit</button>
+      <button class="delete">Delete</button>
+    </div>
 
-        <select id="publicSort" aria-label="Sort listings">
-          <option value="recent">Most recent</option>
-          <option value="price_asc">Price: low to high</option>
-          <option value="price_desc">Price: high to low</option>
-          <option value="rating">Highest rated</option>
-        </select>
-      </div>
+    <div class="listing-card rejected">
+      <h3>Student House</h3>
+      <p>Location: Observatory</p>
+      <p>Price: R5,500/month</p>
+      <span class="status">Rejected</span>
+      <button class="edit">Edit</button>
+      <button class="delete">Delete</button>
+    </div>
 
-      <button class="search-btn" id="publicSearchButton" type="button">
-        <i class="fa-solid fa-search"></i> Search
-      </button>
-    </section>
+    <div class="listing-card approved">
+      <h3>Seaside Apartment</h3>
+      <p>Location: Stellenbosch</p>
+      <p>Price: R10,000/month</p>
+      <span class="status">Approved</span>
+      <button class="edit">Edit</button>
+      <button class="delete">Delete</button>
+    </div>
+  </section>
 
-    <section class="search-container">
-      <!-- FILTERS -->
-      <aside class="sidebar">
-        <details class="search-filter-panel" open>
-        <summary>Filters</summary>
-        <div class="filter-header">
-
-          <button class="filter-clear" id="clearFilters" type="button">Clear All</button>
-        </div>
-
-        <div class="filter-group">
-          <label for="locationFilter">Location</label>
-
-          <select id="locationFilter">
-            <option value="">All areas</option>
-          </select>
-        </div>
-
-        <div class="filter-group">
-          <label>Price Range (per month)</label>
-
-          <div class="price-inputs">
-            <div><label for="minPriceFilter">Minimum rent</label>
-            <input id="minPriceFilter" aria-label="Minimum monthly rent in rand" type="number" min="0" step="100" placeholder="Min R0" />
-            </div><div><label for="maxPriceFilter">Maximum rent</label>
-            <input id="maxPriceFilter" aria-label="Maximum monthly rent in rand" type="number" min="0" step="100" placeholder="Max R8,000" />
-            </div>
-          </div>
-        </div>
-
-        <div class="filter-group">
-          <h3>Accommodation Type</h3>
-
-          <label><input name="type" value="apartment" type="radio" /> Apartment</label>
-
-          <label><input name="type" value="single_room" type="radio" /> Single Rooms</label>
-
-          <label><input name="type" value="shared_room" type="radio" /> Shared Rooms</label>
-
-          <label><input name="type" value="residence" type="radio" /> Student Residence</label>
-        </div>
-
-        <div class="filter-group">
-          <h3>Facilities</h3>
-
-          <label><input name="facility" value="Wifi" type="checkbox" /> Wifi</label>
-
-          <label><input name="facility" value="Parking" type="checkbox" /> Parking</label>
-
-          <label><input name="facility" value="furnished" type="checkbox" /> Furnished</label>
-
-          <label><input name="facility" value="Security" type="checkbox" /> Security</label>
-        </div>
-
-        <button class="apply-btn" id="applyFilters" type="button">Apply Filters</button>
-
-        <button class="reset-btn" id="resetFilters" type="button">Reset Filters</button>
-        </details>
-      </aside>
-
-      <section class="results">
-        <div class="results-top">
-          <h1>Find accommodation</h1>
-
-          <div class="sort-box">
-            Sort by:
-
-            <select id="resultsSort" aria-label="Sort results">
-              <option value="recent">Most recent</option>
-              <option value="price_asc">Price: low to high</option>
-              <option value="price_desc">Price: high to low</option>
-              <option value="rating">Highest rated</option>
-            </select>
-          </div>
-        </div>
-
-        <p class="listings-state" id="publicListingsState" aria-live="polite">Loading approved accommodation...</p>
-      </section>
-    </section>
-
-    <footer>
-      <div class="footer-container">
-        <!-- SECTION 1 -->
-        <div class="footer-section">
-          <div class="logo">
-            <img
-              src="../createAccount/uninest-logo.png"
-              alt="UniNest Logo"
-              class="logo-img"
-            />
-
-            <div class="logo-text">
-              <h2>UniNest</h2>
-              <p>Student Accommodation Marketplace</p>
-            </div>
-          </div>
-
-          <p>
-            Helping Students find safe, affordable and convenient accommodation.
-          </p>
-
-          <div class="social-icons">
-            <i class="fab fa-facebook"></i>
-            <i class="fab fa-instagram"></i>
-            <i class="fab fa-twitter"></i>
-            <i class="fab fa-linkedin"></i>
-          </div>
-        </div>
-
-        <div class="footer-section">
-          <h3>Quick Links</h3>
-
-          <a href="home.html">Home</a>
-          <a href="search.html">Listings</a>
-          <a href="about.html">About</a>
-          <a href="contact.html">Contact</a>
-        </div>
-
-        <div class="footer-section">
-          <h3>For Students</h3>
-
-          <a href="search.html">Browse Listings</a>
-          <a href="../UserDashboard/saved.html">Saved Listings</a>
-          <a href="about.html">How it works</a>
-          <a href="contact.html">Help Center</a>
-        </div>
-
-        <div class="footer-section">
-          <h3>Your accommodation search</h3>
-          <a href="../createAccount/index.html">Create an account</a>
-          <a href="../UserDashboard/saved.html">View saved listings</a>
-          <a href="contact.html">Contact UniNest</a>
-        </div>
-      </div>
-
-      <hr />
-
-      <p class="copyright">@2026 UniNest. All Rights Reserved.</p>
-    </footer>
-    <script src="public-listings.js?v=20260821-dynamic"></script>
-    <script src="../system-status.js"></script>
+  <script src="js/script.js"></script>
 </body>
 </html>
+
