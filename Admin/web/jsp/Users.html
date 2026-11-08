@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../../csrf.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Users - UniNest Admin Portal</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .dashboard-wrapper {
+            display: grid;
+            grid-template-columns: 250px minmax(0, 1fr);
+            min-height: 100vh;
+        }
+
+        .header,
+        .main-content {
+            grid-column: 2;
+        }
+
+        .main-content {
+            padding: 30px;
+            min-width: 0;
+        }
+
+        .section {
+            background: var(--white);
+            border: 1px solid rgba(30, 64, 175, 0.12);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            padding: 24px;
+            margin-bottom: 22px;
+        }
+
+        .user-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .user-filters select {
+            padding: 9px 12px;
+            border: 1px solid var(--light);
+            border-radius: 6px;
+        }
+
+        .user-note {
+            color: var(--gray);
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        .table {
+            width: 100%;
+            min-width: 760px;
+            border-collapse: collapse;
+        }
+
+        .table th,
+        .table td {
+            padding: 13px 12px;
+            border-bottom: 1px solid var(--light);
+            text-align: left;
+            font-size: 14px;
+        }
+
+        .table thead {
+            background: #eef4ff;
+        }
+
+        .user-email {
+            display: block;
+            color: var(--gray);
+            font-size: 13px;
+        }
+
+        @media (max-width: 900px) {
+            .dashboard-wrapper {
+                grid-template-columns: 1fr;
+            }
+
+            .header,
+            .main-content {
+                grid-column: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-wrapper">
+        <div class="header" style="background: var(--white); border-bottom: 1px solid var(--light); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center;">
+            <h1 class="brand-title">UniNest Admin</h1>
+            <div style="display: flex; gap: 14px; align-items: center;">
+                <input type="search" id="userSearch" placeholder="Search name or email..." style="padding: 9px 12px; border: 1px solid var(--light); border-radius: 6px; width: 260px;">
+                <div class="admin-header-actions">
+                    <button class="admin-notification" type="button" aria-label="Notifications">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 7h18s-3 0-3-7"></path><path d="M13.7 21a2 2 0 0 1-3.4 0"></path></svg>
+                    </button>
+                    <div class="admin-profile-menu">
+                        <button class="admin-profile-trigger" type="button" aria-label="Open admin menu">
+                            <span class="admin-avatar">UN</span>
+                            <span>Admin Account</span>
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+                        </button>
+                        <div class="admin-profile-dropdown">
+                            <a href="Profile.html">Profile</a>
+                            <a href="Messages.html" data-support-link>Support Inbox</a>
+                            <a href="../../../LogoutServlet?portal=admin">Logout</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <aside class="sidebar">
+            <a href="Dashboard.html" class="nav-item"><span></span> Dashboard</a>
+            <a href="MyProperties.html" class="nav-item"><span></span> Listing Queue</a>
+            <a href="AddProperty.html" class="nav-item"><span></span> Verify Listings</a>
+            <a href="BookingRequests.html" class="nav-item"><span></span> Booking Requests</a>
+            <a href="Enquiries.html" class="nav-item"><span></span> Enquiries</a>
+            <a href="Messages.html" class="nav-item"><span></span> Messages</a>
+            <a href="Payments.html" class="nav-item"><span></span> Payments</a>
+            <a href="Maintenance.html" class="nav-item"><span></span> Maintenance</a>
+            <a href="Profile.html" class="nav-item"><span></span> Profile</a>
+            <a href="Messages.html" data-support-link class="nav-item"><span></span> Support Inbox</a>
+            <a href="../../../LogoutServlet?portal=admin" class="nav-item"><span></span> Logout</a>
+        </aside>
+
+        <main class="main-content">
+            <div class="page-header">
+                <h1 class="page-title">Users</h1>
+                <p class="page-subtitle">Deactivate or reactivate student, landlord and admin accounts.</p>
+            </div>
+
+            <section class="section">
+                <p class="user-note">Deactivated accounts cannot sign in and are signed out straight away. Their bookings, payments and messages are kept on record, and they can be reactivated at any time. Pending admin requests are approved under Admin access requests.</p>
+                <div class="user-filters">
+                    <select id="roleFilter" aria-label="Filter by role">
+                        <option value="all">All roles</option>
+                        <option value="student">Students</option>
+                        <option value="landlord">Landlords</option>
+                        <option value="admin">Admins</option>
+                    </select>
+                    <select id="statusFilter" aria-label="Filter by status">
+                        <option value="all">All statuses</option>
+                        <option value="active">Active</option>
+                        <option value="pending_verification">Pending</option>
+                        <option value="inactive">Inactive</option>
+                        <option value="suspended">Suspended</option>
+                    </select>
+                </div>
+                <p id="userFeedback" role="status" aria-live="polite"></p>
+                <div class="table-responsive">
+                    <table class="table" id="userTable">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                                <th>Joined</th>
+                                <th>Last sign-in</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="empty-record" colspan="6">Loading accounts...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+  <script>
+    (() => {
+      const context = window.location.pathname.match(/^\/[^/]+/)?.[0] || "";
+      const body = document.querySelector("#userTable tbody");
+      const search = document.getElementById("userSearch");
+      const roleFilter = document.getElementById("roleFilter");
+      const statusFilter = document.getElementById("statusFilter");
+      const feedback = document.getElementById("userFeedback");
+      let users = [];
+
+      const label = (value) => String(value || "").replace(/_verification$/, "").replace(/_/g, " ")
+        .replace(/\b\w/g, (letter) => letter.toUpperCase());
+
+      const addCell = (row, value) => {
+        const cell = document.createElement("td");
+        cell.textContent = value || "-";
+        row.appendChild(cell);
+        return cell;
+      };
+
+      const changeStatus = async (user, action) => {
+        const verb = action === "deactivate" ? "Deactivate" : "Reactivate";
+        if (!window.confirm(`${verb} ${user.fullName} (${user.email})?`)) return;
+        const response = await fetch(`${context}/AdminUsersServlet`, {
+          method: "POST",
+          headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({ userId: user.id, action })
+        }).catch(() => null);
+        const result = response ? await response.json().catch(() => ({})) : {};
+        feedback.textContent = result.message || "The account could not be updated. Try again.";
+        if (response && response.ok) load();
+      };
+
+      const render = () => {
+        const query = search.value.trim().toLowerCase();
+        const filtered = users.filter((user) =>
+          (roleFilter.value === "all" || user.role === roleFilter.value)
+          && (statusFilter.value === "all" || user.status === statusFilter.value)
+          && [user.fullName, user.email].join(" ").toLowerCase().includes(query));
+        body.replaceChildren();
+        if (!filtered.length) {
+          const row = document.createElement("tr");
+          const cell = addCell(row, users.length ? "No accounts match these filters." : "No accounts found.");
+          cell.colSpan = 6;
+          cell.className = "empty-record";
+          body.appendChild(row);
+          return;
+        }
+        filtered.forEach((user) => {
+          const row = document.createElement("tr");
+          const name = addCell(row, user.fullName);
+          const email = document.createElement("span");
+          email.className = "user-email";
+          email.textContent = user.email;
+          name.appendChild(email);
+          addCell(row, label(user.role));
+          const status = document.createElement("td");
+          const badge = document.createElement("span");
+          badge.className = "badge badge-" + String(user.status).replace(/_/g, "-");
+          badge.textContent = label(user.status);
+          status.appendChild(badge);
+          row.appendChild(status);
+          addCell(row, String(user.createdAt || "").slice(0, 10));
+          addCell(row, String(user.lastLogin || "").slice(0, 16));
+          const action = document.createElement("td");
+          const button = document.createElement("button");
+          button.type = "button";
+          if (user.self) {
+            action.textContent = "Your account";
+          } else if (user.status === "active" || user.status === "pending_verification") {
+            button.className = "btn btn-danger";
+            button.textContent = "Deactivate";
+            button.addEventListener("click", () => changeStatus(user, "deactivate"));
+            action.appendChild(button);
+          } else if (user.status === "inactive") {
+            button.className = "btn btn-primary";
+            button.textContent = "Reactivate";
+            button.addEventListener("click", () => changeStatus(user, "reactivate"));
+            action.appendChild(button);
+          } else {
+            action.textContent = "Suspended";
+          }
+          row.appendChild(action);
+          body.appendChild(row);
+        });
+      };
+
+      const load = () =>
+        fetch(`${context}/AdminUsersServlet`, { headers: { Accept: "application/json" }, cache: "no-store" })
+          .then((response) => response.json().then((data) => ({ response, data })))
+          .then(({ response, data }) => {
+            if (!response.ok) throw new Error(data.error || "Accounts could not be loaded");
+            users = data.users || [];
+            render();
+          })
+          .catch((error) => {
+            body.replaceChildren();
+            const row = document.createElement("tr");
+            const cell = addCell(row, error.message);
+            cell.colSpan = 6;
+            cell.className = "empty-record";
+            body.appendChild(row);
+          });
+
+      [search, roleFilter, statusFilter].forEach((element) =>
+        element.addEventListener(element === search ? "input" : "change", render));
+      load();
+    })();
+  </script>
+  <script src="../../../portal-identity.js?v=20260822-auth"></script>
+  <script src="../../../system-status.js"></script>
+</body>
+</html>
