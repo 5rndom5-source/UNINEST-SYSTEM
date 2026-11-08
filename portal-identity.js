@@ -150,8 +150,14 @@
         accessLink.href = contextPath() + '/AdminAccessServlet';
         accessLink.textContent = 'Admin access requests';
         adminNav.appendChild(accessLink);
+        var usersLink = document.createElement('a');
+        usersLink.className = 'nav-item' + (/\/Users\.html$/i.test(window.location.pathname) ? ' active' : '');
+        usersLink.href = contextPath() + '/Admin/web/jsp/Users.html';
+        usersLink.textContent = 'Users';
+        adminNav.appendChild(usersLink);
       }
     }
+    setupCloseAccount();
     if ((user.role === "student" || user.role === "landlord") && user.demoPayments && !document.querySelector('[data-demo-payments]')) {
       var nav = document.querySelector('.side-nav');
       if (nav) { var link = document.createElement('a'); link.className='nav-item'; link.dataset.demoPayments='true'; link.href=contextPath()+'/PaymentSimulationServlet'; link.textContent='Demo payments'; nav.appendChild(link); }
@@ -255,6 +261,70 @@
     back.textContent = "Back to previous page";
     back.style.cssText = "display:inline-block;margin:0 0 16px;text-decoration:underline;";
     main.prepend(back);
+  }
+
+  // Adds "Close account" under the profile form on the student, landlord and admin profile pages.
+  // Closing deactivates the account (it is never deleted) after the current password is confirmed.
+  function setupCloseAccount() {
+    if (document.querySelector("[data-close-account]")) return;
+    var profileForm = document.querySelector('form[action$="ProfileServlet"]');
+    if (!profileForm) return;
+    var host = profileForm.closest("section, .panel") || profileForm;
+    var card = document.createElement("section");
+    card.dataset.closeAccount = "true";
+    card.className = host.className;
+    card.style.cssText = "margin-top:22px;border:1px solid #f1b5ae;";
+    var heading = document.createElement("h2");
+    heading.textContent = "Close account";
+    heading.style.cssText = "margin:0 0 8px;font-size:18px;color:#b42318;";
+    var text = document.createElement("p");
+    text.textContent = "Closing your account signs you out and stops you signing in again. Your bookings, payments and messages are kept on record. Contact support if you want it reopened later.";
+    text.style.cssText = "margin:0 0 14px;color:#475569;font-size:14px;line-height:1.5;";
+    var form = document.createElement("form");
+    form.style.cssText = "display:flex;flex-wrap:wrap;gap:10px;align-items:center;";
+    var password = document.createElement("input");
+    password.type = "password";
+    password.name = "password";
+    password.required = true;
+    password.autocomplete = "current-password";
+    password.placeholder = "Current password";
+    password.setAttribute("aria-label", "Current password");
+    password.style.cssText = "flex:1 1 220px;padding:10px 12px;border:1px solid #cbd5e1;border-radius:6px;";
+    var submit = document.createElement("button");
+    submit.type = "submit";
+    submit.textContent = "Close my account";
+    submit.style.cssText = "padding:10px 16px;border:0;border-radius:6px;background:#b42318;color:#fff;font-weight:700;cursor:pointer;";
+    var status = document.createElement("p");
+    status.setAttribute("role", "status");
+    status.style.cssText = "flex-basis:100%;margin:4px 0 0;color:#b42318;font-size:13px;";
+    form.append(password, submit, status);
+    form.addEventListener("submit", async function (event) {
+      event.preventDefault();
+      if (!window.confirm("Close your UniNest account? You will be signed out and cannot sign in again.")) return;
+      submit.disabled = true;
+      status.textContent = "";
+      try {
+        var response = await fetch(contextPath() + "/CloseAccountServlet", {
+          method: "POST", credentials: "same-origin",
+          headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({ password: password.value })
+        });
+        var result = await response.json().catch(function () { return {}; });
+        if (response.ok && result.success) {
+          window.location.replace(contextPath() + "/createAccount/login.html?success="
+            + encodeURIComponent("Your account has been closed"));
+          return;
+        }
+        status.textContent = result.message || "Your account could not be closed. Try again.";
+      } catch (error) {
+        status.textContent = error.message || "Your account could not be closed. Try again.";
+      } finally {
+        password.value = "";
+        submit.disabled = false;
+      }
+    });
+    card.append(heading, text, form);
+    host.after(card);
   }
 
   function notificationButton() {
