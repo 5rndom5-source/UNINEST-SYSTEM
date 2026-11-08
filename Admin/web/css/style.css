@@ -1673,3 +1673,117 @@ label,
     background: #eef2f7 !important;
     color: #475569 !important;
 }
+
+/* UNINEST — Admin Portal Mobile Improvements */
+@media (max-width: 640px) {
+
+  .dashboard-wrapper,
+  .page-wrapper {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .dashboard-wrapper .main-content,
+  .page-wrapper .content,
+  main.main-content {
+    min-width: 0;
+    padding: 16px !important;
+  }
+
+  .dashboard-wrapper .header,
+  .page-wrapper .header {
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 14px 16px !important;
+  }
+
+  .brand-title,
+  .page-title {
+    font-size: 24px !important;
+    overflow-wrap: anywhere;
+  }
+
+  .admin-header-actions {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .section,
+  .card,
+  .status-card,
+  .admin-panel {
+    min-width: 0;
+    max-width: 100%;
+    padding: 16px;
+  }
+
+  .section-header,
+  .page-header,
+  .toolbar,
+  .filters,
+  .form-actions {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .status-grid,
+  .quick-actions,
+  .form-row,
+  .form-row.three,
+  .review-layout,
+  .profile-layout,
+  .details-layout {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  /* Keep wide tables scrollable on phones */
+  .table-responsive,
+  .table-container {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Fix approval/action controls overflowing */
+  .admin-inline-action {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    min-width: 0;
+    width: 100%;
+  }
+
+  .admin-inline-action select,
+  .admin-inline-action input,
+  .admin-inline-action .btn {
+    width: 100%;
+    min-width: 0;
+    min-height: 44px !important;
+  }
+
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    max-width: 100%;
+    font-size: 16px;
+  }
+
+  .btn,
+  .action-btn,
+  .table-action {
+    min-height: 44px;
+  }
+
+  /* Keep dialogs usable on small screens */
+  .modal-content {
+    width: calc(100vw - 24px);
+    max-width: 100%;
+    max-height: 90dvh;
+    overflow-y: auto;
+  }
+
+  .modal-footer {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+}
+
