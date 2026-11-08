@@ -13,6 +13,22 @@ Members must reach the same running server to share accounts. `localhost` refers
 
 Fresh independent installations require an owner-controlled first admin setup as described in DEPLOYMENT.md. They do not inherit your local accounts or profile images.
 
+### First admin on a database with no active admin
+
+If nobody can approve requests yet (for example a new Render database), the owner approves exactly one request directly:
+
+1. Register the admin at `Register.html` as above, so the account is pending.
+2. Local database: run `tools\approve-admin.ps1 -Email you@example.com`. It uses the `UNINEST_DB_*` settings and only activates a pending admin request; it never changes students, landlords, declined or suspended accounts.
+3. Hosted database (Render): run this once in the database's SQL console, replacing the email:
+
+   ```sql
+   UPDATE users u JOIN admins a ON a.user_id = u.user_id
+   SET u.status = 'active', a.admin_position = 'Administrator'
+   WHERE u.email = 'you@example.com' AND u.role = 'admin' AND u.status = 'pending_verification';
+   ```
+
+After that, approve every other admin from **Admin access requests** in the portal.
+
 ## Profile picture
 
 Open Admin Profile, choose a JPEG/PNG up to 5 MB, then click **Upload Picture**. Pictures are resized to at most 1024 pixels on their longest side and submitted with a session security token. After success the page's avatars refresh; reopening the profile loads the stored image.
