@@ -94,14 +94,17 @@ public final class RecoveryService {
         } catch (SQLException | RuntimeException e) { connection.rollback(); throw e; }
         finally { connection.setAutoCommit(true); }
     }
-    // Logs only Resend's short "message" field (e.g. unverified domain). Links and tokens are removed,
-    // so a reset link can never reach the logs even if the provider echoes request content.
+    // Logs only Resend's short "message" field (e.g. unverified domain). Email addresses, links and
+    // tokens are removed, so personal data and reset links never reach the logs even if echoed back.
+    // Emails are matched with escaped/encoded "@" forms and without a TLD, so truncated ones are caught.
     public static String providerReason(String body) {
         if (body == null) return "";
         java.util.regex.Matcher match = java.util.regex.Pattern
                 .compile("\"message\"\\s*:\\s*\"((?:[^\"\\\\]|\\\\.){0,200})").matcher(body);
         if (!match.find()) return "";
-        String reason = match.group(1).replaceAll("https?://\\S+", "[link removed]")
+        String reason = match.group(1)
+                .replaceAll("(?i)[A-Za-z0-9._%+'-]*(?:@|\\\\u0040|%40|&#64;)[A-Za-z0-9.-]*", "[email removed]")
+                .replaceAll("https?://\\S+", "[link removed]")
                 .replaceAll("token=[A-Za-z0-9_-]+", "token=[removed]")
                 .replaceAll("[A-Za-z0-9_-]{40,}", "[removed]");
         return ": " + reason;
