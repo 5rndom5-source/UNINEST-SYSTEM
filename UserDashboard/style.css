@@ -1033,3 +1033,127 @@ td {
     display: none;
   }
 }
+
+/* UNINEST — Student Portal Mobile Improvements */
+@media (max-width: 700px) {
+  .dashboard-shell {
+    display: block;
+  }
+
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: static;
+    overflow: visible;
+    background: var(--navy);
+  }
+
+  .brand {
+    height: auto;
+    min-height: 72px;
+    padding: 12px 16px;
+    background: #fff;
+  }
+
+  .brand img {
+    width: 44px;
+    height: 44px;
+  }
+
+  .brand strong {
+    font-size: 20px;
+  }
+
+  .side-nav {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 8px;
+    padding: 10px 12px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .nav-item {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    min-height: 44px;
+    padding: 10px 12px;
+  }
+
+  .sidebar-footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding: 10px 16px 16px;
+  }
+
+  .topbar {
+    padding: 14px 16px;
+    gap: 12px;
+  }
+
+  .global-search {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .top-actions {
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
+
+  .content {
+    padding: 16px;
+  }
+
+  .page-heading h1 {
+    font-size: 25px;
+  }
+
+  .summary-grid,
+  .dashboard-grid,
+  .listing-grid,
+  .listing-grid.compact,
+  .messages-layout,
+  .profile-layout,
+  .profile-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .summary-card,
+  .panel,
+  .profile-card {
+    padding: 16px;
+    min-width: 0;
+  }
+
+  .panel-header {
+    flex-wrap: wrap;
+  }
+
+  .card-actions {
+    flex-wrap: wrap;
+  }
+
+  .listing-action {
+    min-height: 44px;
+  }
+
+  .table-wrap {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  .booking-dialog {
+    max-height: calc(100dvh - 24px);
+    overflow-y: auto;
+  }
+
+  .toast {
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    max-width: none;
+  }
+}
+
