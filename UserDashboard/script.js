@@ -676,15 +676,22 @@ const renderMessages = (messages, emptyMessage = "No messages have been sent yet
   });
 };
 
-const loadMessages = async () => {
+const loadMessages = async (live = false) => {
   try {
     const data = await getJson(endpoint("/StudentMessageServlet"));
     renderMessages(data?.messages || []);
     if (window.uninestRefreshNotifications) window.uninestRefreshNotifications();
   } catch {
-    renderMessages([], LOAD_ERROR);
+    // A failed live reload keeps the messages already on screen.
+    if (!live) renderMessages([], LOAD_ERROR);
   }
 };
+
+// portal-identity.js announces new notifications; support replies reload the list without a refresh.
+window.addEventListener("uninest:notification", (event) => {
+  const items = event.detail?.notifications || [];
+  if (pageName === "messages" && items.some((item) => item.type === "message_received")) loadMessages(true);
+});
 
 const fillProfileForm = (profile) => {
   setProfileLabels(profile);

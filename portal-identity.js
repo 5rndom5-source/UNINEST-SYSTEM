@@ -296,6 +296,11 @@
       .uninest-notification-open span { color: #475569; font-size: 12px; line-height: 1.45; }
       .uninest-notification-open small { color: #768396; font-size: 11px; margin-top: 5px; }
       .uninest-notification-empty { padding: 28px 18px; color: #64748b; text-align: center; font-size: 13px; }
+      .uninest-notification-toast { position: fixed; z-index: 1200; right: 22px; bottom: 22px; width: min(340px, calc(100vw - 28px));
+        display: grid; gap: 4px; padding: 14px 16px; border-left: 4px solid #075f59; border-radius: 8px;
+        background: #fff; color: #1f2937; box-shadow: 0 18px 50px rgba(15,23,42,.25); font: 13px/1.45 Arial, sans-serif; }
+      .uninest-notification-toast[hidden] { display: none; }
+      .uninest-notification-toast span { color: #475569; }
       @media (max-width: 640px) { .uninest-notification-panel { top: 62px; right: 14px; } }
     `;
     document.head.appendChild(style);
@@ -407,17 +412,38 @@
     panel.append(head, list);
     document.body.appendChild(panel);
 
+    // The first load only records the newest id, so existing notifications do not pop up again.
+    var newestNotificationId = null;
+    var refreshing = false;
     window.uninestRefreshNotifications = async function () {
+      if (refreshing) return;
+      refreshing = true;
       try {
         var response = await fetch(contextPath() + "/NotificationServlet", {
           credentials: "same-origin", headers: { Accept: "application/json" }, cache: "no-store"
         });
         if (!response.ok) return;
-        renderNotificationPanel(panel, await response.json());
+        var data = await response.json();
+        renderNotificationPanel(panel, data);
+        announceNewNotifications(data.notifications || []);
       } catch (error) {
         // Keep portal navigation usable if notifications are temporarily unavailable.
+      } finally {
+        refreshing = false;
       }
     };
+
+    function announceNewNotifications(items) {
+      var newest = items.reduce(function (max, item) { return Math.max(max, Number(item.id) || 0); }, 0);
+      var previous = newestNotificationId;
+      newestNotificationId = Math.max(previous || 0, newest);
+      if (previous === null) return;
+      var fresh = items.filter(function (item) { return Number(item.id) > previous && !item.read; });
+      if (!fresh.length) return;
+      showNotificationToast(fresh);
+      // Pages such as Messages listen for this to reload their own lists.
+      window.dispatchEvent(new CustomEvent("uninest:notification", { detail: { notifications: fresh } }));
+    }
     button.addEventListener("click", function (event) {
       event.preventDefault();
       panel.hidden = !panel.hidden;
@@ -435,7 +461,60 @@
       if (!panel.hidden && !panel.contains(event.target) && !button.contains(event.target)) panel.hidden = true;
     });
     window.uninestRefreshNotifications();
-    window.setInterval(window.uninestRefreshNotifications, 30000);
+    // Near-live updates while the tab is visible; hidden tabs pause to spare the server.
+    window.setInterval(function () {
+      if (!document.hidden) window.uninestRefreshNotifications();
+    }, NOTIFICATION_POLL_MS);
+    document.addEventListener("visibilitychange", function () {
+      if (!document.hidden) window.uninestRefreshNotifications();
+    });
+  }
+
+  var NOTIFICATION_POLL_MS = 5000;
+
+  function showNotificationToast(items) {
+    var toast = document.getElementById("uninest-notification-toast");
+    if (!toast) {
+      toast = document.createElement("div");
+      toast.id = "uninest-notification-toast";
+      toast.className = "uninest-notification-toast";
+      toast.setAttribute("role", "status");
+      toast.setAttribute("aria-live", "polite");
+      document.body.appendChild(toast);
+    }
+    toast.replaceChildren();
+    var title = document.createElement("strong");
+    var message = document.createElement("span");
+    if (items.length === 1) {
+      title.textContent = items[0].title || "New notification";
+      message.textContent = items[0].message || "";
+    } else {
+      title.textContent = items.length + " new notifications";
+      message.textContent = items[0].title || "";
+    }
+    toast.append(title, message);
+    toast.hidden = false;
+    window.clearTimeout(showNotificationToast.timer);
+    showNotificationToast.timer = window.setTimeout(function () { toast.hidden = true; }, 6000);
+    playNotificationSound();
+  }
+
+  // Browsers only allow sound after the user has interacted with the page; failures stay silent.
+  function playNotificationSound() {
+    try {
+      var AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return;
+      var audio = playNotificationSound.context || (playNotificationSound.context = new AudioContext());
+      if (audio.state === "suspended") audio.resume();
+      var tone = audio.createOscillator();
+      var volume = audio.createGain();
+      tone.frequency.value = 880;
+      volume.gain.setValueAtTime(0.08, audio.currentTime);
+      volume.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + 0.35);
+      tone.connect(volume).connect(audio.destination);
+      tone.start();
+      tone.stop(audio.currentTime + 0.35);
+    } catch (error) { /* Sound is optional. */ }
   }
 
   async function loadIdentity() {
