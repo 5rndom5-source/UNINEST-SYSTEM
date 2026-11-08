@@ -62,7 +62,8 @@ public final class RecoveryService {
             HttpResponse<String> response = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build()
                     .send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() < 200 || response.statusCode() >= 300)
-                throw new java.io.IOException("Email provider returned HTTP " + response.statusCode());
+                throw new java.io.IOException("Email provider returned HTTP " + response.statusCode()
+                        + providerReason(response.body()));
         } catch (Exception e) {
             try (PreparedStatement delete = connection.prepareStatement("DELETE FROM password_reset_tokens WHERE token_hash=?")) {
                 delete.setString(1, hash(token)); delete.executeUpdate();
@@ -92,6 +93,18 @@ public final class RecoveryService {
             connection.commit(); return true;
         } catch (SQLException | RuntimeException e) { connection.rollback(); throw e; }
         finally { connection.setAutoCommit(true); }
+    }
+    // Logs only Resend's short "message" field (e.g. unverified domain). Links and tokens are removed,
+    // so a reset link can never reach the logs even if the provider echoes request content.
+    public static String providerReason(String body) {
+        if (body == null) return "";
+        java.util.regex.Matcher match = java.util.regex.Pattern
+                .compile("\"message\"\\s*:\\s*\"((?:[^\"\\\\]|\\\\.){0,200})").matcher(body);
+        if (!match.find()) return "";
+        String reason = match.group(1).replaceAll("https?://\\S+", "[link removed]")
+                .replaceAll("token=[A-Za-z0-9_-]+", "token=[removed]")
+                .replaceAll("[A-Za-z0-9_-]{40,}", "[removed]");
+        return ": " + reason;
     }
     private static String quote(String value) {
         StringBuilder result = new StringBuilder("\"");
