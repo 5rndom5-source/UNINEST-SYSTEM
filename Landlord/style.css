@@ -1856,3 +1856,166 @@ body.landlord-classic {
   letter-spacing:0;
   white-space:nowrap;
 }
+
+/* UNINEST — Landlord Portal Mobile Improvements */
+@media (max-width: 700px) {
+  .app-shell {
+    display: block;
+  }
+
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: static;
+    overflow: visible;
+  }
+
+  .brand {
+    height: auto;
+    min-height: 72px;
+    padding: 12px 16px;
+  }
+
+  .brand img {
+    width: 44px;
+    height: 44px;
+  }
+
+  .side-nav {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 8px;
+    padding: 12px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .side-nav a {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    padding: 10px 14px;
+  }
+
+  .workspace,
+  .content {
+    min-width: 0;
+  }
+
+  .content,
+  .topbar {
+    padding: 16px;
+  }
+
+  .page-title {
+    font-size: 25px;
+  }
+
+  .hero-panel,
+  .info-grid,
+  .two-column,
+  .form-grid,
+  .profile-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .panel,
+  .info-card,
+  .hero-panel {
+    min-width: 0;
+  }
+
+  .table-shell {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  .btn,
+  .submit-btn {
+    min-height: 44px;
+  }
+
+  /* Property registration and listing pages */
+  .classic-header {
+    padding: 14px 16px;
+    gap: 12px;
+  }
+
+  .classic-brand {
+    min-width: 0;
+  }
+
+  .classic-nav {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    width: 100%;
+    gap: 8px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .classic-nav a {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    min-height: 44px;
+    padding: 12px;
+  }
+
+  .classic-content {
+    padding: 20px 14px 32px;
+  }
+
+  .classic-section {
+    padding: 16px;
+    min-width: 0;
+  }
+
+  .classic-title {
+    font-size: 24px;
+  }
+
+  .form-pair,
+  .classic-listings-grid,
+  .classic-contact-layout,
+  .classic-property-preview,
+  .classic-property-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .classic-card-image {
+    min-height: 180px;
+  }
+
+  .classic-card-details {
+    padding: 16px;
+    min-width: 0;
+  }
+
+  .classic-contact-form {
+    padding: 16px;
+  }
+
+  .classic-buttons {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .classic-buttons .btn,
+  .classic-buttons .submit-btn {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .property-entry-form input,
+  .property-entry-form select,
+  .property-entry-form textarea,
+  .classic-contact-form input,
+  .classic-contact-form textarea {
+    max-width: 100%;
+    min-width: 0;
+    font-size: 16px;
+  }
+}
+
