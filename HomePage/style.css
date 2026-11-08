@@ -1259,3 +1259,150 @@ RESPONSIVE
   }
 
 }
+
+/* UniNest mobile homepage and listings */
+@media (max-width: 640px) {
+  .navbar {
+    padding: 14px 16px;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .navbar .logo,
+  .navbar .nav-right {
+    width: 100%;
+  }
+
+  .navbar .logo-img {
+    width: 48px;
+  }
+
+  .navbar .logo-text h2 {
+    font-size: 22px;
+  }
+
+  .navbar nav {
+    order: 3;
+    width: 100%;
+    margin: 0;
+    gap: 10px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+
+  .navbar nav a {
+    flex-shrink: 0;
+    padding: 12px 6px;
+  }
+
+  .hero {
+    padding: 32px 16px;
+    gap: 24px;
+  }
+
+  .hero-left,
+  .hero-right {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .hero-left h1 {
+    font-size: clamp(32px, 8vw, 44px);
+    line-height: 1.15;
+  }
+
+  .hero-left p {
+    font-size: 16px;
+  }
+
+  .hero-image {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 3 / 2;
+  }
+
+  .search-box {
+    flex-wrap: wrap;
+  }
+
+  .search-box input {
+    min-width: 0;
+  }
+
+  .search-box button {
+    width: 100%;
+    flex-basis: 100%;
+  }
+
+  .category-buttons {
+    gap: 8px;
+  }
+
+  .featured,
+  .why {
+    padding: 36px 16px;
+  }
+
+  .featured-header h2,
+  .why h2 {
+    font-size: 28px;
+  }
+
+  .featured-cards,
+  .why-container {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+
+  .featured-cards .card,
+  .why-box {
+    width: 100%;
+  }
+
+  .top-search {
+    padding: 16px;
+  }
+
+  .search-container {
+    flex-direction: column;
+    padding: 16px;
+  }
+
+  .search-container > .sidebar,
+  .search-container > .results {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .results-top {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .listing-card {
+    padding: 12px;
+  }
+
+  .listing-image {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 3;
+  }
+
+  .contact-hero,
+  .about-hero,
+  .mission-section {
+    padding: 32px 16px;
+  }
+
+  footer {
+    padding: 36px 18px;
+  }
+
+  .footer-section {
+    flex-basis: 100%;
+    min-width: 0;
+  }
+}
+
