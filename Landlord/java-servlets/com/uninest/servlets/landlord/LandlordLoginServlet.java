@@ -1,6 +1,7 @@
 package com.uninest.servlets.landlord;
 
 import com.uninest.utils.DatabaseConnection;
+import com.uninest.utils.LoginRecord;
 import com.uninest.utils.PasswordUtil;
 import com.uninest.utils.ValidationUtil;
 
@@ -91,7 +92,9 @@ public class LandlordLoginServlet extends HttpServlet {
         session.setAttribute("role", "landlord");
         session.setMaxInactiveInterval(1800);
 
+        int userId = rs.getInt("user_id");
         stmt.close();
+        LoginRecord.recordLastLogin(conn, userId);
         return true;
     }
 
