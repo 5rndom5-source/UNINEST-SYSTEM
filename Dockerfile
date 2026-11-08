@@ -14,6 +14,13 @@ FROM tomcat:9-jdk11-temurin
 RUN groupadd --gid 10001 uninest && useradd --uid 10001 --gid uninest --create-home uninest \
     && mkdir -p /data/uploads && chown -R uninest:uninest /data /usr/local/tomcat
 COPY --from=build --chown=uninest:uninest /app/target/uninest.war /usr/local/tomcat/webapps/uninest.war
+
+# Redirect visitors from / to /uninest/
+RUN mkdir -p /usr/local/tomcat/webapps/ROOT \
+    && printf '%s\n' '<% response.sendRedirect("/uninest/"); %>' \
+       > /usr/local/tomcat/webapps/ROOT/index.jsp \
+    && chown -R uninest:uninest /usr/local/tomcat/webapps/ROOT
+
 ENV UNINEST_UPLOAD_DIR=/data/uploads
 USER uninest
 EXPOSE 8080

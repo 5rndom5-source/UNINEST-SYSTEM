@@ -1,6 +1,7 @@
 package com.uninest.servlets.auth;
 
 import com.uninest.utils.DatabaseConnection;
+import com.uninest.utils.LoginRecord;
 import com.uninest.utils.PasswordUtil;
 import com.uninest.utils.ValidationUtil;
 
@@ -80,7 +81,7 @@ public class LoginServlet extends HttpServlet {
                         session.setAttribute("role", "admin");
                         session.setMaxInactiveInterval(1800);
 
-                        updateLastLogin(conn, userId);
+                        LoginRecord.recordLastLogin(conn, userId);
                         response.sendRedirect(request.getContextPath() + "/Dashboard.html");
                         return;
                     }
@@ -105,18 +106,6 @@ public class LoginServlet extends HttpServlet {
 
     private String normalizeEmail(String email) {
         return email == null ? null : email.trim().toLowerCase(java.util.Locale.ROOT);
-    }
-
-    private void updateLastLogin(Connection conn, int userId) {
-        try {
-            String query = "UPDATE users SET last_login = NOW() WHERE user_id = ?";
-            PreparedStatement stmt = conn.prepareStatement(query);
-            stmt.setInt(1, userId);
-            stmt.executeUpdate();
-            stmt.close();
-        } catch (SQLException e) {
-            System.err.println("Error updating last login: " + e.getMessage());
-        }
     }
 
     private void redirectWithError(HttpServletResponse response, String errorMessage)

@@ -3,6 +3,7 @@ package com.uninest.servlets.student;
 import com.uninest.utils.DatabaseConnection;
 import com.uninest.utils.MessageAttachmentSupport;
 import com.uninest.utils.MessageDelivery;
+import com.uninest.utils.MessagePermissions;
 import com.uninest.utils.ValidationUtil;
 
 import javax.servlet.ServletException;
@@ -49,7 +50,9 @@ public class StudentMessageServlet extends HttpServlet {
                 return;
             }
 
-            markIncomingRead(conn, userId);
+            if (MessagePermissions.marksReadOnLoad(request.getParameter("background"))) {
+                markIncomingRead(conn, userId);
+            }
 
             String query = "SELECT m.message_id, m.sender_id, m.recipient_id, m.message_text, "
                     + "m.attachment_url, m.sent_date, m.is_read, "

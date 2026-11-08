@@ -1,6 +1,7 @@
 package com.uninest.servlets.account;
 
 import com.uninest.utils.DatabaseConnection;
+import com.uninest.utils.LoginRecord;
 import com.uninest.utils.PasswordUtil;
 import com.uninest.utils.ValidationUtil;
 
@@ -91,6 +92,7 @@ public class AccountLoginServlet extends HttpServlet {
             }
 
             stmt.close();
+            LoginRecord.recordLastLogin(conn, userId);
             response.sendRedirect(request.getContextPath() + "/" + destinationFor(role));
         } catch (SQLException e) {
             System.err.println("Database error in AccountLoginServlet: " + e.getMessage());

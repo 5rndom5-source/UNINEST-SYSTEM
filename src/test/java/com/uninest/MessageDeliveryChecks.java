@@ -17,6 +17,10 @@ public final class MessageDeliveryChecks {
         check(!MessagePermissions.canMarkRead(2, "admin", 1, "student"), "admin cannot mark outgoing reply read");
         check(!MessagePermissions.canMarkRead(3, "landlord", 2, "admin"), "unrelated landlord denied");
         check(MessagePermissions.canMarkRead(1, "student", 1, "student"), "student reads received reply");
+        check(MessagePermissions.marksReadOnLoad(null), "opening the messages page marks read");
+        check(MessagePermissions.marksReadOnLoad(""), "empty background flag still marks read");
+        check(!MessagePermissions.marksReadOnLoad("1"), "live background refresh leaves notifications unread");
+        check(MessagePermissions.marksReadOnLoad("true"), "only background=1 skips marking read");
         State success = new State();
         try (MessageDelivery delivery = new MessageDelivery(success.connection())) { delivery.commit(); }
         check(success.calls.equals(List.of("auto:false", "commit", "auto:true")), "successful delivery commits once");

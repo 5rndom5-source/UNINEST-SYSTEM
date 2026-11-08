@@ -268,3 +268,49 @@
       width: 100%;
     }
   }
+
+
+/* UNINEST — Mobile Login and Registration Fix */
+@media (max-width: 640px) {
+  body {
+    flex-direction: column;
+    align-items: center;
+    padding: 12px;
+  }
+
+  .container {
+    width: 100%;
+    max-width: 420px;
+    margin-bottom: 12px;
+  }
+
+  .content {
+    padding: 24px 18px 30px;
+  }
+
+  .header-bar {
+    height: auto;
+    min-height: 54px;
+    gap: 8px;
+    justify-content: space-between;
+    padding: 8px 12px;
+  }
+
+  .header-bar .system-status-chip {
+    min-width: 0;
+    max-width: calc(100% - 40px);
+    white-space: normal;
+    line-height: 1.3;
+  }
+
+  .header-bar .home-link {
+    flex-shrink: 0;
+  }
+
+  .form-group input,
+  .form-group select {
+    min-width: 0;
+    max-width: 100%;
+  }
+}
+

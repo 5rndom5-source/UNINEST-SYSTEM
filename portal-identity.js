@@ -150,8 +150,14 @@
         accessLink.href = contextPath() + '/AdminAccessServlet';
         accessLink.textContent = 'Admin access requests';
         adminNav.appendChild(accessLink);
+        var usersLink = document.createElement('a');
+        usersLink.className = 'nav-item' + (/\/Users\.html$/i.test(window.location.pathname) ? ' active' : '');
+        usersLink.href = contextPath() + '/Admin/web/jsp/Users.html';
+        usersLink.textContent = 'Users';
+        adminNav.appendChild(usersLink);
       }
     }
+    setupCloseAccount();
     if ((user.role === "student" || user.role === "landlord") && user.demoPayments && !document.querySelector('[data-demo-payments]')) {
       var nav = document.querySelector('.side-nav');
       if (nav) { var link = document.createElement('a'); link.className='nav-item'; link.dataset.demoPayments='true'; link.href=contextPath()+'/PaymentSimulationServlet'; link.textContent='Demo payments'; nav.appendChild(link); }
@@ -257,6 +263,70 @@
     main.prepend(back);
   }
 
+  // Adds "Close account" under the profile form on the student, landlord and admin profile pages.
+  // Closing deactivates the account (it is never deleted) after the current password is confirmed.
+  function setupCloseAccount() {
+    if (document.querySelector("[data-close-account]")) return;
+    var profileForm = document.querySelector('form[action$="ProfileServlet"]');
+    if (!profileForm) return;
+    var host = profileForm.closest("section, .panel") || profileForm;
+    var card = document.createElement("section");
+    card.dataset.closeAccount = "true";
+    card.className = host.className;
+    card.style.cssText = "margin-top:22px;border:1px solid #f1b5ae;";
+    var heading = document.createElement("h2");
+    heading.textContent = "Close account";
+    heading.style.cssText = "margin:0 0 8px;font-size:18px;color:#b42318;";
+    var text = document.createElement("p");
+    text.textContent = "Closing your account signs you out and stops you signing in again. Your bookings, payments and messages are kept on record. Contact support if you want it reopened later.";
+    text.style.cssText = "margin:0 0 14px;color:#475569;font-size:14px;line-height:1.5;";
+    var form = document.createElement("form");
+    form.style.cssText = "display:flex;flex-wrap:wrap;gap:10px;align-items:center;";
+    var password = document.createElement("input");
+    password.type = "password";
+    password.name = "password";
+    password.required = true;
+    password.autocomplete = "current-password";
+    password.placeholder = "Current password";
+    password.setAttribute("aria-label", "Current password");
+    password.style.cssText = "flex:1 1 220px;padding:10px 12px;border:1px solid #cbd5e1;border-radius:6px;";
+    var submit = document.createElement("button");
+    submit.type = "submit";
+    submit.textContent = "Close my account";
+    submit.style.cssText = "padding:10px 16px;border:0;border-radius:6px;background:#b42318;color:#fff;font-weight:700;cursor:pointer;";
+    var status = document.createElement("p");
+    status.setAttribute("role", "status");
+    status.style.cssText = "flex-basis:100%;margin:4px 0 0;color:#b42318;font-size:13px;";
+    form.append(password, submit, status);
+    form.addEventListener("submit", async function (event) {
+      event.preventDefault();
+      if (!window.confirm("Close your UniNest account? You will be signed out and cannot sign in again.")) return;
+      submit.disabled = true;
+      status.textContent = "";
+      try {
+        var response = await fetch(contextPath() + "/CloseAccountServlet", {
+          method: "POST", credentials: "same-origin",
+          headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({ password: password.value })
+        });
+        var result = await response.json().catch(function () { return {}; });
+        if (response.ok && result.success) {
+          window.location.replace(contextPath() + "/createAccount/login.html?success="
+            + encodeURIComponent("Your account has been closed"));
+          return;
+        }
+        status.textContent = result.message || "Your account could not be closed. Try again.";
+      } catch (error) {
+        status.textContent = error.message || "Your account could not be closed. Try again.";
+      } finally {
+        password.value = "";
+        submit.disabled = false;
+      }
+    });
+    card.append(heading, text, form);
+    host.after(card);
+  }
+
   function notificationButton() {
     return document.querySelector(
       '.admin-notification, .icon-btn[aria-label*="Notification"], .icon-button[aria-label*="notification"]'
@@ -296,6 +366,11 @@
       .uninest-notification-open span { color: #475569; font-size: 12px; line-height: 1.45; }
       .uninest-notification-open small { color: #768396; font-size: 11px; margin-top: 5px; }
       .uninest-notification-empty { padding: 28px 18px; color: #64748b; text-align: center; font-size: 13px; }
+      .uninest-notification-toast { position: fixed; z-index: 1200; right: 22px; bottom: 22px; width: min(340px, calc(100vw - 28px));
+        display: grid; gap: 4px; padding: 14px 16px; border-left: 4px solid #075f59; border-radius: 8px;
+        background: #fff; color: #1f2937; box-shadow: 0 18px 50px rgba(15,23,42,.25); font: 13px/1.45 Arial, sans-serif; }
+      .uninest-notification-toast[hidden] { display: none; }
+      .uninest-notification-toast span { color: #475569; }
       @media (max-width: 640px) { .uninest-notification-panel { top: 62px; right: 14px; } }
     `;
     document.head.appendChild(style);
@@ -407,17 +482,38 @@
     panel.append(head, list);
     document.body.appendChild(panel);
 
+    // The first load only records the newest id, so existing notifications do not pop up again.
+    var newestNotificationId = null;
+    var refreshing = false;
     window.uninestRefreshNotifications = async function () {
+      if (refreshing) return;
+      refreshing = true;
       try {
         var response = await fetch(contextPath() + "/NotificationServlet", {
           credentials: "same-origin", headers: { Accept: "application/json" }, cache: "no-store"
         });
         if (!response.ok) return;
-        renderNotificationPanel(panel, await response.json());
+        var data = await response.json();
+        renderNotificationPanel(panel, data);
+        announceNewNotifications(data.notifications || []);
       } catch (error) {
         // Keep portal navigation usable if notifications are temporarily unavailable.
+      } finally {
+        refreshing = false;
       }
     };
+
+    function announceNewNotifications(items) {
+      var newest = items.reduce(function (max, item) { return Math.max(max, Number(item.id) || 0); }, 0);
+      var previous = newestNotificationId;
+      newestNotificationId = Math.max(previous || 0, newest);
+      if (previous === null) return;
+      var fresh = items.filter(function (item) { return Number(item.id) > previous && !item.read; });
+      if (!fresh.length) return;
+      showNotificationToast(fresh);
+      // Pages such as Messages listen for this to reload their own lists.
+      window.dispatchEvent(new CustomEvent("uninest:notification", { detail: { notifications: fresh } }));
+    }
     button.addEventListener("click", function (event) {
       event.preventDefault();
       panel.hidden = !panel.hidden;
@@ -435,7 +531,60 @@
       if (!panel.hidden && !panel.contains(event.target) && !button.contains(event.target)) panel.hidden = true;
     });
     window.uninestRefreshNotifications();
-    window.setInterval(window.uninestRefreshNotifications, 30000);
+    // Near-live updates while the tab is visible; hidden tabs pause to spare the server.
+    window.setInterval(function () {
+      if (!document.hidden) window.uninestRefreshNotifications();
+    }, NOTIFICATION_POLL_MS);
+    document.addEventListener("visibilitychange", function () {
+      if (!document.hidden) window.uninestRefreshNotifications();
+    });
+  }
+
+  var NOTIFICATION_POLL_MS = 5000;
+
+  function showNotificationToast(items) {
+    var toast = document.getElementById("uninest-notification-toast");
+    if (!toast) {
+      toast = document.createElement("div");
+      toast.id = "uninest-notification-toast";
+      toast.className = "uninest-notification-toast";
+      toast.setAttribute("role", "status");
+      toast.setAttribute("aria-live", "polite");
+      document.body.appendChild(toast);
+    }
+    toast.replaceChildren();
+    var title = document.createElement("strong");
+    var message = document.createElement("span");
+    if (items.length === 1) {
+      title.textContent = items[0].title || "New notification";
+      message.textContent = items[0].message || "";
+    } else {
+      title.textContent = items.length + " new notifications";
+      message.textContent = items[0].title || "";
+    }
+    toast.append(title, message);
+    toast.hidden = false;
+    window.clearTimeout(showNotificationToast.timer);
+    showNotificationToast.timer = window.setTimeout(function () { toast.hidden = true; }, 6000);
+    playNotificationSound();
+  }
+
+  // Browsers only allow sound after the user has interacted with the page; failures stay silent.
+  function playNotificationSound() {
+    try {
+      var AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return;
+      var audio = playNotificationSound.context || (playNotificationSound.context = new AudioContext());
+      if (audio.state === "suspended") audio.resume();
+      var tone = audio.createOscillator();
+      var volume = audio.createGain();
+      tone.frequency.value = 880;
+      volume.gain.setValueAtTime(0.08, audio.currentTime);
+      volume.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + 0.35);
+      tone.connect(volume).connect(audio.destination);
+      tone.start();
+      tone.stop(audio.currentTime + 0.35);
+    } catch (error) { /* Sound is optional. */ }
   }
 
   async function loadIdentity() {
