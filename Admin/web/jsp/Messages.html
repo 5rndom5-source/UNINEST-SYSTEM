@@ -260,6 +260,7 @@
       const send = document.querySelector(".chat-input button[type='submit']");
       const feedback = document.getElementById("messageFeedback");
       let messages = [];
+      let selectedId = null;
 
       const renderDetail = (message) => {
         detail.className = "message-detail";
@@ -358,9 +359,11 @@
           const line = document.createElement("span");
           line.textContent = `${message.subject} | ${message.sentAt}`;
           button.append(name, line);
+          if (message.id === selectedId) button.classList.add("active");
           button.addEventListener("click", () => {
             document.querySelectorAll(".conversation-item").forEach((item) => item.classList.remove("active"));
             button.classList.add("active");
+            selectedId = message.id;
             renderDetail(message);
             if (!message.read) markRead(message);
           });
@@ -371,17 +374,34 @@
       const params = new URLSearchParams(window.location.search);
       feedback.textContent = params.get("success") || params.get("error") || "";
       search.addEventListener("input", renderList);
-      fetch(`${context}/AdminMessagesServlet`, { headers: { Accept: "application/json" }, cache: "no-store" })
-        .then((response) => response.json().then((data) => ({ response, data })))
-        .then(({ response, data }) => {
-          if (!response.ok) throw new Error(data.error || "Messages could not be loaded");
-          messages = data.messages || [];
-          renderList();
-          if (window.uninestRefreshNotifications) window.uninestRefreshNotifications();
-        })
-        .catch((error) => {
-          list.textContent = error.message;
-        });
+
+      // Reloads only the list, so the open message and any reply being typed stay untouched.
+      // Live reloads send background=1 so the server leaves the bell badge unread.
+      const loadMessages = (live) =>
+        fetch(`${context}/AdminMessagesServlet${live ? "?background=1" : ""}`, { headers: { Accept: "application/json" }, cache: "no-store" })
+          .then((response) => response.json().then((data) => ({ response, data })))
+          .then(({ response, data }) => {
+            if (!response.ok) throw new Error(data.error || "Messages could not be loaded");
+            const known = new Set(messages.map((item) => item.id));
+            messages = data.messages || [];
+            renderList();
+            const arrived = messages.filter((item) => !known.has(item.id));
+            if (live && arrived.length) {
+              feedback.textContent = arrived.length === 1
+                ? `New message from ${arrived[0].contactName}`
+                : `${arrived.length} new messages`;
+            }
+            if (window.uninestRefreshNotifications) window.uninestRefreshNotifications();
+          })
+          .catch((error) => {
+            if (!live) list.textContent = error.message;
+          });
+
+      loadMessages(false);
+      window.addEventListener("uninest:notification", (event) => {
+        const items = (event.detail && event.detail.notifications) || [];
+        if (items.some((item) => item.type === "message_received")) loadMessages(true);
+      });
     })();
   </script>
   <script src="../../../portal-identity.js?v=20260822-auth"></script>
