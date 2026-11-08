@@ -2,6 +2,7 @@ package com.uninest.servlets.messages;
 
 import com.uninest.utils.DatabaseConnection;
 import com.uninest.utils.MessageAttachmentSupport;
+import com.uninest.utils.MessagePermissions;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -42,7 +43,9 @@ public class AdminMessagesServlet extends HttpServlet {
                 return;
             }
 
-            clearMessageNotifications(conn, (Integer) session.getAttribute("userId"));
+            if (MessagePermissions.marksReadOnLoad(request.getParameter("background"))) {
+                clearMessageNotifications(conn, (Integer) session.getAttribute("userId"));
+            }
 
             String query = "SELECT m.message_id, m.sender_id, m.recipient_id, m.message_text, "
                     + "m.attachment_url, m.sent_date, m.is_read, sender.full_name AS sender_name, "

@@ -376,8 +376,9 @@
       search.addEventListener("input", renderList);
 
       // Reloads only the list, so the open message and any reply being typed stay untouched.
+      // Live reloads send background=1 so the server leaves the bell badge unread.
       const loadMessages = (live) =>
-        fetch(`${context}/AdminMessagesServlet`, { headers: { Accept: "application/json" }, cache: "no-store" })
+        fetch(`${context}/AdminMessagesServlet${live ? "?background=1" : ""}`, { headers: { Accept: "application/json" }, cache: "no-store" })
           .then((response) => response.json().then((data) => ({ response, data })))
           .then(({ response, data }) => {
             if (!response.ok) throw new Error(data.error || "Messages could not be loaded");

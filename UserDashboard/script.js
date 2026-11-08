@@ -678,7 +678,8 @@ const renderMessages = (messages, emptyMessage = "No messages have been sent yet
 
 const loadMessages = async (live = false) => {
   try {
-    const data = await getJson(endpoint("/StudentMessageServlet"));
+    // Live reloads send background=1 so the server leaves messages and the bell badge unread.
+    const data = await getJson(endpoint(live ? "/StudentMessageServlet?background=1" : "/StudentMessageServlet"));
     renderMessages(data?.messages || []);
     if (window.uninestRefreshNotifications) window.uninestRefreshNotifications();
   } catch {
