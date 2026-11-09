@@ -94,7 +94,7 @@ public class StudentReviewServlet extends HttpServlet {
 
     private Integer findLandlordUserId(Connection conn, int roomId) throws SQLException {
         String sql = "SELECT l.user_id FROM rooms r JOIN landlords l ON l.landlord_id = r.landlord_id "
-                + "WHERE r.room_id = ? AND r.approval_status = 'approved' AND r.availability_status = 'available'";
+                + "WHERE r.room_id = ? AND r.approval_status = 'approved'";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, roomId);
             try (ResultSet rs = stmt.executeQuery()) {
