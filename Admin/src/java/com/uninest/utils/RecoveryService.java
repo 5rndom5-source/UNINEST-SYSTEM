@@ -62,7 +62,8 @@ public final class RecoveryService {
             HttpResponse<String> response = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build()
                     .send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() < 200 || response.statusCode() >= 300)
-                throw new java.io.IOException("Email provider returned HTTP " + response.statusCode());
+                throw new java.io.IOException("Email provider returned HTTP " + response.statusCode()
+                        + providerReason(response.statusCode(), response.body()));
         } catch (Exception e) {
             try (PreparedStatement delete = connection.prepareStatement("DELETE FROM password_reset_tokens WHERE token_hash=?")) {
                 delete.setString(1, hash(token)); delete.executeUpdate();
@@ -92,6 +93,49 @@ public final class RecoveryService {
             connection.commit(); return true;
         } catch (SQLException | RuntimeException e) { connection.rollback(); throw e; }
         finally { connection.setAutoCommit(true); }
+    }
+    // Known Resend error names mapped to fixed, safe descriptions.
+    private static final java.util.Map<String, String> PROVIDER_ERRORS = java.util.Map.ofEntries(
+            java.util.Map.entry("validation_error", "request rejected, often an unverified sender domain or a recipient not allowed in testing mode"),
+            java.util.Map.entry("invalid_from_address", "sender address is not allowed"),
+            java.util.Map.entry("missing_required_field", "request is missing a required field"),
+            java.util.Map.entry("invalid_parameter", "request has an invalid parameter"),
+            java.util.Map.entry("missing_api_key", "API key was not sent"),
+            java.util.Map.entry("invalid_api_key", "API key is not valid"),
+            java.util.Map.entry("restricted_api_key", "API key is not allowed to send email"),
+            java.util.Map.entry("invalid_access", "API key is not allowed for this action"),
+            java.util.Map.entry("rate_limit_exceeded", "rate limit reached"),
+            java.util.Map.entry("daily_quota_exceeded", "daily sending quota reached"),
+            java.util.Map.entry("monthly_quota_exceeded", "monthly sending quota reached"),
+            java.util.Map.entry("security_error", "blocked by provider security checks"),
+            java.util.Map.entry("not_found", "provider endpoint not found"),
+            java.util.Map.entry("method_not_allowed", "request method not allowed"),
+            java.util.Map.entry("application_error", "provider internal error"),
+            java.util.Map.entry("internal_server_error", "provider internal error"));
+    private static final java.util.regex.Pattern PROVIDER_ERROR_NAME =
+            java.util.regex.Pattern.compile("\"name\"\\s*:\\s*\"([A-Za-z_]{1,40})\"");
+
+    /**
+     * Describes a refused send using only fixed text from this class: a known provider error code,
+     * or a category derived from the HTTP status. The provider's message and body are never logged,
+     * so email addresses, keys, reset links and tokens cannot reach the logs.
+     */
+    public static String providerReason(int status, String body) {
+        if (body != null) {
+            java.util.regex.Matcher match = PROVIDER_ERROR_NAME.matcher(body);
+            if (match.find()) {
+                String code = match.group(1).toLowerCase(java.util.Locale.ROOT);
+                for (java.util.Map.Entry<String, String> known : PROVIDER_ERRORS.entrySet()) {
+                    if (known.getKey().equals(code)) return " (" + known.getKey() + ": " + known.getValue() + ")";
+                }
+            }
+        }
+        if (status == 401) return " (unauthorized: API key missing or not valid)";
+        if (status == 403) return " (forbidden: check the sender domain and API key)";
+        if (status == 422) return " (invalid_request: the provider rejected the request)";
+        if (status == 429) return " (rate_limited: too many requests)";
+        if (status >= 500 && status <= 599) return " (provider_unavailable: try again later)";
+        return " (unrecognised_error: see the provider dashboard)";
     }
     private static String quote(String value) {
         StringBuilder result = new StringBuilder("\"");

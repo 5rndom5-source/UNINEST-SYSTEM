@@ -18,6 +18,8 @@ if ($LASTEXITCODE -ne 0) { throw 'CSRF checks failed' }
 if ($LASTEXITCODE -ne 0) { throw 'Messaging checks failed' }
 & "$env:JAVA_HOME\bin\java.exe" -ea -cp $classpath com.uninest.AccountStatusChecks
 if ($LASTEXITCODE -ne 0) { throw 'Account status checks failed' }
+& "$env:JAVA_HOME\bin\java.exe" -ea -cp $classpath com.uninest.RecoveryLogChecks
+if ($LASTEXITCODE -ne 0) { throw 'Password-recovery log checks failed' }
 $originalUploads = $env:UNINEST_UPLOAD_DIR
 try {
     $env:UNINEST_UPLOAD_DIR = Join-Path $root 'test-runtime\attachment-checks'
