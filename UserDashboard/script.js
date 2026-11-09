@@ -308,6 +308,11 @@ const makeListingCard = (listing, context = "browse", index = 0) => {
   bookingButton.textContent = "Book";
 
   actions.append(favoriteButton, requestButton, bookingButton);
+  if (listing.availability && listing.availability !== "available") {
+    addTag(meta, "Currently unavailable");
+    requestButton.disabled = true;
+    bookingButton.disabled = true;
+  }
 
   if (context === "saved") {
     const removeButton = document.createElement("button");
@@ -320,7 +325,7 @@ const makeListingCard = (listing, context = "browse", index = 0) => {
   }
 
   body.append(title, price, meta, rating, tags, actions);
-  if (context === "browse") body.appendChild(makeReviewForm(id));
+  if (context === "browse" || context === "saved") body.appendChild(makeReviewForm(id));
   card.append(image, body);
   return card;
 };
@@ -749,9 +754,20 @@ const submitReview = async (form) => {
   });
   if (!data) return;
   toast(data.message || "Review saved");
-  window.setTimeout(() => {
-    window.location.href = endpoint(`/${data.redirectUrl || "HomePage/home.html?review=success"}`);
-  }, 450);
+  const card = form.closest(".listing-card");
+  const rating = card?.querySelector(".listing-rating");
+  if (rating) {
+    const wrapper = rating.parentElement;
+    rating.remove();
+    addRating(wrapper, data);
+  }
+  let status = form.querySelector('[role="status"]');
+  if (!status) {
+    status = document.createElement("p");
+    status.setAttribute("role", "status");
+    form.appendChild(status);
+  }
+  status.textContent = data.message || "Review saved";
 };
 
 const bookingDialog = () => {

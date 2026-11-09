@@ -53,7 +53,7 @@ public class StudentFavoriteServlet extends HttpServlet {
             }
 
             String query = "SELECT r.room_id, r.room_number, r.room_type, r.location, r.price, "
-                    + "r.capacity, r.furnishing, r.bedrooms, r.bathrooms, "
+                    + "r.capacity, r.furnishing, r.bedrooms, r.bathrooms, r.availability_status, "
                     + "COALESCE((SELECT ri.image_url FROM room_images ri "
                     + "WHERE ri.room_id = r.room_id "
                     + "ORDER BY ri.is_primary DESC, ri.display_order ASC, ri.image_id ASC LIMIT 1), '') AS image_url, "
@@ -63,10 +63,9 @@ public class StudentFavoriteServlet extends HttpServlet {
                     + "LEFT JOIN room_amenities ra ON ra.room_id = r.room_id "
                     + "LEFT JOIN amenities a ON a.amenity_id = ra.amenity_id "
                     + "WHERE f.student_id = ? AND r.approval_status = 'approved' "
-                    + "AND r.availability_status = 'available' "
                     + "GROUP BY r.room_id, r.room_number, r.room_type, r.location, r.price, "
-                    + "r.capacity, r.furnishing, r.bedrooms, r.bathrooms "
-                    + "ORDER BY f.saved_date DESC";
+                    + "r.capacity, r.furnishing, r.bedrooms, r.bathrooms, r.availability_status "
+                    + "ORDER BY MAX(f.saved_date) DESC";
 
             try (PreparedStatement stmt = conn.prepareStatement(query)) {
                 stmt.setInt(1, studentId);
@@ -142,7 +141,20 @@ public class StudentFavoriteServlet extends HttpServlet {
                             + "WHERE room_id = ? AND approval_status = 'approved' AND availability_status = 'available'")) {
                 stmt.setInt(1, studentId);
                 stmt.setInt(2, roomId);
-                stmt.executeUpdate();
+                int inserted = stmt.executeUpdate();
+                if (inserted == 0) {
+                    try (PreparedStatement existing = conn.prepareStatement(
+                            "SELECT 1 FROM favorites WHERE student_id = ? AND room_id = ?")) {
+                        existing.setInt(1, studentId);
+                        existing.setInt(2, roomId);
+                        try (ResultSet saved = existing.executeQuery()) {
+                            if (!saved.next()) {
+                                sendJson(response, HttpServletResponse.SC_CONFLICT, "error", "This listing is no longer available to save");
+                                return;
+                            }
+                        }
+                    }
+                }
             }
 
             sendJson(response, HttpServletResponse.SC_OK, "success", "Listing saved");
@@ -188,6 +200,7 @@ public class StudentFavoriteServlet extends HttpServlet {
         field(out, "type", displayType(rs.getString("room_type")), false);
         field(out, "price", formatPrice(price), false);
         field(out, "image", publicImageUrl(request, rs.getString("image_url")), false);
+        field(out, "availability", rs.getString("availability_status"), false);
         out.print(",\"tags\":[");
         for (int i = 0; i < tags.size(); i++) {
             if (i > 0) out.print(",");
