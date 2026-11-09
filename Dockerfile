@@ -11,6 +11,8 @@ COPY index.html style.css portal-identity.js csrf.js experience.js experience.cs
 RUN mvn -B -DskipTests package
 
 FROM tomcat:9-jdk11-temurin
+RUN sed -i 's/<Server port="8005" shutdown="SHUTDOWN">/<Server port="-1" shutdown="SHUTDOWN">/' /usr/local/tomcat/conf/server.xml \
+    && grep -q '<Server port="-1" shutdown="SHUTDOWN">' /usr/local/tomcat/conf/server.xml
 RUN groupadd --gid 10001 uninest && useradd --uid 10001 --gid uninest --create-home uninest \
     && mkdir -p /data/uploads && chown -R uninest:uninest /data /usr/local/tomcat
 COPY --from=build --chown=uninest:uninest /app/target/uninest.war /usr/local/tomcat/webapps/uninest.war
