@@ -76,6 +76,9 @@ public class RequestLifecycleFilter implements Filter {
                                     || !rows.getString(3).equals(session.getAttribute("role"))
                                     || ("admin".equals(rows.getString(3)) && !"active".equals(rows.getString(2)));
                         }
+                        if (!invalid && "landlord".equals(session.getAttribute("role"))) {
+                            invalid = !com.uninest.utils.LandlordApproval.eligible(conn, (Integer)session.getAttribute("userId"));
+                        }
                         if(invalid){
                             session.invalidate();
                             if (path.endsWith(".html") || path.endsWith("/")) {

@@ -62,6 +62,11 @@ public class AddPropertyServlet extends HttpServlet {
                 return;
             }
 
+            if (!(session.getAttribute("userId") instanceof Integer)
+                    || !com.uninest.utils.LandlordApproval.eligible(conn, (Integer)session.getAttribute("userId"))) {
+                response.sendError(403, "An approved, active landlord account is required");
+                return;
+            }
             conn.setAutoCommit(false);
             if ("2".equals(request.getParameter("editorVersion")) && conn.getNetworkTimeout()>0 && conn.getNetworkTimeout()<30000)
                 conn.setNetworkTimeout(Runnable::run,30000);

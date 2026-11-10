@@ -68,6 +68,11 @@ public class AccountLoginServlet extends HttpServlet {
             }
 
             int userId = rs.getInt("user_id");
+            if ("landlord".equals(role) && !com.uninest.utils.LandlordApproval.eligible(conn, userId)) {
+                stmt.close();
+                redirect(request, response, "createAccount/login.html", "error", "Your landlord account must be approved and active before you can sign in. Contact support for a review.");
+                return;
+            }
             String fullName = rs.getString("full_name");
             Integer landlordId = "landlord".equals(role) ? findLandlordId(conn, userId, fullName) : null;
             if ("landlord".equals(role) && landlordId == null) {
