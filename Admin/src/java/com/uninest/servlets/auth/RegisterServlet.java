@@ -3,6 +3,7 @@ package com.uninest.servlets.auth;
 import com.uninest.utils.DatabaseConnection;
 import com.uninest.utils.PasswordUtil;
 import com.uninest.utils.ValidationUtil;
+import com.uninest.utils.LandlordDocuments;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -15,7 +16,6 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.UUID;
 
 /**
  * RegisterServlet - Handles landlord registration
@@ -86,7 +86,12 @@ public class RegisterServlet extends HttpServlet {
             String hashedPassword = PasswordUtil.hashPassword(password);
             
             // Upload file and get path
-            String idFilePath = uploadFile(idFilePart);
+            if (!conn.getAutoCommit()) throw new SQLException("Registration requires its own transaction");
+            String idFilePath = null;
+            boolean committed = false;
+            conn.setAutoCommit(false);
+            try {
+            idFilePath = LandlordDocuments.save(idFilePart, getServletContext());
             
             // Insert into users table
             String userQuery = "INSERT INTO users (full_name, email, password, phone, role, status) " +
@@ -128,19 +133,35 @@ public class RegisterServlet extends HttpServlet {
             // Insert into documents table
             String docQuery = "INSERT INTO documents " +
                             "(user_id, document_type, file_url, verification_status) " +
-                            "VALUES (?, 'ownership_proof', ?, 'pending')";
+                            "VALUES (?, 'national_id', ?, 'pending')";
             
-            PreparedStatement docStmt = conn.prepareStatement(docQuery);
-            docStmt.setInt(1, userId);
-            docStmt.setString(2, idFilePath);
-            docStmt.executeUpdate();
-            docStmt.close();
+            if (idFilePath != null) {
+                try (PreparedStatement docStmt = conn.prepareStatement(docQuery)) {
+                    docStmt.setInt(1, userId);
+                    docStmt.setString(2, idFilePath);
+                    docStmt.executeUpdate();
+                }
+            }
+            conn.commit();
+            committed = true;
+            } catch (SQLException | IOException | RuntimeException ex) {
+                conn.rollback();
+                throw ex;
+            } finally {
+                try {
+                    if (!committed) LandlordDocuments.discardNew(idFilePath, getServletContext());
+                } finally {
+                    conn.setAutoCommit(true);
+                }
+            }
             
             // Redirect to login page with success message
-            response.sendRedirect("Login.html?success=" + 
+            response.sendRedirect(request.getContextPath() + "/createAccount/login.html?success=" +
                                 java.net.URLEncoder.encode(
-                                "Registration successful! Awaiting admin verification.", "UTF-8"));
+                                "Account created. Awaiting Admin approval. You cannot sign in until your identity and authority to let the property have been verified.", "UTF-8"));
             
+        } catch (IOException e) {
+            sendError(response, "Could not store the document. Choose a JPEG, PNG or PDF up to 5 MB, or try again later.");
         } catch (SQLException e) {
             System.err.println("Database error in RegisterServlet: " + e.getMessage());
             e.printStackTrace();
@@ -237,33 +258,12 @@ public class RegisterServlet extends HttpServlet {
         return exists;
     }
     
-    /**
-     * Upload file and return path
-     */
-    private String uploadFile(Part part) throws IOException {
-        if (part == null) {
-            return null;
-        }
-        
-        String fileName = UUID.randomUUID().toString() + "_" + 
-                         part.getSubmittedFileName();
-        String uploadPath = getServletContext().getRealPath("") + "/uploads/" + fileName;
-        
-        java.nio.file.Files.createDirectories(
-            java.nio.file.Paths.get(
-                getServletContext().getRealPath("") + "/uploads/"
-            )
-        );
-        
-        part.write(uploadPath);
-        return "/uploads/" + fileName;
-    }
     
     /**
      * Send error response
      */
     private void sendError(HttpServletResponse response, String message) throws IOException {
-        response.sendRedirect("Register.html?error=" + 
+        response.sendRedirect("createAccount/index.html?error=" +
                             java.net.URLEncoder.encode(message, "UTF-8"));
     }
 }

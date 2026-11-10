@@ -8,7 +8,7 @@ import javax.servlet.http.*;
 
 @WebServlet("/LandlordApprovalServlet")
 public class LandlordApprovalServlet extends HttpServlet {
-    private Integer authorised(HttpServletRequest req,HttpServletResponse res) throws SQLException,IOException {
+    static Integer authorised(HttpServletRequest req,HttpServletResponse res) throws SQLException,IOException {
         HttpSession s=req.getSession(false);
         if(s==null || !(s.getAttribute("userId") instanceof Integer)){res.sendError(401);return null;}
         if(!"admin".equals(s.getAttribute("role"))){res.sendError(403);return null;}
@@ -38,9 +38,12 @@ public class LandlordApprovalServlet extends HttpServlet {
                     count++;
                     h.append("<article><h2>").append(e(r.getString("full_name"))).append("</h2><p>").append(e(r.getString("email")))
                      .append("</p><p>Business: ").append(e(r.getString("business_name"))).append("</p><p>Address: ").append(e(r.getString("business_address")))
-                     .append("</p><p>Account: ").append(e(r.getString("status"))).append(" | Approval: pending</p><form method='post'>")
+                     .append("</p><p>Account: ").append(e(r.getString("status"))).append(" | Approval: pending</p>");
+                    appendDocuments(h,c,r.getInt("user_id"),root);
+                    h.append("<form method='post'>")
                      .append(CsrfToken.field(req)).append("<input type='hidden' name='userId' value='").append(r.getInt("user_id"))
-                     .append("'><label>Decision reason<textarea name='reason' required maxlength='500'></textarea></label><button name='decision' value='approve'>Approve landlord</button><button name='decision' value='reject'>Reject landlord</button></form></article>");
+                     .append("'><p><label><input type='checkbox' name='independentlyVerified' value='yes'> I independently verified this person's identity and authority to let the property.</label></p>")
+                     .append("<label>Decision reason and verification reference (do not enter identity numbers)<textarea name='reason' required maxlength='500'></textarea></label><button name='decision' value='approve'>Approve landlord</button><button name='decision' value='reject'>Reject landlord</button></form></article>");
                 }
             }
             if(count==0)h.append("<p>No pending landlord accounts.</p>");
@@ -59,10 +62,35 @@ public class LandlordApprovalServlet extends HttpServlet {
             String decision=req.getParameter("decision"),reason=req.getParameter("reason");
             if(!("approve".equals(decision)||"reject".equals(decision)) || reason==null || reason.trim().isEmpty() || reason.length()>500){res.sendError(400,"Choose a decision and enter a reason (maximum 500 characters)");return;}
             int target=Integer.parseInt(req.getParameter("userId"));
-            boolean saved=LandlordApproval.decide(DatabaseConnection.getInstance().getConnection(),actor,target,"approve".equals(decision),reason);
+            boolean verified="yes".equals(req.getParameter("independentlyVerified"));
+            if("approve".equals(decision) && !verified){res.sendError(400,"Independent identity and letting-authority verification is required before approval. Return to the review page and record your checks.");return;}
+            boolean saved=LandlordApproval.decide(DatabaseConnection.getInstance().getConnection(),actor,target,"approve".equals(decision),reason,verified);
             res.sendRedirect(req.getContextPath()+"/LandlordApprovalServlet?result="+(saved?("approve".equals(decision)?"approved":"rejected"):"changed"));
         }catch(NumberFormatException ex){res.sendError(400);}
         catch(SQLException ex){getServletContext().log("Landlord decision failed",ex);res.sendError(503);}
     }
     private static String e(String value){return value==null?"Not supplied":ValidationUtil.sanitizeXSS(value);}
+    private void appendDocuments(StringBuilder h,Connection c,int userId,String root) throws SQLException {
+        int available=0;
+        h.append("<h3>Supporting documents</h3><ul>");
+        try(PreparedStatement q=c.prepareStatement("SELECT document_id,document_type,file_url,verification_status FROM documents WHERE user_id=? ORDER BY document_id")) {
+            q.setInt(1,userId);
+            try(ResultSet r=q.executeQuery()) {
+                while(r.next()) {
+                    boolean exists=false;
+                    try { exists=LandlordDocuments.resolve(r.getString("file_url"),getServletContext())!=null; }
+                    catch(IOException ex) { /* Unavailable storage is not evidence of verification. */ }
+                    h.append("<li>").append(e(r.getString("document_type"))).append(" - ").append(e(r.getString("verification_status")));
+                    if(exists) {
+                        if(!"rejected".equals(r.getString("verification_status"))) available++;
+                        h.append(" <a href='").append(root).append("/LandlordDocumentServlet?id=").append(r.getInt("document_id")).append("'>Download privately</a>");
+                    } else h.append(" - file unavailable");
+                    h.append("</li>");
+                }
+            }
+        }
+        h.append("</ul>");
+        if(available==0) h.append("<p role='note'><strong>No available supporting documents.</strong> Obtain independent verification before approving this account. Missing or rejected files do not establish identity or ownership.</p>");
+        else h.append("<p>Files are supporting evidence only. Independently verify identity and authority to let the property before approval. Do not share downloaded identity documents.</p>");
+    }
 }

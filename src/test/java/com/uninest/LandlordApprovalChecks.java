@@ -33,21 +33,22 @@ public final class LandlordApprovalChecks {
         }
         sql(c,"UPDATE users SET status='pending_verification' WHERE user_id=10");
         sql(c,"UPDATE landlords SET approval_status='pending' WHERE user_id=10");
-        check(!LandlordApproval.decide(c,11,10,true,"Test"),"student cannot approve");
-        check(!LandlordApproval.decide(c,10,10,true,"Test"),"no self approval");
-        check(!LandlordApproval.decide(c,5,11,true,"Test"),"student target rejected");
-        check(!LandlordApproval.decide(c,5,10,true," "),"reason required");
+        check(!LandlordApproval.decide(c,11,10,true,"Test",true),"student cannot approve");
+        check(!LandlordApproval.decide(c,10,10,true,"Test",true),"no self approval");
+        check(!LandlordApproval.decide(c,5,11,true,"Test",true),"student target rejected");
+        check(!LandlordApproval.decide(c,5,10,true," ",true),"reason required");
         sql(c,"UPDATE users SET status='inactive' WHERE user_id=5");
-        check(!LandlordApproval.decide(c,5,10,true,"Test"),"inactive admin denied");
+        check(!LandlordApproval.decide(c,5,10,true,"Test",true),"inactive admin denied");
         sql(c,"UPDATE users SET status='active' WHERE user_id=5");
-        check(LandlordApproval.decide(c,5,10,true,"Identity checked"),"approve pending");
+        check(!LandlordApproval.decide(c,5,10,true,"Not verified",false),"independent verification required even for active admins");
+        check(LandlordApproval.decide(c,5,10,true,"Identity checked",true),"approve pending");
         check(LandlordApproval.eligible(c,10),"approved active account");
-        check(!LandlordApproval.decide(c,5,10,false,"Stale form"),"stale rejection denied");
+        check(!LandlordApproval.decide(c,5,10,false,"Stale form",true),"stale rejection denied");
         check("2".equals(value(c,"SELECT COUNT(*) FROM notifications WHERE title='Landlord account decision'")),"actor and recipient audit records");
         check("active".equals(value(c,"SELECT status FROM users WHERE user_id=5")),"admin unchanged");
         sql(c,"UPDATE users SET status='pending_verification' WHERE user_id=10");
         sql(c,"UPDATE landlords SET approval_status='pending' WHERE user_id=10");
-        check(LandlordApproval.decide(c,5,10,false,"Insufficient information"),"reject pending");
+        check(LandlordApproval.decide(c,5,10,false,"Insufficient information",true),"reject pending");
         check("inactive".equals(value(c,"SELECT status FROM users WHERE user_id=10")),"rejection account status");
         check("rejected".equals(value(c,"SELECT approval_status FROM landlords WHERE user_id=10")),"rejection landlord status");
         check(AccountStatus.setByAdmin(c,5,10,true)==AccountStatus.Result.CHANGED,"generic reactivation");
@@ -56,7 +57,7 @@ public final class LandlordApprovalChecks {
         sql(c,"UPDATE landlords SET approval_status='pending' WHERE user_id=10");
         sql(c,"CREATE TRIGGER fail_decision BEFORE INSERT ON notifications FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='fixture failure'");
         boolean failed=false;
-        try{LandlordApproval.decide(c,5,10,true,"Rollback test");}catch(SQLException e){failed=true;}
+        try{LandlordApproval.decide(c,5,10,true,"Rollback test",true);}catch(SQLException e){failed=true;}
         check(failed,"notification failure propagated");
         check("pending_verification".equals(value(c,"SELECT status FROM users WHERE user_id=10")),"user update rolled back");
         check("pending".equals(value(c,"SELECT approval_status FROM landlords WHERE user_id=10")),"approval update rolled back");
@@ -115,7 +116,7 @@ public final class LandlordApprovalChecks {
                 case "getHeader":return "valid".equals(token)?csrf:token;
                 case "getMethod":return "POST";
                 case "getContextPath":return "";
-                case "getParameter":return Map.of("userId","10","decision","approve","reason","Servlet test").get(a[0]);
+                case "getParameter":return Map.of("userId","10","decision","approve","reason","Servlet test","independentlyVerified","yes").get(a[0]);
                 default:return null;
             }
         });

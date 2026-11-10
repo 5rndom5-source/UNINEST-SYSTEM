@@ -1,3 +1,4 @@
+param([switch]$Browser)
 $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'java-env.ps1')
 $root=Split-Path -Parent $PSScriptRoot
@@ -23,5 +24,8 @@ try {
     $cp="$root\target\classes;$root\target\test-classes;$root\target\uninest\WEB-INF\lib\*;$root\.m2\repository\javax\servlet\javax.servlet-api\4.0.1\javax.servlet-api-4.0.1.jar"
     & "$env:JAVA_HOME\bin\java.exe" -ea -cp $cp com.uninest.LandlordApprovalChecks
     if($LASTEXITCODE -ne 0){throw 'Landlord checks failed'}
+    & "$env:JAVA_HOME\bin\java.exe" -ea -cp $cp com.uninest.LandlordRegistrationChecks
+    if($LASTEXITCODE -ne 0){throw 'Landlord registration checks failed'}
+    if($Browser){ & (Join-Path $PSScriptRoot 'check-landlord-http.ps1') -TestDatabase $name }
     Write-Output "Disposable database retained: $name"
 } finally {$env:UNINEST_DB_URL=$oldUrl;$env:UNINEST_DB_USER=$oldUser;$env:UNINEST_DB_PASSWORD=$oldPassword;$env:UNINEST_UPLOAD_DIR=$oldUploads}

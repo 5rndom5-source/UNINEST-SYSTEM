@@ -13,8 +13,9 @@ public final class LandlordApproval {
             try(ResultSet r=q.executeQuery()){return r.next() && eligible(r.getString(1),r.getString(2));}
         }
     }
-    public static boolean decide(Connection c,int actor,int target,boolean approve,String reason) throws SQLException {
+    public static boolean decide(Connection c,int actor,int target,boolean approve,String reason,boolean independentlyVerified) throws SQLException {
         if(actor==target || reason==null || reason.trim().isEmpty() || reason.length()>500) return false;
+        if(approve && !independentlyVerified) return false;
         if(!c.getAutoCommit()) throw new SQLException("Approval requires its own transaction");
         c.setAutoCommit(false);
         try {
@@ -34,7 +35,8 @@ public final class LandlordApproval {
             try(PreparedStatement q=c.prepareStatement("UPDATE landlords SET approval_status=?,verification_date=NOW() WHERE user_id=?")) {
                 q.setString(1,approve?"approved":"rejected");q.setInt(2,target);q.executeUpdate();
             }
-            String message="Landlord user #"+target+(approve?" approved":" rejected")+" by admin user #"+actor+". Reason: "+reason.trim();
+            String message="Landlord user #"+target+(approve?" approved":" rejected")+" by admin user #"+actor
+                    +(approve?". Independent identity and letting-authority checks confirmed":"")+". Reason: "+reason.trim();
             try(PreparedStatement q=c.prepareStatement("INSERT INTO notifications(user_id,title,message,notification_type,action_url) VALUES(?,'Landlord account decision',?,'system_alert',?)")) {
                 q.setInt(1,actor);q.setString(2,message);q.setString(3,"/LandlordApprovalServlet");q.executeUpdate();
                 q.setInt(1,target);q.setString(3,"/createAccount/login.html?role=landlord");q.executeUpdate();

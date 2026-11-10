@@ -32,6 +32,11 @@ public class RequestLifecycleFilter implements Filter {
         }
         try {
             String path = req.getServletPath();
+            // Legacy registration stored identity files here. Never serve this folder publicly.
+            if (path != null && (path.equalsIgnoreCase("/uploads") || path.toLowerCase(java.util.Locale.ROOT).startsWith("/uploads/"))) {
+                res.sendError(404);
+                return;
+            }
             if(CsrfToken.unsafe(req.getMethod()) && !CsrfToken.valid(req)) {
                 res.setStatus(403);
                 res.setContentType("application/json;charset=UTF-8");
