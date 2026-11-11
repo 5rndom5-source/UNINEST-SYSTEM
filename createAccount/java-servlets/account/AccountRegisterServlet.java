@@ -54,11 +54,23 @@ public class AccountRegisterServlet extends HttpServlet {
                 return;
             }
 
-            int userId = createUser(conn, fullName.trim(), email.trim(), password, role);
-            createRoleRecord(conn, userId, fullName.trim(), role);
+            if (!conn.getAutoCommit()) throw new SQLException("Registration requires its own transaction");
+            conn.setAutoCommit(false);
+            try {
+                int userId = createUser(conn, fullName.trim(), email.trim(), password, role);
+                createRoleRecord(conn, userId, fullName.trim(), role);
+                conn.commit();
+            } catch (SQLException | RuntimeException ex) {
+                conn.rollback();
+                throw ex;
+            } finally {
+                conn.setAutoCommit(true);
+            }
 
             response.sendRedirect(request.getContextPath() + "/createAccount/login.html?success="
-                    + java.net.URLEncoder.encode("Account created. You can sign in now.", "UTF-8"));
+                    + java.net.URLEncoder.encode("landlord".equals(role)
+                    ? "Account created. Awaiting Admin approval. You cannot sign in until your identity and authority to let the property have been verified."
+                    : "Account created. You can sign in now.", "UTF-8"));
         } catch (SQLException e) {
             System.err.println("Database error in AccountRegisterServlet: " + e.getMessage());
             e.printStackTrace();

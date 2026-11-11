@@ -55,7 +55,7 @@ public class LandlordLoginServlet extends HttpServlet {
 
     private boolean authenticateFromDatabase(Connection conn, HttpServletRequest request,
                                              String email, String password) throws SQLException {
-        String query = "SELECT u.user_id, u.full_name, u.password, u.status, l.landlord_id "
+        String query = "SELECT u.user_id, u.full_name, u.password, u.status, l.landlord_id, l.approval_status "
                 + "FROM users u LEFT JOIN landlords l ON u.user_id = l.user_id "
                 + "WHERE u.email = ? AND u.role = 'landlord'";
 
@@ -71,8 +71,7 @@ public class LandlordLoginServlet extends HttpServlet {
         String storedPassword = rs.getString("password");
         String status = rs.getString("status");
         if (!PasswordUtil.verifyPassword(password, storedPassword)
-                || "suspended".equalsIgnoreCase(status)
-                || "inactive".equalsIgnoreCase(status)) {
+                || !com.uninest.utils.LandlordApproval.eligible(status, rs.getString("approval_status"))) {
             stmt.close();
             return false;
         }
