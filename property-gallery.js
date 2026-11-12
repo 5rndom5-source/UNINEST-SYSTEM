@@ -5,7 +5,9 @@
   if(!document.querySelector('[data-photo-tour-style]')){const css=document.createElement('link');css.rel='stylesheet';css.href=new URL('property-gallery.css',base);css.dataset.photoTourStyle='true';document.head.append(css);}
   const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text)n.textContent=text;if(cls)n.className=cls;return n;};
   const button=(text,title,fn,cls='')=>{const b=el('button',text,cls);b.type='button';b.title=title;b.setAttribute('aria-label',title);b.addEventListener('click',fn);return b;};
-  function picture(photo,label,lazy=true){const img=el('img');img.alt=photo.caption||label;img.loading=lazy?'lazy':'eager';img.decoding='async';img.src=photo.url;img.addEventListener('error',()=>{img.alt='Photo unavailable';img.classList.add('photo-unavailable');});return img;}
+  const demoLabel='DEMO PHOTO \u2014 NOT ACTUAL PROPERTY';
+  function picture(photo,label,lazy=true){const img=el('img');img.alt=photo.isDemo?demoLabel:(photo.caption||label);img.loading=lazy?'lazy':'eager';img.decoding='async';img.src=photo.url;img.addEventListener('error',()=>{img.alt='Photo unavailable';img.classList.add('photo-unavailable');});return img;}
+  function demoBadge(photo,parent){if(photo.isDemo){parent.classList.add('has-demo-photo');parent.append(el('span',demoLabel,'demo-photo-label'));}}
   function fullscreen(rooms,selected){
     const entries=rooms.flatMap(room=>room.photos.map((photo,i)=>({room,photo,index:i})));
     let current=entries.findIndex(e=>e.photo===selected);if(current<0)return;
@@ -13,10 +15,11 @@
     const top=el('header');const label=el('h2');label.setAttribute('aria-live','polite');top.append(label,button('\u00d7','Close fullscreen viewer',()=>dialog.close()));
     const stage=el('div',null,'photo-stage');const image=el('img');image.draggable=false;
     const previous=button('\u2190','Previous photo',()=>show(current-1),'photo-previous');const next=button('\u2192','Next photo',()=>show(current+1),'photo-next');stage.append(image,previous,next);
+    const warning=el('p',demoLabel,'demo-photo-warning');warning.hidden=true;warning.setAttribute('role','status');
     const caption=el('p',null,'viewer-caption');const strip=el('div',null,'photo-strip');strip.setAttribute('aria-label','Photo thumbnails');
     entries.forEach((entry,i)=>{const thumb=button('',`${entry.room.label}, photo ${entry.index+1}`,()=>show(i));thumb.append(picture(entry.photo,entry.room.label));strip.append(thumb);});
-    dialog.append(top,stage,caption,strip);document.body.append(dialog);dialog.showModal();
-    function show(index){current=Math.max(0,Math.min(entries.length-1,index));const entry=entries[current];image.src=entry.photo.url;image.alt=entry.photo.caption||entry.room.label;label.textContent=`${entry.room.label} \u00b7 ${entry.index+1} of ${entry.room.photos.length}`;caption.textContent=entry.photo.caption||'';previous.disabled=current===0;next.disabled=current===entries.length-1;Array.from(strip.children).forEach((b,i)=>b.setAttribute('aria-current',String(i===current)));strip.children[current].scrollIntoView({block:'nearest',inline:'center'});}
+    dialog.append(top,warning,stage,caption,strip);document.body.append(dialog);dialog.showModal();
+    function show(index){current=Math.max(0,Math.min(entries.length-1,index));const entry=entries[current];image.src=entry.photo.url;image.alt=entry.photo.isDemo?demoLabel:(entry.photo.caption||entry.room.label);warning.hidden=!entry.photo.isDemo;dialog.classList.toggle('showing-demo',!!entry.photo.isDemo);label.textContent=`${entry.room.label} \u00b7 ${entry.index+1} of ${entry.room.photos.length}`;caption.textContent=entry.photo.caption||'';previous.disabled=current===0;next.disabled=current===entries.length-1;Array.from(strip.children).forEach((b,i)=>b.setAttribute('aria-current',String(i===current)));strip.children[current].scrollIntoView({block:'nearest',inline:'center'});}
     dialog.addEventListener('keydown',e=>{if(e.key==='ArrowRight'){e.preventDefault();show(current+1);}if(e.key==='ArrowLeft'){e.preventDefault();show(current-1);}});
     let start=null;stage.addEventListener('touchstart',e=>{start={x:e.touches[0].clientX,y:e.touches[0].clientY};},{passive:true});stage.addEventListener('touchend',e=>{if(!start)return;const dx=e.changedTouches[0].clientX-start.x,dy=e.changedTouches[0].clientY-start.y;if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy))show(current+(dx<0?1:-1));start=null;},{passive:true});
     dialog.addEventListener('close',()=>dialog.remove(),{once:true});show(current);
@@ -37,12 +40,12 @@
       const photos=rooms.flatMap(r=>r.photos);title.textContent=listing.title||'Accommodation photos';content.replaceChildren();
       if(!photos.length){content.append(el('p','No photos have been added yet.'));return;}
       const cover=photos.find(p=>p.isCover)||photos[0];const ordered=[cover,...photos.filter(p=>p!==cover)];
-      const hero=el('div',null,'photo-hero');const grid=el('div',null,'hero-grid');ordered.slice(0,5).forEach((photo,i)=>{const b=button('','Open photo '+(i+1),()=>fullscreen(rooms,photo));b.append(picture(photo,listing.title,false));grid.append(b);});
+      const hero=el('div',null,'photo-hero');const grid=el('div',null,'hero-grid');ordered.slice(0,5).forEach((photo,i)=>{const b=button('','Open photo '+(i+1),()=>fullscreen(rooms,photo));b.append(picture(photo,listing.title,false));demoBadge(photo,b);grid.append(b);});
       const tour=el('div',null,'room-tour');tour.hidden=true;
       const chips=el('nav',null,'tour-chips');chips.setAttribute('aria-label','Rooms');const sections=[];
       rooms.forEach((room,i)=>{
         const section=el('section',null,'tour-room');section.id='tour-room-'+i;section.append(el('h3',room.label));
-        const roomGrid=el('div',null,'tour-photo-grid');room.photos.forEach(photo=>{const figure=el('figure');const b=button('','View '+room.label+' photo',()=>fullscreen(rooms,photo));b.append(picture(photo,room.label));figure.append(b);if(photo.caption)figure.append(el('figcaption',photo.caption));roomGrid.append(figure);});section.append(roomGrid);sections.push(section);
+        const roomGrid=el('div',null,'tour-photo-grid');room.photos.forEach(photo=>{const figure=el('figure');const b=button('','View '+room.label+' photo',()=>fullscreen(rooms,photo));b.append(picture(photo,room.label));demoBadge(photo,b);figure.append(b);if(photo.caption)figure.append(el('figcaption',photo.caption));roomGrid.append(figure);});section.append(roomGrid);sections.push(section);
         const chip=button('',`${room.label}, ${room.photos.length} photos`,()=>section.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'}));chip.append(picture(room.photos[0],room.label),el('span',`${room.label} \u00b7 ${room.photos.length}`));chips.append(chip);
       });
       tour.append(chips,...sections);
