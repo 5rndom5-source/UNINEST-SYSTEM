@@ -54,7 +54,7 @@ public final class ListingEditor {
                     String label=category.replace('_',' ');if(label.isEmpty())label="Other";label=Character.toUpperCase(label.charAt(0))+label.substring(1);
                     if(!groups.containsKey(gid))groups.put(gid,new Group(gid,type,label,groups.size()));
                 }
-                groups.get(gid).photos.add("{\"id\":"+r.getInt("image_id")+",\"url\":"+json(context+url)+",\"caption\":"+json(r.getString("caption"))+",\"order\":"+r.getInt("display_order")+",\"isCover\":"+r.getBoolean("is_primary")+"}");
+                groups.get(gid).photos.add("{\"id\":"+r.getInt("image_id")+",\"url\":"+json(context+url)+",\"caption\":"+json(r.getString("caption"))+",\"order\":"+r.getInt("display_order")+",\"isCover\":"+r.getBoolean("is_primary")+",\"isDemo\":"+com.uninest.utils.DemoPropertyImages.isMissingUpload(url)+"}");
             }}
         }
         List<String> encoded=new ArrayList<>();for(Group g:groups.values())encoded.add(g.encode());

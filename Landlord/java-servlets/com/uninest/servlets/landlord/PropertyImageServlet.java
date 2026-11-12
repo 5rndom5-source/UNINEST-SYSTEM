@@ -7,14 +7,15 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import com.uninest.utils.DemoPropertyImages;
 
 @WebServlet("/PropertyImageServlet/*")
 public class PropertyImageServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String pathInfo = request.getPathInfo();
-        String fileName = pathInfo == null ? "" : Path.of(pathInfo).getFileName().toString();
-        if (fileName.isEmpty() || !fileName.matches("[A-Za-z0-9._-]+")) {
+        String fileName = pathInfo != null && pathInfo.startsWith("/") ? pathInfo.substring(1) : "";
+        if (!DemoPropertyImages.validName(fileName)) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST);
             return;
         }
@@ -32,7 +33,23 @@ public class PropertyImageServlet extends HttpServlet {
             }
         }catch(java.sql.SQLException e){getServletContext().log("Photo authorization unavailable",e);response.sendError(503);return;}
         Path image = root.resolve(fileName).normalize();
-        if (!image.getParent().equals(root) || !Files.isRegularFile(image)) {
+        if (!image.getParent().equals(root)) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+        if (DemoPropertyImages.isMissingUpload("/PropertyImageServlet/" + fileName)) {
+            byte[] demo;
+            try { demo = DemoPropertyImages.labelledImage(getServletContext(), fileName); }
+            catch (IOException e) { getServletContext().log("Bundled demo image unavailable", e); response.sendError(404); return; }
+            response.setContentType("image/png");
+            response.setHeader("X-Content-Type-Options", "nosniff");
+            response.setHeader("Cache-Control", "private, no-store");
+            response.setHeader("X-UniNest-Demo-Photo", "true");
+            response.setContentLength(demo.length);
+            response.getOutputStream().write(demo);
+            return;
+        }
+        if (!Files.isRegularFile(image)) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
