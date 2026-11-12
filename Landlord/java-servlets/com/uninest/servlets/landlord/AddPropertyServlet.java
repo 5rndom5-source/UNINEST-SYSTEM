@@ -36,12 +36,14 @@ public class AddPropertyServlet extends HttpServlet {
         String price = request.getParameter("price");
         String[] amenities = request.getParameterValues("amenities");
         Integer roomId = parseRoomId(request.getParameter("roomId"));
+        boolean areaOnly="1".equals(request.getParameter("areaOnly"));
+        if(areaOnly && (roomId==null || request.getParameter("area")==null)){response.sendError(400);return;}
 
-        if (!ValidationUtil.isRequired(title)
+        if (!areaOnly && (!ValidationUtil.isRequired(title)
                 || !ValidationUtil.isRequired(description)
                 || !ValidationUtil.isRequired(location)
                 || location.trim().length() > 255
-                || !ValidationUtil.isValidPrice(price)) {
+                || !ValidationUtil.isValidPrice(price))) {
             if ("2".equals(request.getParameter("editorVersion"))) response.sendError(400, "Check required fields.");
             else response.sendRedirect(request.getContextPath() + "/Landlord/listings.html?error=missing");
             return;
@@ -73,6 +75,15 @@ public class AddPropertyServlet extends HttpServlet {
             java.util.List<Path> editorFiles = new java.util.ArrayList<>();
             try {
             int landlordId = (Integer) session.getAttribute("landlordId");
+            if(areaOnly) {
+                ListingEditor.saveArea(request,conn,roomId,landlordId);
+                try(PreparedStatement q=conn.prepareStatement("UPDATE rooms SET approval_status='pending',updated_at=CURRENT_TIMESTAMP WHERE room_id=? AND landlord_id=?")) {
+                    q.setInt(1,roomId);q.setInt(2,landlordId);q.executeUpdate();
+                }
+                conn.commit();
+                response.setContentType("application/json;charset=UTF-8");response.getWriter().print("{\"saved\":true}");
+                return;
+            }
             if (roomId == null) {
                 roomId = insertRoom(conn, landlordId, title.trim(), description.trim(),
                         location.trim(), new BigDecimal(price), amenities);
@@ -88,6 +99,7 @@ public class AddPropertyServlet extends HttpServlet {
                 ListingEditor.save(request, conn, roomId, landlordId, editorFiles);
             } else {
                 saveImages(request, conn, roomId);
+                ListingEditor.saveArea(request,conn,roomId,landlordId);
             }
             conn.commit();
 

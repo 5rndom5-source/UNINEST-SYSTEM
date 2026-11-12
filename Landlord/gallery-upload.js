@@ -10,6 +10,19 @@
   let generation = 0, saving = false, loading = false, loadFailed = false, dragged = null, dirty = false;
   const status = document.getElementById('listingStatus');
   const submit = document.getElementById('propertySubmitButton');
+  const saveArea = document.getElementById('saveListingArea');
+  form.addEventListener('reset',()=>{saveArea.hidden=true;});
+  saveArea.addEventListener('click',async()=>{
+    if(saving||loading||loadFailed||!form.elements.roomId.value)return;
+    saving=true;form.inert=true;status.textContent='Saving area...';
+    try {
+      const body=new URLSearchParams({editorVersion:'2',areaOnly:'1',roomId:form.elements.roomId.value,area:form.elements.area.value});
+      const res=await fetch(form.action,{method:'POST',body});const data=await res.json();
+      if(!res.ok||!data.saved)throw new Error(data.message||'Area could not be saved.');
+      dirty=false;window.location.assign('listings.html?status=pending');
+    }catch(err){status.textContent=err.message;}
+    finally{saving=false;form.inert=false;}
+  });
   const requests = new Set();
   const all = () => listing.rooms.flatMap(room => room.photos);
   const node = (tag, text, cls) => { const e = document.createElement(tag); if (text) e.textContent = text; if (cls) e.className = cls; return e; };
@@ -121,16 +134,16 @@
   form.addEventListener('input',e=>{if(e.target.validity?.valid){e.target.removeAttribute('aria-invalid');const msg=e.target.closest('label')?.querySelector('.field-error');if(msg)msg.textContent='';}});
   form.addEventListener('reset',e=>{if(saving){e.preventDefault();return;}clear();dirty=false;form.querySelectorAll('.field-error').forEach(e=>e.textContent='');});
   form.addEventListener('listing:edit',async e=>{
-    clear();const epoch=generation;loading=true;submit.disabled=true;status.textContent='Loading listing...';
+    clear();saveArea.hidden=true;const epoch=generation;loading=true;submit.disabled=true;status.textContent='Loading listing...';
     try {
       const res=await fetch('../PropertyGalleryServlet?roomId='+encodeURIComponent(e.detail.id),{cache:'no-store'});
       if(!res.ok)throw new Error('Could not load this listing. Cancel and try again.');
       const data=await res.json();if(epoch!==generation)return;if(!data.listing)throw new Error('Listing is unavailable.');
       listing.rooms=data.listing.rooms.map(r=>({...r,photos:r.photos.map(p=>({...p,ref:String(p.id),state:'ready'}))}));
-      const defaults={suburb:'',city:'',deposit:'0',bedrooms:'1',bathrooms:'1',campusDistance:'',contactName:'',contactEmail:'',contactPhone:''};
+      const defaults={area:'',suburb:'',city:'',deposit:'',bedrooms:'',bathrooms:'',campusDistance:'',contactName:'',contactEmail:'',contactPhone:''};
       Object.entries({...defaults,...data.listing.details}).forEach(([k,v])=>{if(form.elements[k])form.elements[k].value=v??'';});
       form.querySelectorAll('[name=amenities]').forEach(input=>input.checked=data.listing.amenities.includes(input.value));
-      dirty=false;status.textContent='Editing listing';render();form.dispatchEvent(new CustomEvent('listing:loaded'));
+      dirty=false;saveArea.hidden=false;status.textContent='Editing listing';render();form.dispatchEvent(new CustomEvent('listing:loaded'));
     }catch(err){if(epoch===generation){loadFailed=true;status.textContent=err.message;}}
     finally {if(epoch===generation){loading=false;submit.disabled=false;}}
   });

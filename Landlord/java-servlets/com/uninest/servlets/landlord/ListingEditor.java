@@ -11,6 +11,19 @@ import javax.servlet.http.HttpServletRequest;
 /** Persists the editor inside the caller's listing transaction. */
 public final class ListingEditor {
     private ListingEditor() {}
+    private static final Set<String> AREAS=Set.of("Cape Town CBD","Rondebosch","Observatory","Bellville","Claremont","Stellenbosch");
+    public static void saveArea(HttpServletRequest r,Connection c,int listing,int owner) throws SQLException {
+        if(r.getParameter("area")==null)return; // Older clients must not clear an existing selection.
+        String area=text(r,"area",100);
+        if(!area.isEmpty()&&!AREAS.contains(area))throw new IllegalArgumentException("Choose an area from the list.");
+        try(PreparedStatement q=c.prepareStatement("SELECT room_id FROM rooms WHERE room_id=? AND landlord_id=? FOR UPDATE")) {
+            q.setInt(1,listing);q.setInt(2,owner);
+            try(ResultSet rs=q.executeQuery()){if(!rs.next())throw new IllegalArgumentException("Listing does not belong to this landlord.");}
+        }
+        try(PreparedStatement q=c.prepareStatement("UPDATE rooms SET area=? WHERE room_id=? AND landlord_id=?")) {
+            if(area.isEmpty())q.setNull(1,Types.VARCHAR);else q.setString(1,area);q.setInt(2,listing);q.setInt(3,owner);q.executeUpdate();
+        }
+    }
     static final Set<String> TYPES = Set.of("Bedroom","Bathroom","Kitchen","Lounge","Study area","Laundry","Shared space","Exterior","Other");
     private static final class Group {
         String id,type,label; int order; List<String> photos=new ArrayList<>();
@@ -18,21 +31,22 @@ public final class ListingEditor {
         String encode(){return "{\"id\":"+json(id)+",\"type\":"+json(type)+",\"label\":"+json(label)+",\"order\":"+order+",\"photos\":["+String.join(",",photos)+"]}";}
     }
     public static String read(Connection c,int id,int owner,boolean admin,String context) throws SQLException {
-        StringBuilder b=new StringBuilder(); boolean furnished;
-        try(PreparedStatement q=c.prepareStatement("SELECT room_number,description,location,price,furnishing FROM rooms WHERE room_id=? AND (approval_status='approved' OR landlord_id=? OR ?=1)")) {
+        StringBuilder b=new StringBuilder(); boolean furnished; String area;
+        try(PreparedStatement q=c.prepareStatement("SELECT room_number,description,location,price,furnishing,area FROM rooms WHERE room_id=? AND (approval_status='approved' OR landlord_id=? OR ?=1)")) {
             q.setInt(1,id);q.setInt(2,owner);q.setInt(3,admin?1:0);
             try(ResultSet r=q.executeQuery()) {
                 if(!r.next())return "null";
                 b.append("{\"id\":").append(id).append(",\"title\":").append(json(r.getString(1))).append(",\"description\":").append(json(r.getString(2))).append(",\"location\":").append(json(r.getString(3))).append(",\"price\":").append(r.getBigDecimal(4));
                 furnished="fully_furnished".equals(r.getString(5));
+                area=r.getString(6);
             }
         }
-        b.append(",\"details\":{");
+        b.append(",\"details\":{\"area\":").append(json(area));
         try(PreparedStatement q=c.prepareStatement("SELECT * FROM listing_details WHERE room_id=?")) {
             q.setInt(1,id);try(ResultSet r=q.executeQuery()){if(r.next()){
                 String[] cols={"suburb","city","deposit","bedrooms","bathrooms","campus_distance","contact_name","contact_email","contact_phone"};
                 String[] keys={"suburb","city","deposit","bedrooms","bathrooms","campusDistance","contactName","contactEmail","contactPhone"};
-                for(int i=0;i<cols.length;i++){if(i>0)b.append(',');b.append(json(keys[i])).append(':').append(json(r.getString(cols[i])));}
+                for(int i=0;i<cols.length;i++){b.append(',');b.append(json(keys[i])).append(':').append(json(r.getString(cols[i])));}
             }}
         }
         b.append("},\"amenities\":[");List<String> amenities=new ArrayList<>();if(furnished)amenities.add(json("Furnished"));
@@ -128,10 +142,11 @@ public final class ListingEditor {
         if(!email.isEmpty()&&!email.matches("[^\\s@]+@[^\\s@]+\\.[^\\s@]+"))throw new IllegalArgumentException("Invalid contact email.");
         String distance=text(r,"campusDistance",8);
         if(!distance.isEmpty()&&!distance.matches("\\d{1,5}(\\.\\d{1,2})?"))throw new IllegalArgumentException("Invalid campus distance.");
-        try(PreparedStatement q=c.prepareStatement("INSERT INTO listing_details VALUES(?,?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE suburb=VALUES(suburb),city=VALUES(city),deposit=VALUES(deposit),bedrooms=VALUES(bedrooms),bathrooms=VALUES(bathrooms),campus_distance=VALUES(campus_distance),contact_name=VALUES(contact_name),contact_email=VALUES(contact_email),contact_phone=VALUES(contact_phone)")) {
+        try(PreparedStatement q=c.prepareStatement("INSERT INTO listing_details(room_id,suburb,city,deposit,bedrooms,bathrooms,campus_distance,contact_name,contact_email,contact_phone) VALUES(?,?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE suburb=VALUES(suburb),city=VALUES(city),deposit=VALUES(deposit),bedrooms=VALUES(bedrooms),bathrooms=VALUES(bathrooms),campus_distance=VALUES(campus_distance),contact_name=VALUES(contact_name),contact_email=VALUES(contact_email),contact_phone=VALUES(contact_phone)")) {
             q.setInt(1,listing);q.setString(2,text(r,"suburb",100));q.setString(3,text(r,"city",100));q.setBigDecimal(4,money(r,"deposit"));q.setInt(5,number(r,"bedrooms",0,999));q.setInt(6,number(r,"bathrooms",0,999));
             if(distance.isEmpty())q.setNull(7,Types.DECIMAL);else q.setBigDecimal(7,new BigDecimal(distance));
             q.setString(8,text(r,"contactName",100));q.setString(9,email);q.setString(10,text(r,"contactPhone",40));q.executeUpdate();
         }
+        saveArea(r,c,listing,owner);
     }
 }

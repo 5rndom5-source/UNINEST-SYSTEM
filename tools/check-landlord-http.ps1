@@ -1,6 +1,6 @@
-param([Parameter(Mandatory=$true)][string]$TestDatabase)
+param([Parameter(Mandatory=$true)][string]$TestDatabase,[switch]$ListingArea)
 $ErrorActionPreference='Stop'
-if($TestDatabase -notmatch '^uninest_landlord_check_[a-f0-9]{12}$' -or $env:UNINEST_DB_URL -notlike "jdbc:mysql://127.0.0.1:3306/$TestDatabase`?*"){throw 'Disposable loopback database required'}
+if($TestDatabase -notmatch '^uninest_(landlord|area)_check_[a-f0-9]{12}$' -or $env:UNINEST_DB_URL -notlike "jdbc:mysql://127.0.0.1:3306/$TestDatabase`?*"){throw 'Disposable loopback database required'}
 . (Join-Path $PSScriptRoot 'java-env.ps1')
 $root=Split-Path -Parent $PSScriptRoot
 $tomcatHome=Join-Path $root 'tools\apache-tomcat-9.0.118'
@@ -38,7 +38,8 @@ try {
     }
     if(-not $ready){throw 'Isolated Tomcat did not become ready'}
     $node=Join-Path $env:USERPROFILE '.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe'
-    & $node "$PSScriptRoot\check-landlord-browser.cjs"
+    $browserScript=if($ListingArea){'check-listing-area-browser.cjs'}else{'check-landlord-browser.cjs'}
+    & $node (Join-Path $PSScriptRoot $browserScript)
     if($LASTEXITCODE -ne 0){throw 'Landlord browser checks failed'}
     & $node "$PSScriptRoot\check-csrf-browser.cjs"
     if($LASTEXITCODE -ne 0){throw 'CSRF browser checks failed'}
