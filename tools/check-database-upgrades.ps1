@@ -20,7 +20,8 @@ $originalUser = $env:UNINEST_DB_USER
 $originalPassword = $env:UNINEST_DB_PASSWORD
 $originalUploads = $env:UNINEST_UPLOAD_DIR
 try {
-    $env:UNINEST_DB_URL = "jdbc:mysql://127.0.0.1:3306/${testName}?serverTimezone=UTC"
+    # Loopback fixtures only: avoid the local server's broken TLS negotiation. Never use this URL in production.
+    $env:UNINEST_DB_URL = "jdbc:mysql://127.0.0.1:3306/${testName}?serverTimezone=UTC&sslMode=DISABLED&allowPublicKeyRetrieval=true&connectTimeout=5000&socketTimeout=30000"
     $env:UNINEST_DB_USER = 'root'
     $env:UNINEST_DB_PASSWORD = $localPassword
     $env:UNINEST_UPLOAD_DIR = Join-Path $root "test-runtime\$testName\uploads"

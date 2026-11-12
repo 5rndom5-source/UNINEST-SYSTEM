@@ -22,6 +22,7 @@
 #propertyForm .form-actions { display:flex; flex-direction:column; gap:12px; }
 #propertyForm .form-actions button { min-height:44px; width:100%; }
 #propertyForm .cancel-listing { background:transparent; border:0; text-decoration:underline; color:#334b40; }
+#saveListingArea { min-height:44px; padding:8px 16px; border:1px solid #8caaa0; border-radius:4px; background:#fff; color:#243d32; font:inherit; cursor:pointer; }
 .photo-room { border:1px solid #d4dbd8; border-radius:6px; padding:12px; margin-top:20px; min-width:0; }
 .photo-room header { display:flex; align-items:center; gap:8px; margin-bottom:12px; }
 .photo-room h3 { flex:1; margin:0; font-size:16px; overflow-wrap:anywhere; }

@@ -53,6 +53,7 @@ public class PublicListingsServlet extends HttpServlet {
             if (!search.isEmpty()) {
                 where.append("AND (LOWER(r.room_number) LIKE ? "
                         + "OR LOWER(r.location) LIKE ? "
+                        + "OR LOWER(r.area) LIKE ? OR LOWER(d.city) LIKE ? OR LOWER(d.suburb) LIKE ? "
                         + "OR LOWER(r.description) LIKE ? "
                         + "OR LOWER(REPLACE(r.room_type, '_', ' ')) LIKE ?) ");
                 String term = "%" + search.toLowerCase() + "%";
@@ -60,10 +61,13 @@ public class PublicListingsServlet extends HttpServlet {
                 params.add(term);
                 params.add(term);
                 params.add(term);
+                params.add(term);
+                params.add(term);
+                params.add(term);
             }
 
             if (!location.isEmpty()) {
-                where.append("AND LOWER(r.location) = ? ");
+                where.append("AND LOWER(COALESCE(NULLIF(r.area,''),r.location)) = ? ");
                 params.add(location.toLowerCase());
             }
             if (!type.isEmpty()) {
@@ -100,7 +104,7 @@ public class PublicListingsServlet extends HttpServlet {
             }
             int offset = (page - 1) * pageSize;
 
-            String query = "SELECT r.room_id, r.room_number, r.room_type, r.location, r.price, "
+            String query = "SELECT r.room_id, r.room_number, r.room_type, r.location, r.area, r.price, "
                     + "r.capacity, r.description, r.furnishing, r.bedrooms, r.bathrooms, "
                     + "COALESCE((SELECT ri.image_url FROM room_images ri "
                     + "WHERE ri.room_id = r.room_id "
@@ -111,10 +115,11 @@ public class PublicListingsServlet extends HttpServlet {
                     + "WHERE rv.room_id = r.room_id AND rv.review_type = 'room_review') AS rating_count, "
                     + "GROUP_CONCAT(a.amenity_name ORDER BY a.amenity_name SEPARATOR ', ') AS amenities "
                     + "FROM rooms r "
+                    + "LEFT JOIN listing_details d ON d.room_id=r.room_id "
                     + "LEFT JOIN room_amenities ra ON ra.room_id = r.room_id "
                     + "LEFT JOIN amenities a ON a.amenity_id = ra.amenity_id "
                     + where
-                    + "GROUP BY r.room_id, r.room_number, r.room_type, r.location, r.price, "
+                    + "GROUP BY r.room_id, r.room_number, r.room_type, r.location, r.area, r.price, "
                     + "r.capacity, r.description, r.furnishing, r.bedrooms, r.bathrooms "
                     + orderBy(sort) + " LIMIT ? OFFSET ?";
 
@@ -151,7 +156,7 @@ public class PublicListingsServlet extends HttpServlet {
     }
 
     private int countListings(Connection conn, String where, List<Object> params) throws SQLException {
-        String query = "SELECT COUNT(*) FROM rooms r " + where;
+        String query = "SELECT COUNT(*) FROM rooms r LEFT JOIN listing_details d ON d.room_id=r.room_id " + where;
         PreparedStatement stmt = conn.prepareStatement(query);
         bindParams(stmt, params, 1);
         ResultSet rs = stmt.executeQuery();
@@ -189,7 +194,8 @@ public class PublicListingsServlet extends HttpServlet {
         out.print("{");
         field(out, "id", String.valueOf(id), true);
         field(out, "title", title, false);
-        field(out, "area", valueOr(rs.getString("location"), "Cape Town"), false);
+        field(out, "area", valueOr(rs.getString("area"), valueOr(rs.getString("location"), "Location not supplied")), false);
+        field(out, "address", valueOr(rs.getString("location"), ""), false);
         field(out, "type", type, false);
         field(out, "price", formatPrice(price), false);
         field(out, "priceAmount", price == null ? "" : price.toPlainString(), false);
@@ -210,8 +216,9 @@ public class PublicListingsServlet extends HttpServlet {
     private void writeFilterOptions(PrintWriter out, Connection conn) throws SQLException {
         out.print("\"locations\":[");
         try (PreparedStatement stmt = conn.prepareStatement(
-                "SELECT DISTINCT location FROM rooms WHERE approval_status = 'approved' "
-                        + "AND availability_status = 'available' AND location IS NOT NULL ORDER BY location");
+                "SELECT DISTINCT COALESCE(NULLIF(area,''),location) AS filter_area FROM rooms WHERE approval_status = 'approved' "
+                        + "AND availability_status = 'available' AND (NULLIF(area,'') IS NOT NULL "
+                        + "OR location IN ('Cape Town CBD','Rondebosch','Observatory','Bellville','Claremont','Stellenbosch')) ORDER BY filter_area");
              ResultSet rs = stmt.executeQuery()) {
             boolean first = true;
             while (rs.next()) {

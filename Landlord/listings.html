@@ -85,6 +85,18 @@
             </section>
             <section class="form-section" aria-labelledby="locationHeading">
               <h2 id="locationHeading">2) Location</h2>
+              <label for="propertyArea">Area
+                <select id="propertyArea" name="area">
+                  <option value="">Not specified</option>
+                  <option>Cape Town CBD</option>
+                  <option>Rondebosch</option>
+                  <option>Observatory</option>
+                  <option>Bellville</option>
+                  <option>Claremont</option>
+                  <option>Stellenbosch</option>
+                </select>
+              </label>
+              <button type="button" id="saveListingArea" hidden>Save area only</button>
               <label>
                 Property address (public):
                 <input type="text" id="propertyLocation" name="location" maxlength="255" autocomplete="street-address" placeholder="Street number, street, suburb, city, postal code, country" required />

@@ -38,6 +38,7 @@ const base = process.env.UNINEST_TEST_URL || 'http://localhost:8091/uninest';
     const responsePromise = page.waitForResponse(r => r.url().endsWith('/ProfileImageServlet') && r.request().method() === 'POST');
     await page.locator('#csrf-test-form button').click();
     check((await responsePromise).status() === 401, 'native multipart form adds token');
+    await page.waitForURL('**/ProfileImageServlet');
     await page.goto(base + '/createAccount/login.html');
     await page.evaluate(base => {
       const link = document.createElement('a');link.href = base + '/LogoutServlet';link.id = 'logout-test';link.textContent = 'Logout';document.body.appendChild(link);
