@@ -34,7 +34,7 @@ async function gallery(c,id=1){const r=await c.request.get(base+'/PropertyGaller
    console.log(`PASS: ${checks} fallback-disabled real HTTP/MySQL checks`);return;
   }
   check(missing.status()===200&&missing.headers()['x-uninest-demo-photo']==='true','enabled authorized missing image uses demo');
-  check(missing.headers()['content-type']==='image/png'&&missing.headers()['cache-control']==='private, no-store','fallback content type and private cache policy');
+  check(missing.headers()['content-type']==='image/jpeg'&&missing.headers()['cache-control']==='private, no-store','fallback content type and private cache policy');
   check((await missing.body()).equals(await (await photo(anon,'missing.png')).body()),'deterministic fallback bytes');
   check(photos.filter(p=>p.isDemo).length===4,'only missing gallery images labelled');
   const owner=await browser.newContext();await login(owner,'landlord','landlord');

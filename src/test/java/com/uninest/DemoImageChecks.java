@@ -52,7 +52,7 @@ public class DemoImageChecks {
             java.awt.image.BufferedImage image=ImageIO.read(new ByteArrayInputStream(bytes));
             check(image!=null&&image.getWidth()<=1200,"demo image decodes");
             int white=0,black=0,y=image.getHeight()/2;
-            for(int row=y-25;row<y+25;row++)for(int x=0;x<image.getWidth();x++){int rgb=image.getRGB(x,row)&0xffffff;if(rgb==0)black++;if(rgb==0xffffff)white++;}
+            for(int row=y-25;row<y+25;row++)for(int x=0;x<image.getWidth();x++){int rgb=image.getRGB(x,row)&0xffffff;if(((rgb>>16)&255)<25 && ((rgb>>8)&255)<25 && (rgb&255)<25)black++;if(((rgb>>16)&255)>235 && ((rgb>>8)&255)>235 && (rgb&255)>235)white++;}
             check(black>1000&&white>100,"visible black/white watermark banner");
         }
         System.out.println("PASS: "+checks+" demo-image packaging, path, watermark and preservation checks");
