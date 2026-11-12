@@ -63,7 +63,7 @@ public final class DemoPropertyImages {
                 g.drawString(LABEL, (width - fm.stringWidth(LABEL)) / 2, y + 12 + fm.getAscent());
             } finally { g.dispose(); }
             ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-            if (!ImageIO.write(output, "png", bytes)) throw new IOException("Demo image encoding failed");
+            if (!ImageIO.write(output, "jpeg", bytes)) throw new IOException("Demo image encoding failed");
             cached = bytes.toByteArray();
             CACHE.put(resource, cached); // At most three public, watermarked assets; never uploaded images.
             return cached;

@@ -41,7 +41,7 @@ public class PropertyImageServlet extends HttpServlet {
             byte[] demo;
             try { demo = DemoPropertyImages.labelledImage(getServletContext(), fileName); }
             catch (IOException e) { getServletContext().log("Bundled demo image unavailable", e); response.sendError(404); return; }
-            response.setContentType("image/png");
+            response.setContentType("image/jpeg");
             response.setHeader("X-Content-Type-Options", "nosniff");
             response.setHeader("Cache-Control", "private, no-store");
             response.setHeader("X-UniNest-Demo-Photo", "true");

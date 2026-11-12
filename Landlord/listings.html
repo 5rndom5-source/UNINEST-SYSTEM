@@ -90,9 +90,71 @@
                 <input type="text" id="propertyLocation" name="location" maxlength="255" autocomplete="street-address" placeholder="Street number, street, suburb, city, postal code, country" required />
               </label>
 
+              <p class="listing-location-hint">Select the city and area for accurate student search results. Enter the full street address above for the map. Current focus: Western Cape.</p>
               <div class="field-pair">
-                <label>Suburb<input name="suburb" maxlength="100" autocomplete="address-level3" /></label>
-                <label>City<input name="city" maxlength="100" autocomplete="address-level2" /></label>
+                <label>City
+                  <select id="listingCityChoice" required aria-label="Listing city">
+                    <option value="">Select a city</option>
+                    <option>Cape Town</option><option>Stellenbosch</option><option>Paarl</option>
+                    <option>Wellington</option><option>George</option>
+                    <option value="__other">Other city...</option>
+                  </select>
+                  <input id="listingCityOther" type="text" maxlength="100" placeholder="Enter city" hidden />
+                  <input id="listingCityValue" type="hidden" name="city" value="" />
+                </label>
+                <label>Area / suburb
+                  <select id="listingSuburbChoice" required aria-label="Listing area or suburb">
+                    <option value="">Select an area</option>
+                    <optgroup label="Cape Town City Bowl & Atlantic Seaboard">
+                      <option>Cape Town City Centre (CBD)</option>
+                      <option>Foreshore</option>
+                      <option>Zonnebloem (District Six)</option>
+                      <option>Woodstock</option>
+                      <option>Gardens</option>
+                      <option>Vredehoek</option>
+                      <option>Oranjezicht</option>
+                      <option>Green Point</option>
+                      <option>Sea Point</option>
+                    </optgroup>
+                    <optgroup label="Cape Town Southern Suburbs">
+                      <option>Salt River</option>
+                      <option>Observatory</option>
+                      <option>Mowbray</option>
+                      <option>Rosebank</option>
+                      <option>Rondebosch</option>
+                      <option>Newlands</option>
+                      <option>Claremont</option>
+                      <option>Kenilworth</option>
+                      <option>Wynberg</option>
+                    </optgroup>
+                    <optgroup label="Cape Town Northern Suburbs">
+                      <option>Bellville</option>
+                      <option>Bellville South</option>
+                      <option>Belhar</option>
+                      <option>Parow</option>
+                      <option>Oakdale</option>
+                      <option>Goodwood</option>
+                      <option>Tygervalley</option>
+                      <option>Durbanville</option>
+                    </optgroup>
+                    <optgroup label="Cape Town West Coast & Helderberg">
+                      <option>Milnerton</option>
+                      <option>Table View</option>
+                      <option>Parklands</option>
+                      <option>Somerset West</option>
+                      <option>Strand</option>
+                    </optgroup>
+                    <optgroup label="Greater Western Cape (Outside Cape Town)">
+                      <option>Stellenbosch</option>
+                      <option>Paarl</option>
+                      <option>Wellington</option>
+                      <option>George</option>
+                    </optgroup>
+                    <option value="__other">Other area...</option>
+                  </select>
+                  <input id="listingSuburbOther" type="text" maxlength="100" placeholder="Enter suburb or area" hidden />
+                  <input id="listingSuburbValue" type="hidden" name="suburb" value="" />
+                </label>
               </div>
               <label>Distance to campus<span class="input-unit suffix"><input name="campusDistance" type="number" min="0" max="99999.99" step="0.01" /><span>km</span></span></label>
               <div id="listingAddressMap"></div>
@@ -177,6 +239,63 @@
     </div>
 
     <script src="script.js"></script>
+    <script>
+    (() => {
+      const form = document.getElementById('propertyForm');
+      if (!form) return;
+      for (const key of ['City', 'Suburb']) {
+        const choice = document.getElementById('listing' + key + 'Choice');
+        const other = document.getElementById('listing' + key + 'Other');
+        const stored = document.getElementById('listing' + key + 'Value');
+        const sync = () => {
+          const custom = choice.value === '__other';
+          other.hidden = !custom;
+          other.required = custom;
+          other.disabled = !custom;
+          const value = (custom ? other.value : choice.value).trim();
+          if (stored.value !== value) {
+            stored.value = value;
+            stored.dispatchEvent(new Event('input', { bubbles: true }));
+          }
+        };
+        const restore = () => {
+          const saved = stored.value.trim();
+          const match = Array.from(choice.options).find(o => o.value === saved && saved);
+          choice.value = match ? saved : saved ? '__other' : '';
+          other.value = match ? '' : saved;
+          sync();
+        };
+        choice.addEventListener('change', () => {
+          // The four Cape Town regions belong to Cape Town; outside towns
+          // use their own city names. Keep the street address independent.
+          if (key === 'Suburb' && choice.value && choice.value !== '__other') {
+            const outside = new Set(['Stellenbosch', 'Paarl', 'Wellington', 'George']);
+            const inferredCity = outside.has(choice.value) ? choice.value : 'Cape Town';
+            const cityChoice = document.getElementById('listingCityChoice');
+            const cityValue = document.getElementById('listingCityValue');
+            if (cityValue.value !== inferredCity) {
+              cityChoice.value = inferredCity;
+              cityChoice.dispatchEvent(new Event('change'));
+            }
+          }
+          sync();
+          if (choice.value === '__other') other.focus();
+        });
+        other.addEventListener('input', sync);
+        form.addEventListener('listing:loaded', restore);
+        form.addEventListener('reset', () => setTimeout(() => { stored.value = ''; restore(); }, 0));
+        restore();
+      }
+      form.addEventListener('submit', e => {
+        if (!form.elements.city.value.trim() || !form.elements.suburb.value.trim()) {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          const empty = !form.elements.city.value.trim() ? 'City' : 'Suburb';
+          document.getElementById('listing' + empty + 'Choice').focus();
+        }
+      }, true);
+    })();
+    </script>
     <script src="gallery-upload.js"></script>
     <script src="../maps.js"></script>
     <script src="../portal-identity.js?v=20260822-auth"></script>

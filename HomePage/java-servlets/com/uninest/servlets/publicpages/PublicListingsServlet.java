@@ -54,17 +54,37 @@ public class PublicListingsServlet extends HttpServlet {
                 where.append("AND (LOWER(r.room_number) LIKE ? "
                         + "OR LOWER(r.location) LIKE ? "
                         + "OR LOWER(r.description) LIKE ? "
+                        + "OR LOWER(COALESCE(d.city, '')) LIKE ? "
+                        + "OR LOWER(COALESCE(d.suburb, '')) LIKE ? "
                         + "OR LOWER(REPLACE(r.room_type, '_', ' ')) LIKE ?) ");
                 String term = "%" + search.toLowerCase() + "%";
-                params.add(term);
-                params.add(term);
-                params.add(term);
-                params.add(term);
+                for (int i = 0; i < 6; i++) params.add(term);
             }
 
             if (!location.isEmpty()) {
-                where.append("AND LOWER(r.location) = ? ");
-                params.add(location.toLowerCase());
+                // Search canonical city/suburb values first. For older records with no
+                // structured fields, match a whole comma-separated address segment:
+                // "Bellville" must NOT match an address in "Bellville South".
+                String area = location.trim().toLowerCase(java.util.Locale.ROOT);
+                boolean city = "cape town".equals(area) || "stellenbosch".equals(area)
+                        || "paarl".equals(area) || "wellington".equals(area)
+                        || "george".equals(area);
+                where.append("AND (LOWER(TRIM(COALESCE(d.suburb, ''))) = ? ");
+                params.add(area);
+                if (city) {
+                    where.append("OR LOWER(TRIM(COALESCE(d.city, ''))) = ? ");
+                    params.add(area);
+                }
+                String normalizedAddress = "CONCAT(',', REPLACE(LOWER(TRIM(COALESCE(r.location, ''))), ', ', ','), ',')";
+                where.append("OR LOCATE(CONCAT(',', ?, ','), " + normalizedAddress + ") > 0 ");
+                params.add(area);
+                // Preserve the old Cape Town CBD label after switching to the clearer
+                // canonical name in the dropdown. Never rewrite saved listing data.
+                if ("cape town city centre (cbd)".equals(area)) {
+                    where.append("OR LOWER(TRIM(COALESCE(d.suburb, ''))) = 'cape town cbd' "
+                            + "OR LOCATE(',cape town cbd,', " + normalizedAddress + ") > 0 ");
+                }
+                where.append(") ");
             }
             if (!type.isEmpty()) {
                 where.append("AND r.room_type = ? ");
@@ -111,6 +131,7 @@ public class PublicListingsServlet extends HttpServlet {
                     + "WHERE rv.room_id = r.room_id AND rv.review_type = 'room_review') AS rating_count, "
                     + "GROUP_CONCAT(a.amenity_name ORDER BY a.amenity_name SEPARATOR ', ') AS amenities "
                     + "FROM rooms r "
+                    + "LEFT JOIN listing_details d ON d.room_id = r.room_id "
                     + "LEFT JOIN room_amenities ra ON ra.room_id = r.room_id "
                     + "LEFT JOIN amenities a ON a.amenity_id = ra.amenity_id "
                     + where
@@ -151,7 +172,8 @@ public class PublicListingsServlet extends HttpServlet {
     }
 
     private int countListings(Connection conn, String where, List<Object> params) throws SQLException {
-        String query = "SELECT COUNT(*) FROM rooms r " + where;
+        String query = "SELECT COUNT(*) FROM rooms r "
+                + "LEFT JOIN listing_details d ON d.room_id = r.room_id " + where;
         PreparedStatement stmt = conn.prepareStatement(query);
         bindParams(stmt, params, 1);
         ResultSet rs = stmt.executeQuery();
@@ -210,8 +232,12 @@ public class PublicListingsServlet extends HttpServlet {
     private void writeFilterOptions(PrintWriter out, Connection conn) throws SQLException {
         out.print("\"locations\":[");
         try (PreparedStatement stmt = conn.prepareStatement(
-                "SELECT DISTINCT location FROM rooms WHERE approval_status = 'approved' "
-                        + "AND availability_status = 'available' AND location IS NOT NULL ORDER BY location");
+                "SELECT area FROM ("
+                        + "SELECT TRIM(d.city) AS area FROM rooms r JOIN listing_details d ON d.room_id=r.room_id "
+                        + "WHERE r.approval_status='approved' AND r.availability_status='available' "
+                        + "UNION SELECT TRIM(d.suburb) AS area FROM rooms r JOIN listing_details d ON d.room_id=r.room_id "
+                        + "WHERE r.approval_status='approved' AND r.availability_status='available'"
+                        + ") available_areas WHERE area IS NOT NULL AND area <> '' ORDER BY area");
              ResultSet rs = stmt.executeQuery()) {
             boolean first = true;
             while (rs.next()) {

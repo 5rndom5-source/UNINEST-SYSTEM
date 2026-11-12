@@ -147,7 +147,7 @@
     const select = document.getElementById("locationFilter");
     if (!select || select.dataset.loaded === "true") return;
     (locations || []).forEach((location) => {
-      if (Array.from(select.options).some(option => option.value === location)) return;
+      if (Array.from(select.options).some(option => option.value.toLowerCase() === String(location).toLowerCase())) return;
       const option = document.createElement("option");
       option.value = location;
       option.textContent = location;
