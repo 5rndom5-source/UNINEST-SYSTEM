@@ -2019,3 +2019,32 @@ body.landlord-classic {
   }
 }
 
+
+/* Keep property management controls visible on every screen size. */
+.classic-listings-grid .classic-property-body,
+.classic-listings-grid .classic-card-details { min-width: 0; }
+.classic-listings-grid .classic-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  max-width: 100%;
+  gap: 8px;
+}
+.classic-listings-grid .classic-card-actions .btn {
+  flex: 1 1 95px;
+  min-width: 0;
+  white-space: normal;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+.classic-listings-grid .classic-card-actions .classic-card-note { flex: 1 1 100%; }
+@media (max-width: 720px) {
+  .classic-listings-grid .classic-property-body { grid-template-columns: minmax(0, 1fr); }
+  .classic-listings-grid .classic-card-image {
+    min-height: 180px;
+    border-right: 0;
+    border-bottom: 1px solid #d8e0ec;
+  }
+}

@@ -124,7 +124,7 @@ const makeListingCard = (listing) => {
   remove.type = "button";
   remove.className = "btn btn-red delete-btn";
   remove.textContent = "Delete";
-  actions.append(edit, remove);
+  actions.prepend(edit, remove);
   details.append(location, price, status, actions);
   body.append(imageBox, details);
   card.append(title, body);
