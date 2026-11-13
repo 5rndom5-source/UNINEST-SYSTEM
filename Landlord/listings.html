@@ -83,8 +83,22 @@
             </label>
 
             </section>
+            <section class="form-section" aria-labelledby="typeHeading">
+              <h2 id="typeHeading">2) Accommodation type</h2>
+              <fieldset class="accommodation-fieldset">
+                <legend>Select one accommodation type</legend>
+                <div class="accommodation-type-options">
+                  <label><input type="radio" name="roomType" value="apartment" required /><span>Apartment</span></label>
+                  <label><input type="radio" name="roomType" value="studio" /><span>Studio</span></label>
+                  <label><input type="radio" name="roomType" value="house" /><span>House</span></label>
+                  <label><input type="radio" name="roomType" value="residence" /><span>Student residence</span></label>
+                  <label><input type="radio" name="roomType" value="single_room" /><span>Single / private room</span></label>
+                  <label><input type="radio" name="roomType" value="shared_room" /><span>Shared room</span></label>
+                </div>
+              </fieldset>
+            </section>
             <section class="form-section" aria-labelledby="locationHeading">
-              <h2 id="locationHeading">2) Location</h2>
+              <h2 id="locationHeading">3) Location</h2>
               <label>
                 Street address
                 <input type="text" id="propertyLocation" name="location" maxlength="255" autocomplete="street-address" placeholder="e.g. 13 Hans Strijdom Street" required />
@@ -160,7 +174,7 @@
               <div id="listingAddressMap"></div>
             </section>
             <section class="form-section" aria-labelledby="pricingHeading">
-              <h2 id="pricingHeading">3) Pricing</h2>
+              <h2 id="pricingHeading">4) Pricing</h2>
               <div class="field-pair">
               <label>
                 Monthly rent
@@ -173,7 +187,7 @@
               </div>
             </section>
             <section class="form-section" aria-labelledby="roomsHeading">
-              <h2 id="roomsHeading">4) Rooms &amp; amenities</h2>
+              <h2 id="roomsHeading">5) Rooms &amp; amenities</h2>
               <div class="field-pair">
                 <label>Rooms<input name="bedrooms" type="number" min="0" max="999" value="1" required /></label>
                 <label>Bathrooms<input name="bathrooms" type="number" min="0" max="999" value="1" required /></label>
@@ -190,7 +204,7 @@
               </div>
             </section>
             <section class="form-section" aria-labelledby="photosHeading">
-            <h2 id="photosHeading">5) Photos</h2>
+            <h2 id="photosHeading">6) Photos</h2>
 
             <div>
               <span class="field-caption">Upload Photos:</span>
@@ -211,7 +225,7 @@
 
             </section>
             <section class="form-section" aria-labelledby="contactHeading">
-              <h2 id="contactHeading">6) Contact</h2>
+              <h2 id="contactHeading">7) Contact</h2>
               <label>Contact name<input name="contactName" maxlength="100" autocomplete="name" /></label>
               <label>Contact email<input name="contactEmail" type="email" maxlength="254" autocomplete="email" /></label>
               <label>Contact phone<input name="contactPhone" type="tel" maxlength="40" autocomplete="tel" /></label>

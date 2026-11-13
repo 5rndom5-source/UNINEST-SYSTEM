@@ -19,12 +19,13 @@ public final class ListingEditor {
     }
     public static String read(Connection c,int id,int owner,boolean admin,String context) throws SQLException {
         StringBuilder b=new StringBuilder(); boolean furnished;
-        try(PreparedStatement q=c.prepareStatement("SELECT room_number,description,location,price,furnishing FROM rooms WHERE room_id=? AND (approval_status='approved' OR landlord_id=? OR ?=1)")) {
+        try(PreparedStatement q=c.prepareStatement("SELECT room_number,description,location,price,furnishing,room_type FROM rooms WHERE room_id=? AND (approval_status='approved' OR landlord_id=? OR ?=1)")) {
             q.setInt(1,id);q.setInt(2,owner);q.setInt(3,admin?1:0);
             try(ResultSet r=q.executeQuery()) {
                 if(!r.next())return "null";
                 b.append("{\"id\":").append(id).append(",\"title\":").append(json(r.getString(1))).append(",\"description\":").append(json(r.getString(2))).append(",\"location\":").append(json(r.getString(3))).append(",\"price\":").append(r.getBigDecimal(4));
                 furnished="fully_furnished".equals(r.getString(5));
+                b.append(",\"roomType\":").append(json(r.getString(6)));
             }
         }
         b.append(",\"details\":{");

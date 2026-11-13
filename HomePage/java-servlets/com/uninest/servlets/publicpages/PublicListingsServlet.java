@@ -40,7 +40,15 @@ public class PublicListingsServlet extends HttpServlet {
             int page = parsePositiveInt(request.getParameter("page"), 1);
             String search = valueOr(request.getParameter("search"), "");
             String location = valueOr(request.getParameter("location"), "");
-            String type = normalizedType(request.getParameter("type"));
+            String[] requestedTypes = request.getParameterValues("type");
+            java.util.LinkedHashSet<String> selectedTypes = new java.util.LinkedHashSet<>();
+            if (requestedTypes != null) {
+                for (String requested : requestedTypes) {
+                    String normalized = normalizedType(requested);
+                    if (!normalized.isEmpty()) selectedTypes.add(normalized);
+                    if (selectedTypes.size() == 6) break;
+                }
+            }
             BigDecimal minPrice = parseMoney(request.getParameter("minPrice"));
             BigDecimal maxPrice = parseMoney(request.getParameter("maxPrice"));
             String sort = valueOr(request.getParameter("sort"), "recent");
@@ -86,9 +94,14 @@ public class PublicListingsServlet extends HttpServlet {
                 }
                 where.append(") ");
             }
-            if (!type.isEmpty()) {
-                where.append("AND r.room_type = ? ");
-                params.add(type);
+            if (!selectedTypes.isEmpty()) {
+                where.append("AND r.room_type IN (");
+                for (String selectedType : selectedTypes) {
+                    if (where.charAt(where.length() - 1) != '(') where.append(',');
+                    where.append('?');
+                    params.add(selectedType);
+                }
+                where.append(") ");
             }
             if (minPrice != null) {
                 where.append("AND r.price >= ? ");

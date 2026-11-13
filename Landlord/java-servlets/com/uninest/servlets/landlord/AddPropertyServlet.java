@@ -35,6 +35,11 @@ public class AddPropertyServlet extends HttpServlet {
         String location = request.getParameter("location");
         String price = request.getParameter("price");
         String[] amenities = request.getParameterValues("amenities");
+        String roomType = request.getParameter("roomType");
+        if (roomType == null || !java.util.Set.of("apartment", "studio", "house", "residence", "single_room", "shared_room").contains(roomType)) {
+            response.sendError(400, "Select a valid accommodation type.");
+            return;
+        }
         Integer roomId = parseRoomId(request.getParameter("roomId"));
 
         if (!ValidationUtil.isRequired(title)
@@ -75,9 +80,9 @@ public class AddPropertyServlet extends HttpServlet {
             int landlordId = (Integer) session.getAttribute("landlordId");
             if (roomId == null) {
                 roomId = insertRoom(conn, landlordId, title.trim(), description.trim(),
-                        location.trim(), new BigDecimal(price), amenities);
+                        location.trim(), new BigDecimal(price), amenities, roomType);
             } else if (!updateOwnedRoom(conn, roomId, landlordId, title.trim(), description.trim(),
-                    location.trim(), new BigDecimal(price), amenities)) {
+                    location.trim(), new BigDecimal(price), amenities, roomType)) {
                 conn.rollback();
                 response.sendError(403);
                 return;
@@ -115,9 +120,9 @@ public class AddPropertyServlet extends HttpServlet {
 
     private boolean updateOwnedRoom(Connection conn, int roomId, int landlordId, String title,
                                     String description, String location, BigDecimal price,
-                                    String[] amenities) throws SQLException {
+                                    String[] amenities, String roomType) throws SQLException {
         String sql = "UPDATE rooms SET room_number = ?, description = ?, location = ?, price = ?, "
-                + "furnishing = ?, approval_status = 'pending', admin_note = NULL, "
+                + "furnishing = ?, room_type = ?, approval_status = 'pending', admin_note = NULL, "
                 + "reviewed_by = NULL, reviewed_at = NULL WHERE room_id = ? AND landlord_id = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, title);
@@ -125,8 +130,9 @@ public class AddPropertyServlet extends HttpServlet {
             stmt.setString(3, location);
             stmt.setBigDecimal(4, price);
             stmt.setString(5, hasAmenity(amenities, "Furnished") ? "fully_furnished" : "unfurnished");
-            stmt.setInt(6, roomId);
-            stmt.setInt(7, landlordId);
+            stmt.setString(6, roomType);
+            stmt.setInt(7, roomId);
+            stmt.setInt(8, landlordId);
             return stmt.executeUpdate() == 1;
         }
     }
@@ -150,20 +156,21 @@ public class AddPropertyServlet extends HttpServlet {
     }
 
     private int insertRoom(Connection conn, int landlordId, String title, String description,
-                           String location, BigDecimal price, String[] amenities)
+                           String location, BigDecimal price, String[] amenities, String roomType)
             throws SQLException {
         String query = "INSERT INTO rooms "
                 + "(landlord_id, room_number, room_type, location, price, capacity, description, "
                 + "availability_status, furnishing, approval_status) "
-                + "VALUES (?, ?, 'apartment', ?, ?, 1, ?, 'available', ?, 'pending')";
+                + "VALUES (?, ?, ?, ?, ?, 1, ?, 'available', ?, 'pending')";
 
         PreparedStatement stmt = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
         stmt.setInt(1, landlordId);
         stmt.setString(2, title);
-        stmt.setString(3, location);
-        stmt.setBigDecimal(4, price);
-        stmt.setString(5, description);
-        stmt.setString(6, hasAmenity(amenities, "Furnished") ? "fully_furnished" : "unfurnished");
+        stmt.setString(3, roomType);
+        stmt.setString(4, location);
+        stmt.setBigDecimal(5, price);
+        stmt.setString(6, description);
+        stmt.setString(7, hasAmenity(amenities, "Furnished") ? "fully_furnished" : "unfurnished");
         stmt.executeUpdate();
 
         ResultSet keys = stmt.getGeneratedKeys();

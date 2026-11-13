@@ -74,13 +74,13 @@
     const location = document.getElementById("locationFilter")?.value;
     const minPrice = document.getElementById("minPriceFilter")?.value;
     const maxPrice = document.getElementById("maxPriceFilter")?.value;
-    const type = document.querySelector('input[name="type"]:checked')?.value;
+    const types = Array.from(document.querySelectorAll('input[name="type"]:checked'), item => item.value);
     const sort = document.getElementById("resultsSort")?.value || document.getElementById("publicSort")?.value;
     if (search) params.set("search", search);
     if (location) params.set("location", location);
     if (minPrice) params.set("minPrice", minPrice);
     if (maxPrice) params.set("maxPrice", maxPrice);
-    if (type) params.set("type", type);
+    types.forEach(type => params.append("type", type));
     if (sort) params.set("sort", sort);
     document.querySelectorAll('input[name="facility"]:checked').forEach((item) => params.append("facility", item.value));
     return params;
@@ -212,8 +212,8 @@
     const area = query.get('location'); const select = document.getElementById('locationFilter');
     if (area && select) { const option = new Option(area, area, true, true); select.appendChild(option); }
     document.querySelectorAll('input[name="facility"]').forEach(item => { item.checked = query.getAll('facility').includes(item.value); });
-    const type = query.get("type");
-    if (type) document.querySelector(`input[name="type"][value="${CSS.escape(type)}"]`)?.click();
+    const selectedTypes = query.getAll("type");
+    document.querySelectorAll('input[name="type"]').forEach(input => { input.checked = selectedTypes.includes(input.value); });
   };
 
   const resetFilters = () => {
