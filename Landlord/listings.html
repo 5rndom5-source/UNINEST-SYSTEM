@@ -86,12 +86,12 @@
             <section class="form-section" aria-labelledby="locationHeading">
               <h2 id="locationHeading">2) Location</h2>
               <label>
-                Property address (public):
-                <input type="text" id="propertyLocation" name="location" maxlength="255" autocomplete="street-address" placeholder="Street number, street, suburb, city, postal code, country" required />
+                Street address
+                <input type="text" id="propertyLocation" name="location" maxlength="255" autocomplete="street-address" placeholder="e.g. 13 Hans Strijdom Street" required />
               </label>
 
-              <p class="listing-location-hint">Select the city and area for accurate student search results. Enter the full street address above for the map. Current focus: Western Cape.</p>
-              <div class="field-pair">
+
+              <div class="field-pair location-fields">
                 <label>City
                   <select id="listingCityChoice" required aria-label="Listing city">
                     <option value="">Select a city</option>
