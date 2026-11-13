@@ -48,5 +48,10 @@
 #listingStatus { white-space:normal; overflow-wrap:anywhere; }
 @media(max-width:599px) { #propertyForm .field-pair { grid-template-columns:1fr; } #propertyForm .form-section { padding:16px; } .photo-thumbs { grid-template-columns:repeat(3,minmax(0,1fr)); } .classic-section.listing-editor { width:100%; } }
 
-#propertyForm .listing-location-hint { margin:0; color:#42594e; font-size:13px; line-height:1.5; }
+#propertyForm .location-fields { align-items:start; gap:16px; }
 #propertyForm input[hidden] { display:none !important; }
+
+#propertyForm .location-fields label { gap:8px; }
+#propertyForm .location-fields select { border-radius:7px; }
+#propertyForm input#propertyLocation { border-radius:7px; }
+#propertyForm .form-section[aria-labelledby='locationHeading'] { gap:18px; }
