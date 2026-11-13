@@ -55,3 +55,14 @@
 #propertyForm .location-fields select { border-radius:7px; }
 #propertyForm input#propertyLocation { border-radius:7px; }
 #propertyForm .form-section[aria-labelledby='locationHeading'] { gap:18px; }
+
+/* The listing's primary accommodation type has one value; present it as selectable chips. */
+#propertyForm .accommodation-fieldset { border:0; padding:0; margin:0; min-width:0; }
+#propertyForm .accommodation-fieldset legend { font-size:14px; font-weight:600; margin-bottom:12px; }
+#propertyForm .accommodation-type-options { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+#propertyForm .accommodation-type-options label { position:relative; display:block; cursor:pointer; }
+#propertyForm .accommodation-type-options input { position:absolute; width:1px; height:1px; opacity:0; }
+#propertyForm .accommodation-type-options span { display:block; padding:12px; border:1px solid #aebbb5; border-radius:8px; font-weight:500; background:white; min-height:44px; box-sizing:border-box; }
+#propertyForm .accommodation-type-options input:checked + span { border-color:#247246; background:#e0f0e6; color:#164c2d; font-weight:650; }
+#propertyForm .accommodation-type-options input:focus-visible + span { outline:3px solid #276da9; outline-offset:2px; }
+@media(max-width:599px) { #propertyForm .accommodation-type-options { grid-template-columns:1fr; } }

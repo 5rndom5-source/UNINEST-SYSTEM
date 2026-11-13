@@ -130,6 +130,8 @@
       const defaults={suburb:'',city:'',deposit:'0',bedrooms:'1',bathrooms:'1',campusDistance:'',contactName:'',contactEmail:'',contactPhone:''};
       Object.entries({...defaults,...data.listing.details}).forEach(([k,v])=>{if(form.elements[k])form.elements[k].value=v??'';});
       form.querySelectorAll('[name=amenities]').forEach(input=>input.checked=data.listing.amenities.includes(input.value));
+      const savedType = data.listing.roomType || 'apartment';
+      form.querySelectorAll('[name=roomType]').forEach(input => { input.checked = input.value === savedType; });
       dirty=false;status.textContent='Editing listing';render();form.dispatchEvent(new CustomEvent('listing:loaded'));
     }catch(err){if(epoch===generation){loadFailed=true;status.textContent=err.message;}}
     finally {if(epoch===generation){loading=false;submit.disabled=false;}}
